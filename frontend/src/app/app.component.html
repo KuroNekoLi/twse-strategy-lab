@@ -1,0 +1,200 @@
+<main id="backtest-workspace" class="app-shell">
+  <header class="topbar">
+    <a href="#backtest-workspace" class="brand" aria-label="策略實驗室首頁">
+      <span class="brand-mark"><i></i><i></i><i></i></span>
+      <span>策略<span class="brand-light">實驗室</span></span>
+    </a>
+    <div class="topbar-right">
+      <span class="market-pill"><span class="pulse-dot"></span>{{ apiBaseUrl ? '台股歷史資料' : '回測 API 待設定' }}</span>
+      <span class="header-divider"></span>
+      <span class="header-caption">研究工具 · 01</span>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page-intro">
+      <div>
+        <p class="eyebrow">STRATEGY BACKTESTING WORKSPACE</p>
+        <h1>讓策略接受歷史考驗。</h1>
+        <p class="intro-copy">用同一段行情、相同投入金額，檢視你的規則和定期定額走出什麼結果。</p>
+      </div>
+      <div class="intro-date"><span class="live-dot"></span>資料來源：臺灣證券交易所</div>
+    </div>
+
+    <section class="workspace">
+      <aside class="config-panel">
+        <div class="panel-heading">
+          <div><span class="step">01</span><h2>設定回測</h2></div>
+          <span class="tiny-label">PARAMETERS</span>
+        </div>
+
+        <div class="field">
+          <label>回測標的（最多 3 檔）</label>
+          <div class="symbol-add">
+            <input aria-label="輸入台股代碼" inputmode="numeric" placeholder="輸入代碼，例如 2603"
+              [(ngModel)]="symbolInput" name="symbolInput" maxlength="6"
+              (ngModelChange)="onSymbolInputChange($event)"
+              (keydown.enter)="$event.preventDefault(); addSymbol()">
+            <button type="button" (click)="addSymbol()" [disabled]="symbols.length >= 3">加入</button>
+          </div>
+          <div class="selected-symbols" aria-label="已選標的">
+            <span class="selected-symbol" *ngFor="let code of symbols">{{ code }}
+              <button type="button" [attr.aria-label]="'移除 ' + code" (click)="toggleSymbol(code)" [disabled]="symbols.length <= 1">×</button>
+            </span>
+          </div>
+          <div class="symbol-presets">
+            <span>快速加入</span>
+            <button type="button" (click)="addPreset('0050')" [disabled]="symbols.includes('0050') || symbols.length >= 3">0050 台灣50</button>
+            <button type="button" (click)="addPreset('0056')" [disabled]="symbols.includes('0056') || symbols.length >= 3">0056 高股息</button>
+            <button type="button" (click)="addPreset('2330')" [disabled]="symbols.includes('2330') || symbols.length >= 3">2330 台積電</button>
+          </div>
+          <span class="field-hint">輸入 TWSE 上市股票代碼即可回測；快速選項僅供方便，不限於這三檔。</span>
+        </div>
+
+        <div class="field">
+          <label>回測期間</label>
+          <div class="range-inputs">
+            <select aria-label="起始年度" [(ngModel)]="fromYear" name="fromYear"><option *ngFor="let year of yearOptions" [value]="year">{{ year }}</option></select>
+            <span>至</span>
+            <select aria-label="結束年度" [(ngModel)]="toYear" name="toYear"><option *ngFor="let year of yearOptions" [value]="year">{{ year }}</option></select>
+          </div>
+          <span class="field-hint">證交所此行情端點提供 2010 年起資料</span>
+        </div>
+
+        <div class="field">
+          <label for="strategy">策略範本</label>
+          <select id="strategy" [(ngModel)]="strategy" name="strategy">
+            <option *ngFor="let option of strategyOptions" [value]="option.id">{{ option.name }}</option>
+          </select>
+          <div class="strategy-chip">
+            <span class="strategy-icon">⌁</span>
+            <span><strong>{{ selectedStrategy.name }}</strong><small>{{ selectedStrategy.summary }}</small></span>
+            <span class="custom-tag">可調參數</span>
+          </div>
+          <div class="range-inputs window-inputs" *ngIf="strategy === 'ma-crossover'">
+            <label>短均線<input type="number" min="2" max="250" [(ngModel)]="fast" name="fastWindow" aria-label="短均線交易日"><span>日</span></label>
+            <label>長均線<input type="number" min="3" max="500" [(ngModel)]="slow" name="slowWindow" aria-label="長均線交易日"><span>日</span></label>
+          </div>
+          <div class="range-inputs strategy-inputs" *ngIf="strategy === 'rsi-reversion'">
+            <label>RSI 週期<input type="number" min="2" max="100" [(ngModel)]="rsiWindow" name="rsiWindow"></label>
+            <label>買進低於<input type="number" min="1" max="49" [(ngModel)]="rsiBuy" name="rsiBuy"><small>RSI</small></label>
+            <label>賣出高於<input type="number" min="51" max="99" [(ngModel)]="rsiSell" name="rsiSell"><small>RSI</small></label>
+          </div>
+          <div class="range-inputs strategy-inputs" *ngIf="strategy === 'bollinger-reversion'">
+            <label>計算週期<input type="number" min="2" max="200" [(ngModel)]="bollingerWindow" name="bollingerWindow"></label>
+            <label>標準差倍數<input type="number" min="0.5" max="5" step="0.1" [(ngModel)]="bollingerMultiplier" name="bollingerMultiplier"></label>
+          </div>
+          <div class="range-inputs strategy-inputs" *ngIf="strategy === 'breakout'">
+            <label>突破回看日數<input type="number" min="2" max="250" [(ngModel)]="breakoutWindow" name="breakoutWindow"></label>
+          </div>
+          <ng-container *ngIf="strategy === 'drawdown-entry'">
+            <div class="range-inputs strategy-inputs">
+              <label>回跌近一年高點<input type="number" min="1" max="80" [(ngModel)]="drawdownBuy" name="drawdownBuy"><small>% 才買進</small></label>
+              <label>持倉報酬達<input type="number" min="1" max="200" [(ngModel)]="profitSell" name="profitSell"><small>% 才賣出</small></label>
+            </div>
+            <span class="field-hint">訊號以昨日收盤判定，今天收盤模擬成交。</span>
+          </ng-container>
+        </div>
+
+        <div class="field">
+          <label>投入金額</label>
+          <div class="range-inputs money-inputs">
+            <label>起始投入<div class="money-field"><span>$</span><input inputmode="numeric" [(ngModel)]="initial" name="initialCapital" aria-label="起始投入金額"></div></label>
+            <label>每月投入<div class="money-field"><span>$</span><input inputmode="numeric" [(ngModel)]="monthly" name="monthlyContribution" aria-label="每月投入金額"></div></label>
+          </div>
+        </div>
+
+        <details class="cost-details">
+          <summary>交易成本假設 <span>佣金與證交稅</span></summary>
+          <div class="range-inputs cost-fields">
+            <label>單邊手續費 %<input type="number" step="0.01" [(ngModel)]="commission" name="commissionRate"><small>預設為費率上限</small></label>
+            <label>賣出交易稅 %<input type="number" step="0.01" [(ngModel)]="tax" name="sellTaxRate" placeholder="依標的預設"><small>留白時，各標的套用預設稅率</small></label>
+          </div>
+        </details>
+
+        <button class="run-button" type="button" (click)="runBacktest()" [disabled]="busy || symbols.length === 0 || isInvalid()">
+          <ng-container *ngIf="busy; else runLabel"><span class="spinner"></span>讀取行情並計算中…</ng-container>
+          <ng-template #runLabel>執行策略回測</ng-template>
+        </button>
+        <p class="validation" *ngIf="isInvalid()">請確認年度順序，且短均線小於長均線。</p>
+        <p class="error-box" role="alert" *ngIf="error">{{ error }}</p>
+        <p class="config-footnote">回測以日收盤價判斷，均線訊號採前一交易日資料，避免使用未來資訊。</p>
+      </aside>
+
+      <section class="results-panel" aria-live="polite">
+        <div class="results-top">
+          <div class="panel-heading results-heading">
+            <div><span class="step">02</span><h2>策略比較</h2></div>
+            <span class="compare-note">相同投入金額 · 費用納入</span>
+          </div>
+          <div class="range-badge" *ngIf="response">{{ response.symbols.join(' / ') }} · {{ response.from }} — {{ response.to }}</div>
+        </div>
+
+        <div class="loading-state" *ngIf="busy"><span class="spinner dark"></span><strong>正在整理證交所歷史行情</strong><span>首次載入較長期間可能需要一點時間。</span></div>
+
+        <ng-container *ngIf="!busy && response as result">
+          <div class="metric-row">
+            <div class="metric-card featured"><span class="metric-label">資產最高策略</span><strong>${{ formatMoney(leadingResult?.endingValue ?? 0) }}</strong><span class="metric-sub">{{ leadingResult?.name }} · 報酬 {{ formatPercent(leadingResult?.totalReturn ?? 0) }}</span></div>
+            <div class="metric-card"><span class="metric-label">每組總投入</span><strong>${{ formatMoney(result.results[0]?.contributed ?? 0) }}</strong><span class="metric-sub">含初始投入與每月加碼</span></div>
+            <div class="metric-card"><span class="metric-label">比較標的 / 交易日</span><strong>{{ result.symbols.length }} 檔 · {{ formatMoney(result.tradingDays) }}</strong><span class="metric-sub">行情來源：TWSE</span></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title-row">
+              <div><h3>資產成長曲線</h3><span>新台幣 · 含未投資現金 · 不含配息</span></div>
+              <div class="legend"><span *ngFor="let item of result.results; let index = index"><i class="legend-dot" [style.backgroundColor]="lineColor(index)"></i>{{ item.name }}</span></div>
+            </div>
+            <div class="chart-wrap">
+              <svg class="chart" viewBox="0 0 860 290" role="img" aria-label="各策略回測資產曲線">
+                <ng-container *ngFor="let tick of chartTicks">
+                  <line x1="60" x2="846" [attr.y1]="valueY(tick)" [attr.y2]="valueY(tick)" class="chart-rule"></line>
+                  <text x="50" [attr.y]="tickY(tick)" text-anchor="end" class="chart-axis">${{ formatMoney(tick) }}</text>
+                </ng-container>
+                <polyline *ngFor="let item of result.results; let index = index" [attr.points]="linePoints(item.series)" fill="none" [attr.stroke]="lineColor(index)" [attr.stroke-width]="index === 0 ? 3 : 2" stroke-linejoin="round" stroke-linecap="round"></polyline>
+                <ng-container *ngIf="result.results[0]?.series?.length">
+                  <text x="60" y="285" class="chart-axis">{{ chartFirstDate }}</text>
+                  <text x="846" y="285" text-anchor="end" class="chart-axis">{{ chartLastDate }}</text>
+                </ng-container>
+              </svg>
+            </div>
+          </div>
+
+          <div class="comparison-table">
+            <div class="table-heading"><h3>績效摘要</h3><span>歷史模擬，不代表未來表現</span></div>
+            <div class="table-scroll"><table>
+              <thead><tr><th>策略</th><th>期末資產</th><th>總報酬</th><th>年化報酬</th><th>月末最大回撤</th></tr></thead>
+              <tbody><tr *ngFor="let item of result.results; let index = index">
+                <td><i class="legend-dot" [style.backgroundColor]="lineColor(index)"></i>{{ item.name }}</td>
+                <td class="table-value">${{ formatMoney(item.endingValue) }}</td>
+                <td [class.positive]="item.totalReturn >= 0" [class.negative]="item.totalReturn < 0">{{ formatPercent(item.totalReturn) }}</td>
+                <td>{{ formatPercent(item.annualizedReturn) }}</td>
+                <td class="negative">−{{ item.maxDrawdown.toFixed(1) }}%</td>
+              </tr></tbody>
+            </table></div>
+          </div>
+          <div class="assumption-note"><strong>回測假設</strong><span>{{ result.assumptions.join(' · ') }} · 報酬率為時間加權；期末資產含投入本金。</span></div>
+        </ng-container>
+
+        <div class="empty-result" *ngIf="!busy && !response">
+          <div class="empty-chart">
+            <div class="empty-y"><span>資產價值</span><i>$</i><i>$</i><i>$</i></div>
+            <svg viewBox="0 0 620 190" aria-hidden="true"><path d="M0 155H620M0 108H620M0 60H620M0 14H620" class="empty-rule"></path><path d="M0 160 C36 146,46 136,78 142 S127 153,153 127 S184 120,209 133 S257 111,279 117 S313 100,337 106 S366 84,393 99 S421 76,449 85 S473 61,499 75 S532 47,555 59 S585 24,620 18" class="ghost-line"></path></svg>
+            <div class="empty-x"><span>開始日</span><span>回測期間</span><span>結束日</span></div>
+          </div>
+          <div class="empty-message"><span class="empty-spark">✳</span><div><strong>你的策略，會走出自己的曲線。</strong><p>設定標的與期間，開始比較策略和定期定額。</p></div></div>
+        </div>
+
+        <div class="comparison-preview" *ngIf="!busy && !response">
+          <div class="preview-head"><h3>策略範本</h3><span>所有結果都與定期定額比較</span></div>
+          <div class="preview-item" *ngFor="let item of strategyOptions; let index = index"><i class="legend-dot" [style.backgroundColor]="lineColor(index)"></i><span>{{ item.name }}</span><small>{{ item.category }}</small></div>
+        </div>
+      </section>
+    </section>
+
+    <footer class="disclaimer">
+      <span class="disclaimer-icon">i</span>
+      <p><strong>研究用途，非投資建議。</strong>回測依歷史收盤價計算，不含配息、滑價與券商最低手續費；已知分割依公告調整。報酬數字是歷史模擬，不保證未來績效。實際交易成本依券商與標的而異。</p>
+      <a href="https://openapi.twse.com.tw/" target="_blank" rel="noreferrer">資料來源說明</a>
+    </footer>
+  </div>
+</main>

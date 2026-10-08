@@ -1,0 +1,83 @@
+name: Build and deploy Angular to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Set API base URL
+        env:
+          BACKEND_API_URL: ${{ vars.BACKEND_API_URL }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const config = { apiBaseUrl: process.env.BACKEND_API_URL || '' };
+          fs.writeFileSync('public/config.js', `window.APP_CONFIG = ${JSON.stringify(config)};\n`);
+          NODE
+        working-directory: frontend
+      - name: Build Angular site
+        run: npm run build:pages
+        working-directory: frontend
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: frontend/dist/pages/browser
+
+  backend-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+      - name: Compile Spring Boot API
+        run: mvn --batch-mode -f backend/pom.xml -DskipTests package
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: [build, backend-check]
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
