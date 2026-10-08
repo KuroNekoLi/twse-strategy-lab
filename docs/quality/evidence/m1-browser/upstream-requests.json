@@ -1,0 +1,1458 @@
+[
+  {
+    "dateTime": "2026-10-08T21:58:08.520Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:08.520Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:08.521Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:08.802Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:08.803Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:08.803Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:09.073Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:09.073Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:09.074Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:09.343Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:09.343Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:09.343Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:09.877Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:09.877Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:09.877Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:10.143Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:10.143Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:10.143Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:10.411Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:10.411Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:10.411Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:10.681Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:10.681Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:10.681Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:11.011Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:11.011Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:11.011Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:11.281Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:11.282Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:11.282Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:11.578Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:11.578Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:11.578Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:11.845Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:11.845Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:11.845Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:12.223Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:12.223Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:12.223Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:12.490Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:12.491Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:12.491Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:12.757Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:12.757Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:12.757Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:13.026Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:13.027Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:13.027Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:13.400Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:13.400Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:13.400Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:13.669Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:13.669Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:13.669Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:13.939Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:13.939Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:13.939Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:14.208Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:14.209Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:14.209Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:15.250Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:15.250Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:15.250Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:15.520Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:15.520Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:15.520Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:15.801Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:15.802Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:15.802Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:16.069Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:16.069Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:16.069Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:16.219Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:16.219Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:16.219Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:16.485Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:16.485Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:16.485Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:16.755Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:16.755Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:16.755Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:17.023Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:17.023Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:17.023Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:17.653Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:17.653Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:17.653Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:17.923Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:17.923Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:17.923Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:18.191Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:18.191Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:18.191Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:18.460Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:18.460Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:18.460Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:18.611Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:18.611Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:18.611Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:18.879Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:18.879Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:18.879Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:19.145Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:19.145Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:19.145Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:19.411Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:19.411Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:19.411Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:19.723Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:19.723Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:19.723Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:19.992Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:19.992Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:19.992Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:20.260Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:20.260Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:20.260Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:20.529Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:20.529Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:20.529Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:20.680Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250301",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:20.680Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250101",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:20.680Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250201",
+    "fixtureMode": "upstream"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:21.059Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "no-data"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:21.060Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "no-data"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:21.061Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "no-data"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:21.435Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "invalid-row"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:21.435Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "invalid-row"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:21.435Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "invalid-row"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:22.972Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:22.972Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:22.972Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:23.241Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:23.241Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:23.241Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:23.510Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:23.510Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:23.510Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:23.777Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:23.777Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:23.777Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:25.714Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:25.714Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:25.714Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:25.982Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:25.982Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:25.982Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:26.249Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:26.249Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:26.249Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:26.574Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:26.574Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:26.574Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:27.764Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:27.764Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:27.765Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:28.034Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:28.034Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:28.034Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:28.303Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:28.303Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:28.303Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:28.575Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:28.575Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:28.575Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:28.751Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:28.751Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:28.751Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:29.022Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:29.022Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:29.023Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:29.291Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:29.291Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:29.291Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:29.559Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:29.559Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:29.559Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:29.732Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:29.732Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:29.732Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.000Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.000Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.000Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.270Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.270Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.270Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.538Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.538Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.538Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.703Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250301",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.703Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.704Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.972Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250501",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.972Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250601",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:30.972Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250401",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:31.237Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250901",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:31.238Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250801",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:31.238Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20250701",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:31.508Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20251101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:31.508Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20251201",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:31.508Z",
+    "path": "/STOCK_DAY",
+    "symbol": "2330",
+    "month": "20251001",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:31.679Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "normal"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:31.879Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "duplicate"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:31.879Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "duplicate"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:31.879Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "duplicate"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:32.028Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250201",
+    "fixtureMode": "non-ok"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:32.028Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250101",
+    "fixtureMode": "non-ok"
+  },
+  {
+    "dateTime": "2026-10-08T21:58:32.028Z",
+    "path": "/STOCK_DAY",
+    "symbol": "0050",
+    "month": "20250301",
+    "fixtureMode": "non-ok"
+  }
+]

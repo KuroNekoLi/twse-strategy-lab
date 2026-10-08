@@ -1,126 +1,92 @@
 package uk.kuronekoli.strategylab.backtest;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.util.ArrayList;
+import java.math.BigDecimal;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import uk.kuronekoli.strategylab.api.BacktestException;
 import uk.kuronekoli.strategylab.api.BacktestRequest;
-import uk.kuronekoli.strategylab.api.BacktestResponse.Point;
 import uk.kuronekoli.strategylab.api.BacktestResponse.StrategyResult;
 import uk.kuronekoli.strategylab.market.DailyBar;
 
+/** Stateless deterministic close-only research simulation. Never a real execution promise. */
 public final class BacktestEngine {
+  public static final String VERSION = "m1-engine-v1.0.0";
+  public static final String EXECUTION_MODEL = "NEXT_CLOSE_PROXY";
+  public static final String EXECUTION_VERSION = "next-close-proxy-v1.0.0";
+  public static final String COST_VERSION = "whole-shares-cents-half-up-v1.0.0";
+  public static final String ADJUSTMENT = "RAW_CLOSE_UNADJUSTED_V1";
+  public static final String RULES_VERSION = "research-estimated-tax-v1.0.0";
+  public static final String METRICS_VERSION = "daily-twr-volatility-beginning-flow-v2.0.0";
   private BacktestEngine() {}
-  private static final String[] STRATEGY_NAMES = {"雙均線交叉", "RSI 均值回歸", "布林通道回歸", "區間突破", "回跌買進 / 獲利賣出"};
-
   public static List<StrategyResult> run(BacktestRequest input, String symbol, List<DailyBar> bars, double taxRate) {
-    String strategy = input.strategyOrDefault();
-    int lookback = switch (strategy) {
-      case "drawdown-entry" -> 252;
-      case "breakout" -> input.value(input.breakoutWindow(), 20) + 1;
-      case "rsi-reversion" -> input.value(input.rsiWindow(), 14) + 1;
-      case "bollinger-reversion" -> input.value(input.bollingerWindow(), 20);
-      default -> input.slowWindow();
-    };
-    if (bars.size() < lookback + 2) throw new IllegalArgumentException("此期間只有 " + bars.size() + " 個交易日，資料不足以計算所選策略。");
-    Portfolio dca = new Portfolio(), active = new Portfolio();
-    int stride = Math.max(1, bars.size() / 320);
-    for (int index = 0; index < bars.size(); index++) {
-      DailyBar bar = bars.get(index);
-      String month = bar.date().toString().substring(0, 7);
-      boolean newMonth = !month.equals(dca.previousMonth);
-      if (index == 0) {
-        dca.cash += input.initialCapital().doubleValue(); dca.contributed += input.initialCapital().doubleValue();
-        active.cash += input.initialCapital().doubleValue(); active.contributed += input.initialCapital().doubleValue();
-      } else if (newMonth) {
-        dca.cash += input.monthlyContribution().doubleValue(); dca.contributed += input.monthlyContribution().doubleValue();
-        active.cash += input.monthlyContribution().doubleValue(); active.contributed += input.monthlyContribution().doubleValue();
-      }
-      dca.previousMonth = month;
-      if (index == 0 || newMonth) buy(dca, bar.close(), input.commissionRate().doubleValue());
-      int historyStart = Math.max(0, index - lookback - 1);
-      List<Double> history = bars.subList(historyStart, index).stream().map(DailyBar::close).toList();
-      if (history.size() >= lookback) {
-        double previous = history.get(history.size() - 1);
-        boolean shouldBuy = false, shouldSell = false;
-        switch (strategy) {
-          case "ma-crossover" -> {
-            double fast = average(tail(history, input.fastWindow())), slow = average(tail(history, input.slowWindow()));
-            shouldBuy = fast > slow; shouldSell = fast <= slow;
-          }
-          case "rsi-reversion" -> {
-            double value = rsi(tail(history, input.value(input.rsiWindow(), 14) + 1));
-            shouldBuy = value < input.value(input.rsiBuyThreshold(), 30); shouldSell = value > input.value(input.rsiSellThreshold(), 55);
-          }
-          case "bollinger-reversion" -> {
-            List<Double> window = tail(history, input.value(input.bollingerWindow(), 20));
-            double mean = average(window), deviation = Math.sqrt(window.stream().mapToDouble(value -> Math.pow(value - mean, 2)).average().orElse(0));
-            shouldBuy = previous < mean - deviation * input.value(input.bollingerMultiplier(), 2);
-            shouldSell = previous >= mean;
-          }
-          case "breakout" -> {
-            List<Double> window = tail(history, input.value(input.breakoutWindow(), 20) + 1);
-            double priorHigh = window.subList(0, window.size() - 1).stream().mapToDouble(Double::doubleValue).max().orElse(0);
-            shouldBuy = previous > priorHigh; shouldSell = previous < average(window);
-          }
-          default -> {
-            double recentHigh = tail(history, Math.min(lookback, 252)).stream().mapToDouble(Double::doubleValue).max().orElse(previous);
-            shouldBuy = previous <= recentHigh * (1 - input.value(input.drawdownBuyPercent(), 20) / 100);
-            shouldSell = active.costBasis > 0 && previous >= active.costBasis * (1 + input.value(input.profitSellPercent(), 20) / 100);
-          }
-        }
-        if (active.shares > 0 && shouldSell) sell(active, bar.close(), input.commissionRate().doubleValue(), taxRate);
-        else if (active.shares == 0 && shouldBuy) buy(active, bar.close(), input.commissionRate().doubleValue());
-      }
-      double dcaValue = dca.cash + dca.shares * bar.close(), activeValue = active.cash + active.shares * bar.close();
-      mark(dca, dcaValue, bar.date(), month, index, stride, bars.size());
-      mark(active, activeValue, bar.date(), month, index, stride, bars.size());
+    if (!Double.isFinite(taxRate)) throw BacktestException.input("交易稅率需為有限數值。");
+    return run(input, symbol, bars, BigDecimal.valueOf(taxRate));
+  }
+  public static List<StrategyResult> run(BacktestRequest input, String symbol, List<DailyBar> bars, BigDecimal taxRate) {
+    BacktestValidation.parameters(input); BacktestValidation.costs(input.commissionRate(), taxRate); BacktestValidation.bars(bars);
+    if (bars.size() < StrategySignals.minimumBars(input)) throw new BacktestException("INSUFFICIENT_DATA", "此期間只有 " + bars.size() + " 個交易日，資料不足以計算所選策略。", 422);
+    AccountingPortfolio dca = new AccountingPortfolio(), active = new AccountingPortfolio(), buyAndHold = new AccountingPortfolio();
+    YearMonth previousMonth = null;
+    for (int i = 0; i < bars.size(); i++) {
+      DailyBar bar = bars.get(i);
+      YearMonth month = YearMonth.from(bar.date());
+      boolean monthStart = !month.equals(previousMonth);
+      BigDecimal flow = i == 0 ? input.initialCapital() : monthStart ? input.monthlyContribution() : BigDecimal.ZERO;
+      dca.deposit(flow); active.deposit(flow);
+      buyAndHold.deposit(flow);
+      if (i == 0 || monthStart) dca.buy(null, bar.date(), bar.close(), input.commissionRate(), "DCA_FIRST_OBSERVED_BAR_OF_MONTH_V1");
+      if (i == 0) buyAndHold.buy(null, bar.date(), bar.close(), input.commissionRate(), "BUY_AND_HOLD_INITIAL_CAPITAL_FIRST_OBSERVED_CLOSE_V1");
+      StrategySignals.Signal signal = StrategySignals.at(input, bars, i - 1, active.averageCost());
+      if (active.shares > 0 && signal.sell()) active.sell(bars.get(i - 1).date(), bar.date(), bar.close(), input.commissionRate(), taxRate, signal.reason());
+      else if (active.shares == 0 && signal.buy()) active.buy(bars.get(i - 1).date(), bar.date(), bar.close(), input.commissionRate(), signal.reason());
+      dca.mark(bar.date(), bar.close(), flow); active.mark(bar.date(), bar.close(), flow);
+      buyAndHold.mark(bar.date(), bar.close(), flow); previousMonth = month;
     }
-    DailyBar last = bars.get(bars.size() - 1);
-    double years = Math.max(Duration.between(bars.get(0).date().atStartOfDay(), last.date().atStartOfDay()).toDays() / 365.2425, 1 / 365.2425);
-    String label = strategyLabel(input);
-    return List.of(finish(symbol + "-" + strategy, symbol + " · " + label, active, active.cash + active.shares * last.close(), years),
-        finish(symbol + "-dca", symbol + " · 定期定額", dca, dca.cash + dca.shares * last.close(), years));
+    double years = ChronoUnit.DAYS.between(bars.get(0).date(), bars.get(bars.size() - 1).date()) / 365.2425;
+    return List.of(finish(symbol + "-" + input.strategyOrDefault(), symbol + " · " + label(input), active, years),
+        finish(symbol + "-dca", symbol + " · 定期定額", dca, years),
+        finish(symbol + "-buy-and-hold", symbol + " · 買進持有（後續月投入保留現金）", buyAndHold, years));
   }
-
-  private static String strategyLabel(BacktestRequest in) {
-    return switch (in.strategyOrDefault()) {
-      case "ma-crossover" -> STRATEGY_NAMES[0] + " · " + in.fastWindow() + "/" + in.slowWindow() + " 日";
-      case "rsi-reversion" -> STRATEGY_NAMES[1] + " · RSI" + in.value(in.rsiWindow(), 14) + " < " + in.value(in.rsiBuyThreshold(), 30) + " 買 / > " + in.value(in.rsiSellThreshold(), 55) + " 賣";
-      case "bollinger-reversion" -> STRATEGY_NAMES[2] + " · " + in.value(in.bollingerWindow(), 20) + " 日 / " + in.value(in.bollingerMultiplier(), 2) + "σ";
-      case "breakout" -> STRATEGY_NAMES[3] + " · 突破 " + in.value(in.breakoutWindow(), 20) + " 日高點";
-      default -> STRATEGY_NAMES[4] + " · 回跌 " + in.value(in.drawdownBuyPercent(), 20) + "% 買 / 獲利 " + in.value(in.profitSellPercent(), 20) + "% 賣";
+  private static StrategyResult finish(String key, String name, AccountingPortfolio p, double years) {
+    BigDecimal ending = p.previousEquity, profit = ending.subtract(p.contributed);
+    double investedProfit = profit.divide(p.contributed, java.math.MathContext.DECIMAL128).multiply(BigDecimal.valueOf(100)).doubleValue();
+    Double twr = p.nav.subtract(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).doubleValue();
+    if (!Double.isFinite(twr)) { twr = null; p.metricWarnings.add("TWR_NUMERIC_RANGE"); }
+    double annualized = Math.expm1(Math.log(p.nav.doubleValue()) / years) * 100;
+    // Very short extreme-return fixtures can overflow annualization; this is explicitly unavailable, never infinity JSON.
+    Double reportedAnnualized = annualized;
+    if (!Double.isFinite(annualized)) { reportedAnnualized = null; p.metricWarnings.add("ANNUALIZATION_NUMERIC_RANGE"); }
+    Double realizedVolatility = annualizedRealizedVolatility(p.days.stream().map(day -> day.dailyReturn()).toList());
+    if (realizedVolatility == null && p.days.stream().map(day -> day.dailyReturn())
+        .filter(value -> value != null && Double.isFinite(value)).count() >= 2)
+      p.metricWarnings.add("REALIZED_VOLATILITY_NUMERIC_RANGE");
+    return new StrategyResult(key, name, ending, p.contributed, investedProfit, reportedAnnualized,
+        p.maxDrawdown.multiply(BigDecimal.valueOf(100)).doubleValue(), List.copyOf(p.points), profit, twr,
+        "DAILY_TWR_ACT_365_2425", List.copyOf(p.trades), List.copyOf(p.days), List.copyOf(p.metricWarnings), realizedVolatility);
+  }
+  /** Sample standard deviation of available daily percentage returns, annualized using 252 sessions. */
+  static Double annualizedRealizedVolatility(List<Double> dailyReturns) {
+    long count = 0;
+    double mean = 0, sumSquaredDifferences = 0;
+    for (Double value : dailyReturns) {
+      if (value == null || !Double.isFinite(value)) continue;
+      count++;
+      double difference = value - mean;
+      mean += difference / count;
+      sumSquaredDifferences += difference * (value - mean);
+    }
+    if (count < 2) return null;
+    double volatility = Math.sqrt(Math.max(0, sumSquaredDifferences / (count - 1))) * Math.sqrt(252);
+    return Double.isFinite(volatility) ? volatility : null;
+  }
+  private static String label(BacktestRequest r) {
+    return switch (r.strategyOrDefault()) {
+      case "ma-crossover" -> "雙均線交叉 · " + r.fastWindow() + "/" + r.slowWindow() + " 日";
+      case "rsi-reversion" -> "RSI 簡單滾動均值回歸（門檻狀態）";
+      case "bollinger-reversion" -> "布林通道回歸（母體標準差、門檻狀態）";
+      case "breakout" -> "前期最高收盤價突破";
+      default -> "前 252 日回跌買進 / 含費成本獲利賣出";
     };
-  }
-  private static void mark(Portfolio p, double value, LocalDate date, String month, int index, int stride, int size) {
-    p.peak = Math.max(p.peak, value);
-    if (p.peak > 0) p.maxDrawdown = Math.max(p.maxDrawdown, (p.peak - value) / p.peak);
-    if (index % stride == 0 || index == size - 1) p.points.add(new Point(month, Math.round(value)));
-  }
-  private static StrategyResult finish(String key, String name, Portfolio p, double value, double years) {
-    double total = p.contributed > 0 ? value / p.contributed * 100 - 100 : 0;
-    double annual = value > 0 && p.contributed > 0 ? (Math.pow(value / p.contributed, 1 / years) - 1) * 100 : -100;
-    return new StrategyResult(key, name, Math.round(value), Math.round(p.contributed), total, annual, p.maxDrawdown * 100, List.copyOf(p.points));
-  }
-  private static void buy(Portfolio p, double price, double fee) {
-    if (p.cash <= 0 || price <= 0) return;
-    double units = p.cash / (price * (1 + fee));
-    p.costBasis = (p.costBasis * p.shares + price * units) / (p.shares + units); p.cash = 0; p.shares += units;
-  }
-  private static void sell(Portfolio p, double price, double fee, double tax) {
-    if (p.shares <= 0) return;
-    p.cash += p.shares * price * (1 - fee - tax); p.shares = 0; p.costBasis = 0;
-  }
-  private static double average(List<Double> values) { return values.stream().mapToDouble(Double::doubleValue).average().orElse(0); }
-  private static List<Double> tail(List<Double> values, int count) { return values.subList(Math.max(0, values.size() - count), values.size()); }
-  private static double rsi(List<Double> values) {
-    double gain = 0, loss = 0;
-    for (int i = 1; i < values.size(); i++) { double change = values.get(i) - values.get(i - 1); gain += Math.max(change, 0); loss += Math.max(-change, 0); }
-    gain /= values.size() - 1; loss /= values.size() - 1;
-    if (loss == 0) return gain == 0 ? 50 : 100;
-    return 100 - 100 / (1 + gain / loss);
-  }
-  private static final class Portfolio {
-    double cash, shares, contributed, peak, maxDrawdown, costBasis; String previousMonth = ""; List<Point> points = new ArrayList<>();
   }
 }

@@ -1,0 +1,108 @@
+[
+  {
+    "id": "device-only-disclosure",
+    "status": "PASS",
+    "at": "2026-10-08T22:12:10.270Z",
+    "detail": "只保存在此裝置／瀏覽器，沒有登入或雲端同步；清除瀏覽器資料會刪除設定。僅保存表單參數，不保存行情或回測結果。"
+  },
+  {
+    "id": "save-v1-and-payload-whitelist",
+    "status": "PASS",
+    "at": "2026-10-08T22:12:10.274Z",
+    "detail": {
+      "fields": [
+        "symbols",
+        "symbolInput",
+        "strategy",
+        "fromYear",
+        "toYear",
+        "fast",
+        "slow",
+        "rsiWindow",
+        "rsiBuy",
+        "rsiSell",
+        "bollingerWindow",
+        "bollingerMultiplier",
+        "breakoutWindow",
+        "drawdownBuy",
+        "profitSell",
+        "monthly",
+        "initial",
+        "commission",
+        "tax"
+      ],
+      "rawBytes": 566
+    }
+  },
+  {
+    "id": "reload-load-v1",
+    "status": "PASS",
+    "at": "2026-10-08T22:12:10.490Z",
+    "detail": {
+      "strategy": "rsi-reversion",
+      "fromYear": "2020",
+      "toYear": "2024",
+      "rsiWindow": "12",
+      "rsiBuy": "28",
+      "rsiSell": "62",
+      "initialCapital": "234567",
+      "monthlyContribution": "12345",
+      "commissionRate": "0.15",
+      "sellTaxRate": "0.3"
+    }
+  },
+  {
+    "id": "v2-retains-v1-and-loads-both",
+    "status": "PASS",
+    "at": "2026-10-08T22:12:10.681Z",
+    "detail": {
+      "v1": "234567",
+      "v2": "345678",
+      "remainingVersions": [
+        1
+      ]
+    }
+  },
+  {
+    "id": "malformed-preserved-readonly",
+    "status": "PASS",
+    "at": "2026-10-08T22:12:11.086Z",
+    "detail": {
+      "alert": "無法讀取本機設定（資料格式無效、版本不支援或瀏覽器拒絕存取）。原有資料已保留；修復或匯出前不會寫入，以免覆蓋可恢復資料。",
+      "rawPreserved": true
+    }
+  },
+  {
+    "id": "unknown-schema-preserved-readonly",
+    "status": "PASS",
+    "at": "2026-10-08T22:12:11.230Z",
+    "detail": {
+      "rawPreserved": true
+    }
+  },
+  {
+    "id": "duplicate-version-ids-preserved-readonly",
+    "status": "PASS",
+    "at": "2026-10-08T22:12:11.292Z",
+    "detail": {
+      "duplicateVersionId": "ver-1",
+      "versionCount": 2,
+      "rawPreserved": true,
+      "saveDisabled": true,
+      "deleteControls": 0,
+      "alert": "無法讀取本機設定（資料格式無效、版本不支援或瀏覽器拒絕存取）。原有資料已保留；修復或匯出前不會寫入，以免覆蓋可恢復資料。"
+    }
+  },
+  {
+    "id": "viewport-and-runtime-errors",
+    "status": "PASS",
+    "at": "2026-10-08T22:12:11.359Z",
+    "detail": {
+      "viewport": {
+        "innerWidth": 390,
+        "scrollWidth": 390
+      },
+      "pageErrors": []
+    }
+  }
+]

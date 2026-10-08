@@ -1,0 +1,48 @@
+{
+  "evidenceLabels": [
+    "BROWSER_RUNTIME",
+    "AUTOMATED_TEST"
+  ],
+  "runtimeIdentity": "/root/m1_catalog_browser",
+  "taskId": "M1-CATALOG-BROWSER",
+  "browser": {
+    "name": "Google Chrome",
+    "version": "154.0.8037.98",
+    "headless": true
+  },
+  "host": {
+    "os": "darwin",
+    "release": "25.6.0",
+    "macOS": "26.6",
+    "arch": "arm64"
+  },
+  "viewport": {
+    "width": 1440,
+    "height": 1100
+  },
+  "target": "http://127.0.0.1:18082",
+  "backend": "http://127.0.0.1:14202",
+  "syntheticUpstream": "http://127.0.0.1:19082",
+  "fixtureOnly": true,
+  "liveMarketData": false,
+  "artifactHashes": {
+    "company-search-attribution.png": "2134dfca84520d67fe3657fd05b9cd9c231bdb328498a2bea72ae8a761902f65",
+    "selected-company.png": "03e772bb002a506a0ce405a53be20b853acc0c9f7829ae12cb7d5745e8ebcbc8",
+    "latest-query-result.png": "57e571cac70879b286cc09242744b5f7598ca41c5ca025878cac27117c5ae22f",
+    "catalog-trace.zip": "5d564f74cc365cca9b708c4402d158ad9813531194725620659477d814fd5296"
+  },
+  "upstreamRequests": [
+    {
+      "path": "/company",
+      "at": "2026-10-08T22:11:47.590Z"
+    },
+    {
+      "path": "/fund",
+      "at": "2026-10-08T22:11:47.804Z"
+    }
+  ],
+  "expectedConsoleErrors": [
+    "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+  ],
+  "unexpectedConsoleErrors": []
+}

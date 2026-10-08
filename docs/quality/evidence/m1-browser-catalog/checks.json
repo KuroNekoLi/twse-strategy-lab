@@ -1,0 +1,90 @@
+[
+  {
+    "name": "Code search, transient loading, rendered result and company label",
+    "status": "PASS",
+    "detail": {
+      "query": "2330",
+      "row": "2330\n台積電\n上市公司 · 出表 2026-10-08\n加入",
+      "loadingCleared": true
+    }
+  },
+  {
+    "name": "Source/license attribution and limitations",
+    "status": "PASS",
+    "detail": {
+      "provenance": "目錄來源與限制\n上市公司基本資料\n· 臺灣證券交易所\n更新頻率：MONTHLY；來源出表：2026-10-08 至 2026-10-08；取得時間：2026-10-08T22:11:47.802019Z；快取：900 秒。\n授權：政府資料開放授權條款第1版（OGDL v1.0） · 授權說明 · 資料集\n基金基本資料\n· 臺灣證券交易所\n更新頻率：MONTHLY；來源出表：2026-10-08 至 2026-10-08；取得時間：2026-10-08T22:11:47.987873Z；快取：900 秒。\n授權：政府資料開放授權條款第1版（OGDL v1.0） · 授權說明 · 資料集\n來源公布更新頻率為每月；fetchedAt 只代表取得時間，asOf 為來源出表日期，快取不保證資料即時或完整。\n只保留代碼、名稱、來源類型與出表日期；未回傳公司聯絡資料或個人欄位。\nFUND 表示基金基本資料來源，未將所有基金推定為 ETF；名錄存在不保證本平台行情或回測可用。\n停牌、上市／下市生命週期與公司行動仍未驗證；此名錄不解除回測發布阻擋。",
+      "links": [
+        {
+          "text": "授權說明",
+          "href": "https://data.gov.tw/license"
+        },
+        {
+          "text": "資料集",
+          "href": "https://data.gov.tw/dataset/18419"
+        },
+        {
+          "text": "授權說明",
+          "href": "https://data.gov.tw/license"
+        },
+        {
+          "text": "資料集",
+          "href": "https://data.gov.tw/dataset/157399"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Duplicate is disabled with clear status",
+    "status": "PASS",
+    "detail": {
+      "button": "已加入",
+      "disabled": true
+    }
+  },
+  {
+    "name": "Name search and selectable 4–6 digit code",
+    "status": "PASS",
+    "detail": {
+      "selected": "0050\n×\n2603\n×",
+      "before": "2603\n長榮\n上市公司 · 出表 2026-10-08\n加入"
+    }
+  },
+  {
+    "name": "Alphanumeric fund is disabled with incompatibility explanation",
+    "status": "PASS",
+    "detail": {
+      "row": "00400A\n合成主動基金A\n基金目錄 · 出表 2026-10-08\n不支援\n代碼格式不相容：目前行情與回測只接受 4 至 6 位數字代碼。",
+      "disabled": true
+    }
+  },
+  {
+    "name": "Maximum count is enforced",
+    "status": "PASS",
+    "detail": {
+      "selected": "0050\n×\n2603\n×\n2882\n×",
+      "fourthButton": "已達上限"
+    }
+  },
+  {
+    "name": "Empty result state",
+    "status": "PASS",
+    "detail": {
+      "empty": "沒有符合的目錄項目。"
+    }
+  },
+  {
+    "name": "Error state is visible and stale results are cleared",
+    "status": "PASS",
+    "detail": {
+      "error": "標的目錄查詢失敗，請稍後重試。",
+      "staleResults": 0
+    }
+  },
+  {
+    "name": "Out-of-order old response cannot replace current results",
+    "status": "PASS",
+    "detail": {
+      "query": "2603\n新查詢結果\n上市公司 · 出表 2026-10-08\n已加入\n\n最多顯示 1 / 1 筆符合項目。\n\n目錄來源與限制"
+    }
+  }
+]

@@ -11,13 +11,13 @@ Angular 前端、Spring Boot API 的台股策略回測作品。前端部署在 G
 
 ## 本機啟動
 
-需求：Node.js 22、Java 17 以上、Maven 3.6.3 以上。
+需求：Node.js 22、Java 17 以上。專案附 Maven Wrapper（Maven 3.9.11），不必安裝系統 Maven。
 
 啟動 API：
 
 ```sh
 cd backend
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 啟動 Angular：
@@ -48,4 +48,22 @@ npm start
 
 ## 回測限制
 
-目前資料來源為 TWSE `STOCK_DAY` 日收盤價（2010 年起、每次最長 17 年）；最多比較 3 檔。結果不含配息、滑價與券商最低手續費。歷史模擬僅供研究，不構成投資建議。
+目前資料來源為 TWSE `STOCK_DAY` 原始日收盤價（2010 年起、每次最長 17 年）；最多比較 3 檔。使用下一筆觀察資料的收盤代理計價，不代表真實可成交價格。結果不含股利、公司行動調整、滑價與券商最低手續費；未取得可靠交易日曆時，不保證已識別停牌或缺漏。歷史模擬僅供研究，不構成投資建議。
+
+## M0 基礎與驗證
+
+本次範圍與驗收見 [M0_SCOPE](docs/product/M0_SCOPE.md)。引擎／API 規格、行情來源與授權盤點分別位於 `docs/specifications/`；固定行情情境及交付證據位於 `docs/quality/`。市場資料的授權、公司行動與交易日曆關卡尚未清除，工程測試通過不代表可以公開提供完整含息績效。
+
+```sh
+cd backend
+./mvnw verify
+```
+
+```sh
+cd frontend
+npm ci
+npm run typecheck
+npm run build
+```
+
+固定測試使用合成行情與獨立手算預期，無需連線 TWSE。後端 CI 執行 `verify`，包含測試與打包；瀏覽器的合成上游證據和官方活行情來源檢查分開記錄。行情 hash 用來辨識本次資料；未封存活行情快照時，不能保證將來重取結果完全相同。

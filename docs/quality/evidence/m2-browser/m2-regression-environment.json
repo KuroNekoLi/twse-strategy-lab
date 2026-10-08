@@ -1,0 +1,51 @@
+{
+  "taskId": "M2-DUPLICATE-ID-REGRESSION",
+  "runtimeIdentity": "/root/m2_browser_regression",
+  "labels": [
+    "BROWSER_RUNTIME",
+    "AUTOMATED_TEST"
+  ],
+  "browser": {
+    "name": "Google Chrome",
+    "version": "154.0.8037.98",
+    "channel": "chrome",
+    "headless": true
+  },
+  "platform": {
+    "os": "darwin",
+    "release": "25.6.0",
+    "arch": "arm64",
+    "node": "v22.22.3"
+  },
+  "target": {
+    "url": "http://127.0.0.1:14212",
+    "build": "Angular production build frontend/dist/pages/browser",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1
+    },
+    "nativeDevice": false
+  },
+  "checks": {
+    "passed": 8,
+    "failed": 0
+  },
+  "artifacts": {
+    "screenshots": [
+      "m2-regression-mobile.png",
+      "m2-malformed-readonly.png",
+      "m2-duplicate-id-readonly.png"
+    ]
+  },
+  "frontendHashes": {
+    "config.js": "155a78541cdac895cb598f23a7554971baa70ea76f3f266e7205c9bf42ad2658",
+    "main-PCLU2NC4.js": "4700c6c378d72975df736512427f69a51c7fead71ea662239aea42201427f119",
+    "polyfills-LVNOU2XZ.js": "f1b35a3b4db37b73ca0281d6b6247701465ff9e56a7a7b3aff9784518dc2c30a",
+    "styles-QBMPNEMF.css": "1821e523f6e9fdca42f2fad08c51b72bf78564dac6867f9436abd2c4be9b4c88"
+  },
+  "limitations": [
+    "Web browser viewport only; not Android/iOS simulator or physical device.",
+    "Local browser storage only; no live market-data/catalog API calls."
+  ]
+}

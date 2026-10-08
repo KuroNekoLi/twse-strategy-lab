@@ -1,0 +1,31 @@
+{
+  "status": "PREPARED_NOT_EXECUTED",
+  "taskId": "M0-BROWSER",
+  "runtimeIdentity": "/root/m0_browser",
+  "root": "/Users/linli/dev_spring-boot/twse-strategy-lab",
+  "jar": "/Users/linli/dev_spring-boot/twse-strategy-lab/backend/target/twse-strategy-lab-api-1.0.0.jar",
+  "dist": "/Users/linli/dev_spring-boot/twse-strategy-lab/frontend/dist/pages/browser",
+  "java": "/Library/Java/JavaVirtualMachines/amazon-corretto-17.jdk/Contents/Home/bin/java",
+  "playwright": "/Users/linli/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.js",
+  "portsCheckedFree": {
+    "upstream": 19081,
+    "api": 18081,
+    "frontend": 14201
+  },
+  "node": "v22.22.3",
+  "plannedViewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "date": "2026-10-08T17:13:09.406Z"
+}

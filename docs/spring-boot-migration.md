@@ -58,12 +58,16 @@ Angular 前端使用 `POST /api/v1/backtests` 呼叫 Spring Boot。Pages 僅託�
 
 每個標的回傳所選策略和定期定額兩組結果。錯誤回應格式為 `{ "error": "說明" }`。CORS 來源由 `CORS_ALLOWED_ORIGIN_PATTERNS` 設定。
 
+M0 保留以上欄位，追加可追溯的版本、資料識別、請求期間、限制、成交與每日帳務。錯誤保留 `error` 並追加 `code`。精確欄位與計算定義以 [API_CONTRACT](specifications/API_CONTRACT.md) 與 [BACKTEST_ENGINE_SPEC](specifications/BACKTEST_ENGINE_SPEC.md) 為準；此處的舊版回應例只呈現相容欄位，不代表完整 M0 回應。
+
 ## 計算與資料處理
 
 - `BacktestController` 接收 JSON，`BacktestService` 驗證期間、策略與標的並協調資料和計算。
-- `TwseMarketDataClient` 呼叫 TWSE `STOCK_DAY`，處理民國日期和 TWSE 307 轉址；每次最多三個月份並行，僅允許 HTTPS 的 `twse.com.tw` 網域轉址。
-- `BacktestEngine` 使用昨日已完成行情產生訊號，並以當日收盤價模擬成交。計算雙均線、RSI、布林通道、突破及回跌／報酬門檻策略，也提供每月定期定額基準。
-- 0050 於 2025-06-18 進行 1 拆 4；已將此日前的日收盤價除以 4。結果不含配息、滑價和券商最低手續費。
+- `TwseMarketDataClient` 呼叫 TWSE `STOCK_DAY`，處理民國日期和 TWSE 307 轉址；每次最多三個月份並行，僅允許 HTTPS 的 `twse.com.tw` 網域轉址。無效資料與空月份不再靜默略過；仍缺乏可證明逐日完整性的交易日曆與停牌資料。
+- `BacktestEngine` 使用前一筆已完成觀察資料產生訊號，以下一筆觀察資料收盤作 `NEXT_CLOSE_PROXY` 假設性計價。計算五種策略並提供每月定期定額基準；訊號、整數股數、費用、剩餘現金與每日資產均可追蹤。此模式不保證真實委託可在該價格成交。
+- 使用原始未調整收盤價；移除原本對 0050 的固定除以 4 特例。未處理股利及公司行動，不能宣稱完整含息總報酬。滑價、最低手續費、交易日曆與特殊商品規則亦未支援，發布關卡為 `BLOCKED`。
+- `totalReturn` 是損益／總投入比率；`timeWeightedReturn` 是排除外部投入直接影響的每日 TWR；年化與最大回撤依 TWR 口徑。金額採十進位與明確捨入，詳細公式見引擎規格。
+- 活行情 SHA256 識別本次消費的資料，未封存原始資料時僅為 `IDENTIFIED_NOT_ARCHIVED`，不能保證日後重取同樣資料。固定合成行情測試的重播證據另列於 [GOLDEN_TEST_FIXTURES](quality/GOLDEN_TEST_FIXTURES.md)。
 
 ## 後端部署環境變數
 

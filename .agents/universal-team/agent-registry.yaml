@@ -1,0 +1,138 @@
+version: 1
+roles:
+  - id: project-orchestrator
+    skill: .agents/skills/project-orchestrator/SKILL.md
+    invoke_when: "Every substantial request; convenes specialists and reports outcome"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: product-manager
+    skill: .agents/skills/product-manager/SKILL.md
+    invoke_when: "User outcome, feature prioritization, acceptance, or roadmap implications"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: software-architect
+    skill: .agents/skills/software-architect/SKILL.md
+    invoke_when: "Cross-module, API, data, compatibility, or nonfunctional design impact"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: software-developer
+    skill: .agents/skills/software-developer/SKILL.md
+    invoke_when: "Implementation is explicitly in scope"
+    write_scope: "paths explicitly assigned in handoff"
+  - id: code-reviewer
+    skill: .agents/skills/code-reviewer/SKILL.md
+    invoke_when: "Independent review after a meaningful code change; never author of reviewed diff"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: qa-engineer
+    skill: .agents/skills/qa-engineer/SKILL.md
+    invoke_when: "Behavioral verification or acceptance criteria require evidence"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: ui-ux-director
+    skill: .agents/skills/ui-ux-director/SKILL.md
+    invoke_when: "User journey, interaction, interface or visual design changes"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: security-reviewer
+    skill: .agents/skills/security-reviewer/SKILL.md
+    invoke_when: "Identity, permissions, data sensitivity, trust boundaries, network, dependencies"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: idea-facilitator
+    skill: .agents/skills/idea-facilitator/SKILL.md
+    invoke_when: "Problem is vague, opportunity exploration, or user asks to brainstorm"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: market-researcher
+    skill: .agents/skills/market-researcher/SKILL.md
+    invoke_when: "Category, competitor, demand, trend, or external factual claims affect decision"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: user-researcher
+    skill: .agents/skills/user-researcher/SKILL.md
+    invoke_when: "User evidence, supplied feedback, discovery study, or usability validation needed"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: marketing-strategist
+    skill: .agents/skills/marketing-strategist/SKILL.md
+    invoke_when: "Positioning, pricing communication, channel, brand, acquisition or launch impact"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: growth-experiment-designer
+    skill: .agents/skills/growth-experiment-designer/SKILL.md
+    invoke_when: "Uncertain behavior can be tested with a measurable, safe experiment"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: operations-strategist
+    skill: .agents/skills/operations-strategist/SKILL.md
+    invoke_when: "Ongoing workload, support, vendor, policy, business process, service readiness"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: business-analyst
+    skill: .agents/skills/business-analyst/SKILL.md
+    invoke_when: "Multiple stakeholders, rules, workflow or business requirements need traceability"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: finance-analyst
+    skill: .agents/skills/finance-analyst/SKILL.md
+    invoke_when: "Budget, costs, revenue, pricing or unit economics materially affect choice"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: decision-challenger
+    skill: .agents/skills/decision-challenger/SKILL.md
+    invoke_when: "A consequential proposal needs independent assumption, downside, status-quo, or option stress-testing"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: database-engineer
+    skill: .agents/skills/database-engineer/SKILL.md
+    invoke_when: "Schema, migration, integrity, datastore performance, or backup/restore implications"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: privacy-engineer
+    skill: .agents/skills/privacy-engineer/SKILL.md
+    invoke_when: "Personal or sensitive data processing, consent, retention, sharing, analytics, or deletion"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: frontend-developer
+    skill: .agents/skills/frontend-developer/SKILL.md
+    invoke_when: "Browser-based UI implementation in scope"
+    write_scope: "paths explicitly assigned in handoff"
+  - id: backend-developer
+    skill: .agents/skills/backend-developer/SKILL.md
+    invoke_when: "Service, API, business logic or server change in scope"
+    write_scope: "paths explicitly assigned in handoff"
+  - id: mobile-developer
+    skill: .agents/skills/mobile-developer/SKILL.md
+    invoke_when: "Native/cross-platform mobile client change in scope"
+    write_scope: "paths explicitly assigned in handoff"
+  - id: test-automation-engineer
+    skill: .agents/skills/test-automation-engineer/SKILL.md
+    invoke_when: "Automated regression coverage is needed or test harness changes"
+    write_scope: "paths explicitly assigned in handoff"
+  - id: devops-engineer
+    skill: .agents/skills/devops-engineer/SKILL.md
+    invoke_when: "CI/CD, deployment config or infrastructure modifications are in scope"
+    write_scope: "paths explicitly assigned in handoff"
+  - id: site-reliability-engineer
+    skill: .agents/skills/site-reliability-engineer/SKILL.md
+    invoke_when: "SLO, resilience, observability, capacity or operational readiness matter"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: performance-engineer
+    skill: .agents/skills/performance-engineer/SKILL.md
+    invoke_when: "Latency, throughput, resource use or perceived speed is material"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: accessibility-reviewer
+    skill: .agents/skills/accessibility-reviewer/SKILL.md
+    invoke_when: "Changed or proposed user flow needs accessibility review"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: release-manager
+    skill: .agents/skills/release-manager/SKILL.md
+    invoke_when: "Release planning, migration, rollout, version or go/no-go coordination"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: technical-writer
+    skill: .agents/skills/technical-writer/SKILL.md
+    invoke_when: "User, API, operator or developer documentation changes"
+    write_scope: "paths explicitly assigned in handoff"
+  - id: data-analyst
+    skill: .agents/skills/data-analyst/SKILL.md
+    invoke_when: "Product/business metrics, funnels, cohorts, trend claims, or baseline evidence affect a decision"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: data-engineer
+    skill: .agents/skills/data-engineer/SKILL.md
+    invoke_when: "Event schemas, warehouse, pipeline, data quality or analytical instrumentation"
+    write_scope: "paths explicitly assigned in handoff"
+  - id: integration-engineer
+    skill: .agents/skills/integration-engineer/SKILL.md
+    invoke_when: "Third-party, vendor, SDK, webhook or cross-service contract in scope"
+    write_scope: "paths explicitly assigned in handoff"
+  - id: incident-responder
+    skill: .agents/skills/incident-responder/SKILL.md
+    invoke_when: "Active incident analysis or recovery readiness"
+    write_scope: "read-only unless implementation is specifically assigned"
+  - id: device-browser-tester
+    skill: .agents/skills/device-browser-tester/SKILL.md
+    invoke_when: "User-visible web/browser flow, cross-browser coverage, native mobile emulator/simulator, device, or runtime UI evidence is requested"
+    write_scope: "read-only unless test artifacts are specifically assigned"

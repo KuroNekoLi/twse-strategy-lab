@@ -1,0 +1,7 @@
+{
+  "status": 400,
+  "body": {
+    "error": "回測日期格式不正確；請使用 YYYY-MM-DD。",
+    "code": "INVALID_INPUT"
+  }
+}

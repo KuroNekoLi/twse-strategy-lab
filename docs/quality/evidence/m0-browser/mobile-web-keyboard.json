@@ -1,0 +1,87 @@
+{
+  "focusPath": [
+    {
+      "tag": "INPUT",
+      "name": "輸入台股代碼",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": "加入",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": "0056 高股息",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": "2330 台積電",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    },
+    {
+      "tag": "SELECT",
+      "name": "起始年度",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    },
+    {
+      "tag": "SELECT",
+      "name": "結束年度",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    },
+    {
+      "tag": "SELECT",
+      "name": "strategy",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    },
+    {
+      "tag": "INPUT",
+      "name": "短均線觀察資料筆數",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    },
+    {
+      "tag": "INPUT",
+      "name": "長均線觀察資料筆數",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    },
+    {
+      "tag": "INPUT",
+      "name": "起始投入金額",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    },
+    {
+      "tag": "INPUT",
+      "name": "每月投入金額",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    },
+    {
+      "tag": "SUMMARY",
+      "name": "交易成本假設 佣金與證交稅",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    },
+    {
+      "tag": "BUTTON",
+      "name": "執行策略回測",
+      "outline": "solid",
+      "outlineWidth": "2px"
+    }
+  ],
+  "tableScroll": {
+    "before": 0,
+    "after": 32,
+    "needsScroll": true
+  }
+}

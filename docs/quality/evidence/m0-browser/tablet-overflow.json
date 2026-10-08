@@ -1,0 +1,20 @@
+{
+  "viewport": 768,
+  "body": 768,
+  "document": 768,
+  "regions": [
+    {
+      "label": "逐檔資料期間，可左右捲動",
+      "client": 344,
+      "scroll": 490,
+      "overflowX": "auto"
+    },
+    {
+      "label": "策略績效，可左右捲動",
+      "client": 344,
+      "scroll": 826,
+      "overflowX": "auto"
+    }
+  ],
+  "escaping": []
+}

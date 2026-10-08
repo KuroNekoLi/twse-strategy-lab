@@ -1,0 +1,82 @@
+{
+  "taskId": "M1-BROWSER",
+  "runtimeIdentity": "/root/m1_browser",
+  "evidenceLabels": [
+    "BROWSER_RUNTIME",
+    "AUTOMATED_TEST"
+  ],
+  "startedAt": "2026-10-08T21:58:07.212Z",
+  "browser": {
+    "name": "Google Chrome",
+    "version": "154.0.8037.98",
+    "channel": "chrome",
+    "headless": true
+  },
+  "platform": {
+    "os": "darwin",
+    "release": "25.6.0",
+    "arch": "arm64",
+    "node": "v22.22.3",
+    "javaVersion": "openjdk version \"17.0.15\" 2025-04-15 LTS\nOpenJDK Runtime Environment Corretto-17.0.15.6.1 (build 17.0.15+6-LTS)\nOpenJDK 64-Bit Server VM Corretto-17.0.15.6.1 (build 17.0.15+6-LTS, mixed mode, sharing)"
+  },
+  "build": {
+    "jarSha256": "937a413eca47d0002afca3ef7d278a6f7f8b1b34bb56a8a6e83919a53358b2aa",
+    "indexSha256": "36f474c4c737209cab4c2865ee52a603fb312275cee32393c8cb5ef8ad4d4cc3",
+    "files": {
+      "config.js": "155a78541cdac895cb598f23a7554971baa70ea76f3f266e7205c9bf42ad2658",
+      "main-GORVYZH4.js": "794772e747c02c4b55d51b87ebfcb8e7c2e229fc967e63d0a462ec0d099689bc",
+      "polyfills-LVNOU2XZ.js": "f1b35a3b4db37b73ca0281d6b6247701465ff9e56a7a7b3aff9784518dc2c30a",
+      "styles-YI7KXW4V.css": "c6ddcbbdce53bd78f44fdd750bbb3d0e0a33383387685c0bfc3d5d8f419c6d96"
+    },
+    "postRunJarSha256": "937a413eca47d0002afca3ef7d278a6f7f8b1b34bb56a8a6e83919a53358b2aa",
+    "jarUnchangedDuringRun": true
+  },
+  "urls": {
+    "frontend": "http://127.0.0.1:14201",
+    "api": "http://127.0.0.1:18081",
+    "upstream": "http://127.0.0.1:19081/STOCK_DAY"
+  },
+  "synthetic": true,
+  "caveat": "Generated weekday closes; no live TWSE requests or authoritative trading calendar. Mobile web viewport only; no native simulator/physical device/user research.",
+  "viewportRuns": [
+    {
+      "name": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "mode": "WEB_VIEWPORT",
+      "screenshot": "desktop-result-details.png",
+      "trace": "desktop-trace.zip"
+    },
+    {
+      "name": "tablet",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "mode": "WEB_VIEWPORT",
+      "screenshot": "tablet-result-details.png",
+      "trace": "tablet-trace.zip"
+    },
+    {
+      "name": "mobile-web",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "mode": "WEB_VIEWPORT",
+      "screenshot": "mobile-web-result-details.png",
+      "trace": "mobile-web-trace.zip"
+    }
+  ],
+  "finishedAt": "2026-10-08T21:58:32.175Z",
+  "summary": {
+    "passed": 39,
+    "failed": 0
+  },
+  "runtimeOverrides": {
+    "configJs": "window.APP_CONFIG = {apiBaseUrl: 'http://127.0.0.1:18081'};",
+    "configurationFileModified": false
+  }
+}

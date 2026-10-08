@@ -10,20 +10,22 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import uk.kuronekoli.strategylab.api.BacktestException;
+import uk.kuronekoli.strategylab.backtest.BacktestValidation;
 
 @Component
 public class TwseMarketDataClient {
   private static final Logger log = LoggerFactory.getLogger(TwseMarketDataClient.class);
   private final JsonMapper mapper;
   private final URI endpoint;
-  private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
+  private final HttpClient http = HttpClient.newBuilder().connectTimeout(java.time.Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NEVER).build();
   public TwseMarketDataClient(JsonMapper mapper, @Value("${app.twse.base-url}") String endpoint) {
     this.mapper = mapper; this.endpoint = URI.create(endpoint);
   }
@@ -37,7 +39,8 @@ public class TwseMarketDataClient {
       bars.addAll(batch);
       if (!groupStart.plusMonths(3).isAfter(last)) try { Thread.sleep(120); } catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new IllegalStateException("行情請求已中斷。", e); }
     }
-    return bars.stream().sorted(Comparator.comparing(DailyBar::date)).toList();
+    BacktestValidation.bars(bars);
+    return List.copyOf(bars);
   }
 
   private List<DailyBar> loadMonth(String symbol, YearMonth month) {
@@ -47,7 +50,7 @@ public class TwseMarketDataClient {
     URI uri = URI.create(endpoint.toString() + query);
     try {
       HttpResponse<String> response = fetch(uri);
-      if (response.statusCode() < 200 || response.statusCode() >= 300) throw new IllegalStateException("證交所行情服務回應 " + response.statusCode() + "（" + month + "）。");
+      if (response.statusCode() < 200 || response.statusCode() >= 300) throw BacktestException.upstream(symbol + "／" + month + "：證交所行情服务回應 " + response.statusCode() + "。");
       JsonNode root;
       try {
         root = mapper.readTree(response.body());
@@ -60,23 +63,9 @@ public class TwseMarketDataClient {
             response.body().length(), response.body().isEmpty() ? "empty" : response.body().substring(0, 1), e);
         throw e;
       }
-      String stat = root.path("stat").asText("");
-      if (!"OK".equals(stat)) {
-        if (stat.isBlank() || stat.matches(".*(查詢日期小於|查詢日期大於|查無資料|無符合).*")) return List.of();
-        throw new IllegalStateException("證交所暫時無法提供 " + month + " 的行情：" + stat);
-      }
-      List<DailyBar> rows = new ArrayList<>();
-      for (JsonNode row : root.path("data")) {
-        if (row.size() < 7) continue;
-        String[] dateParts = row.get(0).asText().trim().split("/");
-        if (dateParts.length != 3) continue;
-        int year = Integer.parseInt(dateParts[0].trim()); if (year < 1911) year += 1911;
-        int monthNumber = Integer.parseInt(dateParts[1].trim());
-        int day = Integer.parseInt(dateParts[2].trim());
-        double close = Double.parseDouble(row.get(6).asText().replace(",", "").trim());
-        if (close > 0) rows.add(new DailyBar(LocalDate.of(year, monthNumber, day), close));
-      }
-      return rows;
+      return parseMonthResponse(symbol, month, root);
+    } catch (BacktestException e) {
+      throw e;
     } catch (IllegalStateException e) {
       log.warn("TWSE data request failed: symbol={}, month={}, exceptionType={}, reason={}",
           symbol, month, e.getClass().getName(), e.getMessage());
@@ -85,8 +74,38 @@ public class TwseMarketDataClient {
       Throwable root = rootCause(e);
       log.warn("TWSE data request failed: symbol={}, month={}, exceptionType={}, rootCauseType={}, rootCauseReason={}",
           symbol, month, e.getClass().getName(), root.getClass().getName(), root.getMessage(), e);
-      throw new IllegalStateException("無法讀取證交所 " + month + " 行情，請稍後再試。", e);
+      if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+      throw BacktestException.upstream(symbol + "／" + month + "：無法讀取證交所行情，請稍後再試。");
     }
+  }
+
+  /** Strict package-visible parser allows offline synthetic provider-shape tests. */
+  List<DailyBar> parseMonthResponse(String symbol, YearMonth month, JsonNode root) {
+    String context = symbol + "／" + month + "：";
+    if (root == null || !root.isObject() || !root.path("stat").isTextual() || !"OK".equals(root.path("stat").asText()))
+      throw new BacktestException("UPSTREAM_MONTH_STATUS_UNKNOWN", context + "行情狀態非 OK；上市、停牌及缺漏原因未知，已停止計算。", 502);
+    JsonNode data = root.path("data");
+    if (!data.isArray() || data.isEmpty()) throw new BacktestException("UPSTREAM_EMPTY_MONTH", context + "月份資料為空或格式不正確，已停止計算。", 502);
+    if (data.size() > 31) throw BacktestException.data(context + "月份行情筆數超出上限。");
+    List<DailyBar> rows = new ArrayList<>();
+    for (JsonNode row : data) {
+      try {
+        if (!row.isArray() || row.size() < 7 || !row.get(0).isTextual() || !row.get(6).isTextual()) throw new IllegalArgumentException("row shape");
+        String dateText = row.get(0).asText().trim();
+        if (!dateText.matches("\\d{2,4}/\\d{1,2}/\\d{1,2}")) throw new IllegalArgumentException("date shape");
+        String[] dateParts = dateText.split("/");
+        int year = Integer.parseInt(dateParts[0]); if (year < 1911) year += 1911;
+        LocalDate date = LocalDate.of(year, Integer.parseInt(dateParts[1]), Integer.parseInt(dateParts[2]));
+        if (!YearMonth.from(date).equals(month)) throw new IllegalArgumentException("wrong month");
+        String price = row.get(6).asText().trim();
+        if (!price.matches("(?:\\d+|\\d{1,3}(?:,\\d{3})+)(?:\\.\\d+)?")) throw new IllegalArgumentException("price shape");
+        rows.add(new DailyBar(date, new BigDecimal(price.replace(",", ""))));
+      } catch (RuntimeException e) {
+        throw BacktestException.data(context + "行情列含無效日期或收盤價；不跳過錯誤列，已停止計算。");
+      }
+    }
+    try { BacktestValidation.bars(rows); } catch (BacktestException e) { throw BacktestException.data(context + e.getMessage()); }
+    return List.copyOf(rows);
   }
 
   private Throwable rootCause(Throwable error) {

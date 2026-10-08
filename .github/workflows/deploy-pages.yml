@@ -64,8 +64,9 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: maven
-      - name: Compile Spring Boot API
-        run: mvn --batch-mode -f backend/pom.xml -DskipTests package
+      - name: Test and package Spring Boot API
+        run: ./mvnw --batch-mode verify
+        working-directory: backend
 
   deploy:
     if: github.event_name != 'pull_request'

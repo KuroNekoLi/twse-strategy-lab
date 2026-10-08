@@ -1,0 +1,545 @@
+[
+  {
+    "id": "desktop-empty",
+    "description": "Initial empty state and disclosures render",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:07.957Z",
+    "evidence": []
+  },
+  {
+    "id": "desktop-invalid-year",
+    "description": "Reversed year range disables execution",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:08.088Z",
+    "evidence": []
+  },
+  {
+    "id": "desktop-invalid-amount",
+    "description": "Invalid input disables execution without API request",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:08.212Z",
+    "evidence": []
+  },
+  {
+    "id": "desktop-ma-crossover",
+    "description": "Real backend success, loading and results",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:08.280Z",
+    "detail": {
+      "status": 200,
+      "resultCount": 3,
+      "trades": [
+        12,
+        12,
+        1
+      ],
+      "commissionRate": 0.001425
+    },
+    "evidence": [
+      "desktop-ma-crossover-api.json"
+    ]
+  },
+  {
+    "id": "desktop-rsi-reversion",
+    "description": "Real backend success, loading and results",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:09.736Z",
+    "detail": {
+      "status": 200,
+      "resultCount": 3,
+      "trades": [
+        13,
+        12,
+        1
+      ],
+      "commissionRate": 0.001425
+    },
+    "evidence": [
+      "desktop-rsi-reversion-api.json"
+    ]
+  },
+  {
+    "id": "desktop-bollinger-reversion",
+    "description": "Real backend success, loading and results",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:10.954Z",
+    "detail": {
+      "status": 200,
+      "resultCount": 3,
+      "trades": [
+        13,
+        12,
+        1
+      ],
+      "commissionRate": 0.001425
+    },
+    "evidence": [
+      "desktop-bollinger-reversion-api.json"
+    ]
+  },
+  {
+    "id": "desktop-breakout",
+    "description": "Real backend success, loading and results",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:12.170Z",
+    "detail": {
+      "status": 200,
+      "resultCount": 3,
+      "trades": [
+        14,
+        12,
+        1
+      ],
+      "commissionRate": 0.001425
+    },
+    "evidence": [
+      "desktop-breakout-api.json"
+    ]
+  },
+  {
+    "id": "desktop-drawdown-entry",
+    "description": "Real backend success, loading and results",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:13.314Z",
+    "detail": {
+      "status": 200,
+      "resultCount": 3,
+      "trades": [
+        1,
+        12,
+        1
+      ],
+      "commissionRate": 0.001425
+    },
+    "evidence": [
+      "desktop-drawdown-entry-api.json"
+    ]
+  },
+  {
+    "id": "desktop-labels-and-provenance",
+    "description": "Money/TWR, requested/actual dates, restrictions and ledger display",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:14.421Z",
+    "evidence": [
+      "desktop-result-details.png"
+    ]
+  },
+  {
+    "id": "desktop-overflow",
+    "description": "Horizontal overflow contained in designated scroll regions",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:14.827Z",
+    "detail": {
+      "viewport": 1440,
+      "body": 1440,
+      "document": 1440,
+      "regions": [
+        {
+          "label": "逐檔資料期間，可左右捲動",
+          "client": 944,
+          "scroll": 944,
+          "overflowX": "auto"
+        },
+        {
+          "label": "策略績效，可左右捲動",
+          "client": 944,
+          "scroll": 944,
+          "overflowX": "auto"
+        }
+      ],
+      "escaping": []
+    },
+    "evidence": []
+  },
+  {
+    "id": "desktop-keyboard",
+    "description": "Tab navigation, visible focus, Enter summary and table scrolling",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:14.833Z",
+    "detail": {
+      "focusedElements": 13,
+      "tableScroll": {
+        "before": 0,
+        "after": 0,
+        "needsScroll": false
+      }
+    },
+    "evidence": []
+  },
+  {
+    "id": "desktop-two-symbols",
+    "description": "Two symbols retain distinct observed periods and six comparison rows",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:15.196Z",
+    "detail": [
+      {
+        "symbol": "0050",
+        "from": "2025-01-02",
+        "to": "2025-12-31",
+        "tradingDays": 260,
+        "requestedFrom": "2025-01-01",
+        "requestedTo": "2025-12-31",
+        "coverageStatus": "UNVERIFIED_CALENDAR",
+        "marketStatus": "UNKNOWN"
+      },
+      {
+        "symbol": "2330",
+        "from": "2025-01-03",
+        "to": "2025-12-31",
+        "tradingDays": 259,
+        "requestedFrom": "2025-01-01",
+        "requestedTo": "2025-12-31",
+        "coverageStatus": "UNVERIFIED_CALENDAR",
+        "marketStatus": "UNKNOWN"
+      }
+    ],
+    "evidence": []
+  },
+  {
+    "id": "desktop-explicit-zero-tax",
+    "description": "Explicit numeric zero tax is accepted without market defaults",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:17.361Z",
+    "detail": {
+      "2330": 0,
+      "0050": 0
+    },
+    "evidence": []
+  },
+  {
+    "id": "desktop-error-upstream",
+    "description": "Upstream failure shows error and no successful partial metrics",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:19.662Z",
+    "detail": {
+      "status": 502,
+      "code": "UPSTREAM_DATA_UNAVAILABLE",
+      "error": "2330／2025-03：證交所行情服务回應 503。"
+    },
+    "evidence": []
+  },
+  {
+    "id": "desktop-error-no-data",
+    "description": "Upstream failure shows error and no successful partial metrics",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:21.008Z",
+    "detail": {
+      "status": 502,
+      "code": "UPSTREAM_EMPTY_MONTH",
+      "error": "0050／2025-01：月份資料為空或格式不正確，已停止計算。"
+    },
+    "evidence": []
+  },
+  {
+    "id": "desktop-error-invalid-row",
+    "description": "Upstream failure shows error and no successful partial metrics",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:21.317Z",
+    "detail": {
+      "status": 422,
+      "code": "DATA_INTEGRITY_FAILED",
+      "error": "0050／2025-02：行情列含無效日期或收盤價；不跳過錯誤列，已停止計算。"
+    },
+    "evidence": []
+  },
+  {
+    "id": "tablet-empty",
+    "description": "Initial empty state and disclosures render",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:22.701Z",
+    "evidence": []
+  },
+  {
+    "id": "tablet-invalid-year",
+    "description": "Reversed year range disables execution",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:22.790Z",
+    "evidence": []
+  },
+  {
+    "id": "tablet-invalid-amount",
+    "description": "Invalid input disables execution without API request",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:22.873Z",
+    "evidence": []
+  },
+  {
+    "id": "tablet-ma-crossover",
+    "description": "Real backend success, loading and results",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:22.950Z",
+    "detail": {
+      "status": 200,
+      "resultCount": 3,
+      "trades": [
+        12,
+        12,
+        1
+      ],
+      "commissionRate": 0.001425
+    },
+    "evidence": [
+      "tablet-ma-crossover-api.json"
+    ]
+  },
+  {
+    "id": "tablet-labels-and-provenance",
+    "description": "Money/TWR, requested/actual dates, restrictions and ledger display",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:23.993Z",
+    "evidence": [
+      "tablet-result-details.png"
+    ]
+  },
+  {
+    "id": "tablet-overflow",
+    "description": "Horizontal overflow contained in designated scroll regions",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:24.327Z",
+    "detail": {
+      "viewport": 768,
+      "body": 768,
+      "document": 768,
+      "regions": [
+        {
+          "label": "逐檔資料期間，可左右捲動",
+          "client": 344,
+          "scroll": 490,
+          "overflowX": "auto"
+        },
+        {
+          "label": "策略績效，可左右捲動",
+          "client": 344,
+          "scroll": 826,
+          "overflowX": "auto"
+        }
+      ],
+      "escaping": []
+    },
+    "evidence": []
+  },
+  {
+    "id": "tablet-keyboard",
+    "description": "Tab navigation, visible focus, Enter summary and table scrolling",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:24.334Z",
+    "detail": {
+      "focusedElements": 13,
+      "tableScroll": {
+        "before": 0,
+        "after": 38,
+        "needsScroll": true
+      }
+    },
+    "evidence": []
+  },
+  {
+    "id": "mobile-web-empty",
+    "description": "Initial empty state and disclosures render",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:25.301Z",
+    "evidence": []
+  },
+  {
+    "id": "mobile-web-invalid-year",
+    "description": "Reversed year range disables execution",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:25.441Z",
+    "evidence": []
+  },
+  {
+    "id": "mobile-web-invalid-amount",
+    "description": "Invalid input disables execution without API request",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:25.578Z",
+    "evidence": []
+  },
+  {
+    "id": "mobile-web-ma-crossover",
+    "description": "Real backend success, loading and results",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:25.661Z",
+    "detail": {
+      "status": 200,
+      "resultCount": 3,
+      "trades": [
+        12,
+        12,
+        1
+      ],
+      "commissionRate": 0.001425
+    },
+    "evidence": [
+      "mobile-web-ma-crossover-api.json"
+    ]
+  },
+  {
+    "id": "mobile-web-labels-and-provenance",
+    "description": "Money/TWR, requested/actual dates, restrictions and ledger display",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:26.839Z",
+    "evidence": [
+      "mobile-web-result-details.png"
+    ]
+  },
+  {
+    "id": "mobile-web-overflow",
+    "description": "Horizontal overflow contained in designated scroll regions",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:27.210Z",
+    "detail": {
+      "viewport": 390,
+      "body": 390,
+      "document": 390,
+      "regions": [
+        {
+          "label": "逐檔資料期間，可左右捲動",
+          "client": 308,
+          "scroll": 490,
+          "overflowX": "auto"
+        },
+        {
+          "label": "策略績效，可左右捲動",
+          "client": 308,
+          "scroll": 826,
+          "overflowX": "auto"
+        }
+      ],
+      "escaping": []
+    },
+    "evidence": []
+  },
+  {
+    "id": "mobile-web-keyboard",
+    "description": "Tab navigation, visible focus, Enter summary and table scrolling",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:27.227Z",
+    "detail": {
+      "focusedElements": 13,
+      "tableScroll": {
+        "before": 0,
+        "after": 31,
+        "needsScroll": true
+      }
+    },
+    "evidence": []
+  },
+  {
+    "id": "api-determinism",
+    "description": "Same fixed synthetic data/input preserve identifiers and full response",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:27.749Z",
+    "detail": {
+      "backtestId": "bt_e03c8523806fc32b656e75a94fbaeab6c4ce0fe2d782cae89e89ca9b2b9d92cb",
+      "datasetHash": "bb4049191c48fb6d18babad1157d7d5d5beff3ebe4945d49744890845b83d765"
+    },
+    "evidence": []
+  },
+  {
+    "id": "api-accounting-and-next-observation",
+    "description": "Every synthetic daily valuation and strategy execution date reconciles",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:29.726Z",
+    "detail": {
+      "valuationsChecked": 1557,
+      "tradesChecked": 50,
+      "nextObservedExecutionsChecked": 24
+    },
+    "evidence": []
+  },
+  {
+    "id": "api-no-bars-in-requested-window",
+    "description": "Observed month with no bars inside weekend request returns NO_MARKET_DATA",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:31.674Z",
+    "detail": {
+      "status": 404,
+      "body": {
+        "code": "NO_MARKET_DATA",
+        "error": "0050 在這段期間沒有可用日行情；上市、停牌與日曆狀態未知。"
+      }
+    },
+    "evidence": []
+  },
+  {
+    "id": "api-invalid-fields",
+    "description": "Invalid request preserves code/error without result payload",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:31.826Z",
+    "detail": {
+      "status": 400,
+      "body": {
+        "code": "INVALID_INPUT",
+        "error": "請求資料格式不正確，請確認回測參數後再試。"
+      }
+    },
+    "evidence": []
+  },
+  {
+    "id": "api-invalid-date",
+    "description": "Invalid request preserves code/error without result payload",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:31.864Z",
+    "detail": {
+      "status": 400,
+      "body": {
+        "code": "INVALID_INPUT",
+        "error": "回測日期格式不正確；請使用 YYYY-MM-DD。"
+      }
+    },
+    "evidence": []
+  },
+  {
+    "id": "api-invalid-order",
+    "description": "Invalid request preserves code/error without result payload",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:31.870Z",
+    "detail": {
+      "status": 400,
+      "body": {
+        "code": "INVALID_INPUT",
+        "error": "回測日期範圍不正確；此資料服務目前提供 2010 年起的行情。"
+      }
+    },
+    "evidence": []
+  },
+  {
+    "id": "api-duplicate",
+    "description": "Invalid provider dataset is rejected without partial success",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:31.875Z",
+    "detail": {
+      "status": 422,
+      "body": {
+        "code": "DATA_INTEGRITY_FAILED",
+        "error": "0050／2025-02：行情日期重複或未依時間遞增，已停止計算。"
+      }
+    },
+    "evidence": []
+  },
+  {
+    "id": "api-non-ok",
+    "description": "Invalid provider dataset is rejected without partial success",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:32.024Z",
+    "detail": {
+      "status": 502,
+      "body": {
+        "code": "UPSTREAM_MONTH_STATUS_UNKNOWN",
+        "error": "0050／2025-01：行情狀態非 OK；上市、停牌及缺漏原因未知，已停止計算。"
+      }
+    },
+    "evidence": []
+  },
+  {
+    "id": "runtime-errors",
+    "description": "No unhandled page errors or unexpected network failures",
+    "status": "PASS",
+    "startedAt": "2026-10-08T21:58:32.174Z",
+    "detail": {
+      "totalEvents": 6,
+      "expectedHttpErrors": 3
+    },
+    "evidence": []
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "status": 422,
+  "body": {
+    "error": "0050／2025-02：行情日期重複或未依時間遞增，已停止計算。",
+    "code": "DATA_INTEGRITY_FAILED"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "source": "REAL_SPRING_BOOT_SYNTHETIC_UPSTREAM",
+  "status": 502,
+  "request": {
+    "symbol": "0050",
+    "symbols": [
+      "0050",
+      "2330"
+    ],
+    "strategy": "drawdown-entry",
+    "from": "2025-01-01",
+    "to": "2025-12-31",
+    "fastWindow": 4,
+    "slowWindow": 8,
+    "rsiWindow": 4,
+    "rsiBuyThreshold": 30,
+    "rsiSellThreshold": 55,
+    "bollingerWindow": 4,
+    "bollingerMultiplier": 1,
+    "breakoutWindow": 4,
+    "drawdownBuyPercent": 10,
+    "profitSellPercent": 10,
+    "monthlyContribution": 10000,
+    "initialCapital": 100000,
+    "commissionRate": 0.001425,
+    "sellTaxRate": 0.001,
+    "useMarketTaxDefaults": true
+  },
+  "response": {
+    "error": "0050／2025-01：月份資料為空或格式不正確，已停止計算。",
+    "code": "UPSTREAM_EMPTY_MONTH"
+  }
+}
