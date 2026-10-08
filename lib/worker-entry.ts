@@ -6,11 +6,21 @@ const headers = {
   html: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache" },
   js: { "Content-Type": "text/javascript; charset=utf-8", "Cache-Control": "public, max-age=3600" },
   css: { "Content-Type": "text/css; charset=utf-8", "Cache-Control": "public, max-age=3600" },
+  robots: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" },
+  sitemap: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" },
 };
+
+const siteUrl = "https://twse-strategy-lab.alice-margatroid-lov.chatgpt.site/";
 
 export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    if (request.method === "GET" && url.pathname === "/robots.txt") {
+      return new Response(`User-agent: *\nAllow: /\nSitemap: ${siteUrl}sitemap.xml\n`, { headers: headers.robots });
+    }
+    if (request.method === "GET" && url.pathname === "/sitemap.xml") {
+      return new Response(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${siteUrl}</loc></url></urlset>`, { headers: headers.sitemap });
+    }
     if (request.method === "GET" && url.pathname === "/") return new Response(pageHtml, { headers: headers.html });
     if (request.method === "GET" && url.pathname === "/app.js") return new Response(appJavaScript, { headers: headers.js });
     if (request.method === "GET" && url.pathname === "/style.css") return new Response(appCss, { headers: headers.css });

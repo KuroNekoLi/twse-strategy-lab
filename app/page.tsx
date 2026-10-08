@@ -101,7 +101,7 @@ export default function Home() {
     ["drawdown-entry", "自訂回跌 / 獲利", "距近一年高點回跌達門檻買進，達目標報酬賣出"],
   ];
 
-  return <main className="app-shell">
+  return <main id="backtest-workspace" className="app-shell">
     <header className="topbar"><a href="#" className="brand"><span className="brand-mark"><i /><i /><i /></span><span>策略<span className="brand-light">實驗室</span></span></a><div className="topbar-right"><span className="market-pill"><span className="pulse-dot" />台股歷史資料</span><span className="header-divider"/><span className="header-caption">研究工具 · 01</span></div></header>
     <div className="content">
       <div className="page-intro"><div><p className="eyebrow">STRATEGY BACKTESTING WORKSPACE</p><h1>讓策略接受歷史考驗。</h1><p className="intro-copy">用同一段行情、相同投入金額，檢視你的規則和定期定額走出什麼結果。</p></div><div className="intro-date"><span className="live-dot"/>資料來源：臺灣證券交易所</div></div>
