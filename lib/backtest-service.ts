@@ -35,11 +35,8 @@ async function loadMonth(symbol: string, month: string): Promise<DailyBar[]> {
   url.searchParams.set("stockNo", symbol);
   url.searchParams.set("response", "json");
   const request = new Request(url.toString(), { headers: { Accept: "application/json" } });
-  const cache = typeof caches !== "undefined" ? caches.default : null;
-  if (cache) {
-    const cached = await cache.match(request);
-    if (cached) return toBars(await cached.json() as TwseMonth);
-  }
+  // Sites Workers do not grant access to the account-wide default Cache API.
+  // Fetch the public TWSE endpoint directly instead of touching caches.default.
   const response = await fetch(request, { signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error(`證交所行情服務回應 ${response.status}（${month}）。`);
   const body = await response.json() as TwseMonth;
@@ -47,7 +44,6 @@ async function loadMonth(symbol: string, month: string): Promise<DailyBar[]> {
     if (!body.stat || /查詢日期小於|查詢日期大於|查無資料|無符合/.test(body.stat)) return [];
     throw new Error(`證交所暫時無法提供 ${month} 的行情：${body.stat}`);
   }
-  if (cache) await cache.put(request, new Response(JSON.stringify(body), { headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=86400" } }));
   return toBars(body);
 }
 
