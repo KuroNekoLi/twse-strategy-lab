@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 
@@ -107,14 +109,15 @@ const strategyIds: StrategyId[] = ['ma-crossover', 'rsi-reversion', 'bollinger-r
 const colors = ['#21c7a8', '#b3c2d4', '#f0a84b', '#6f8fe8', '#d780a8', '#73a86c'];
 
 @Component({
-  selector: 'app-root',
+  selector: 'app-backtest-workspace',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './app.component.html',
 })
-export class AppComponent {
+export class BacktestWorkspaceComponent {
   private readonly http = inject(HttpClient);
   private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly route = inject(ActivatedRoute);
   readonly apiBaseUrl = (window.APP_CONFIG?.apiBaseUrl ?? '').replace(/\/$/, '');
   private chartCacheFor: BacktestResponse | null = null;
   private chartCacheDates: string[] = [];
@@ -166,6 +169,14 @@ export class AppComponent {
   private catalogDebounce?: ReturnType<typeof setTimeout>;
 
   constructor() {
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      const requestedSymbols = (params.get('symbols') ?? params.get('symbol') ?? '').split(',').map((code) => code.trim());
+      const validSymbols = requestedSymbols.filter((code) => /^\d{4,6}$/.test(code)).slice(0, 3);
+      if (validSymbols.length) this.symbols = [...new Set(validSymbols)];
+      const requestedStrategy = params.get('strategy');
+      if (requestedStrategy && strategyIds.includes(requestedStrategy as StrategyId)) this.strategy = requestedStrategy as StrategyId;
+      this.changeDetector.markForCheck();
+    });
     this.readDrafts();
   }
 
