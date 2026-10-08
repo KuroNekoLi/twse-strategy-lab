@@ -17,8 +17,12 @@ Angular 前端、Spring Boot API 的台股策略回測作品。前端部署在 G
 
 ```sh
 cd backend
-./mvnw spring-boot:run
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
+
+`local` profile 使用 H2 記憶體資料庫；啟動時由 Hibernate 建立本機資料表。資料庫連線狀態可用 `GET /api/health/database` 檢查。正式環境需透過 `SPRING_DATASOURCE_URL`、`SPRING_DATASOURCE_USERNAME`、`SPRING_DATASOURCE_PASSWORD` 提供連線設定，並以 `SPRING_JPA_HIBERNATE_DDL_AUTO=update` 管理 schema；程式不提供預設正式資料庫網址或憑證。Zeabur 上可使用 MySQL 私有網路位址。既有 CORS 設定仍由 `CORS_ALLOWED_ORIGIN_PATTERNS` 控制。
+
+目前僅持久化合成回放 session 與決策，schema 選擇理由及欄位見 [MySQL schema proposal](docs/database/MYSQL_SCHEMA_PROPOSAL.md)。回放服務依賴儲存介面，使用 Spring Data JPA adapter；切換其他資料庫時可替換 adapter／連線設定，但仍須驗證該資料庫的 JDBC driver、Hibernate dialect、鎖定及 schema 更新行為。TWSE 行情快取與回測輸出因授權尚未確認而不寫入資料庫。
 
 啟動 Angular：
 

@@ -15,10 +15,12 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.test.context.ActiveProfiles;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Embedded local HTTP; the source transport returns synthetic JSON and never contacts TWSE. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("local")
 @Import(InstrumentCatalogHttpTest.SyntheticCatalog.class)
 class InstrumentCatalogHttpTest {
   @Value("${local.server.port}") int port;

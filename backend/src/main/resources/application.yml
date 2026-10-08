@@ -1,6 +1,11 @@
 server:
   port: ${PORT:8080}
   forward-headers-strategy: framework
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+  jpa:
+    open-in-view: false
 app:
   cors:
     allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:4200,https://kuronekoli.github.io,https://finance.kuronekoli.uk}
