@@ -53,26 +53,39 @@ async function loadMonth(symbol: string, month: string): Promise<DailyBar[]> {
 }
 
 async function fetchTwse(request: Request) {
-  let current = request;
-  for (let hop = 0; hop < 4; hop++) {
-    const response = await fetch(current, { redirect: "manual", signal: AbortSignal.timeout(15000) });
-    if (![301, 302, 303, 307, 308].includes(response.status)) return response;
-    const location = response.headers.get("location");
-    if (!location) return response;
-    const nextUrl = new URL(location, current.url);
-    if (nextUrl.protocol !== "https:" || !(nextUrl.hostname === "twse.com.tw" || nextUrl.hostname.endsWith(".twse.com.tw"))) {
-      throw new Error("證交所行情服務導向了非證交所網址，已停止請求。");
+  for (let attempt = 0; attempt < 3; attempt++) {
+    let current = request;
+    let retry = false;
+    for (let hop = 0; hop < 4; hop++) {
+      const response = await fetch(current, { redirect: "manual", signal: AbortSignal.timeout(15000) });
+      if (![301, 302, 303, 307, 308].includes(response.status)) return response;
+      const location = response.headers.get("location");
+      if (!location) {
+        if ([307, 429, 503].includes(response.status) && attempt < 2) {
+          await response.body?.cancel();
+          retry = true;
+          break;
+        }
+        return response;
+      }
+      const nextUrl = new URL(location, current.url);
+      if (nextUrl.protocol !== "https:" || !(nextUrl.hostname === "twse.com.tw" || nextUrl.hostname.endsWith(".twse.com.tw"))) {
+        throw new Error("證交所行情服務導向了非證交所網址，已停止請求。");
+      }
+      current = new Request(nextUrl, { headers: request.headers });
     }
-    current = new Request(nextUrl, { headers: request.headers });
+    if (!retry) throw new Error("證交所行情服務轉址次數過多，請稍後再試。");
+    await new Promise((resolve) => setTimeout(resolve, 300 * (attempt + 1)));
   }
-  throw new Error("證交所行情服務轉址次數過多，請稍後再試。");
+  throw new Error("證交所行情服務暫時拒絕請求，請稍後再試。");
 }
 
 async function loadBars(symbol: string, months: string[]) {
   const rows: DailyBar[] = [];
-  for (let i = 0; i < months.length; i += 8) {
-    const group = await Promise.all(months.slice(i, i + 8).map((month) => loadMonth(symbol, month)));
+  for (let i = 0; i < months.length; i += 3) {
+    const group = await Promise.all(months.slice(i, i + 3).map((month) => loadMonth(symbol, month)));
     rows.push(...group.flat());
+    if (i + 3 < months.length) await new Promise((resolve) => setTimeout(resolve, 120));
   }
   return rows.sort((a, b) => a.date.localeCompare(b.date));
 }
