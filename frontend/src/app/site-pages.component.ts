@@ -67,9 +67,9 @@ export class AppComponent {
   </section>
   <section class="page-wrap section-block"><div class="section-heading"><div><p class="eyebrow">從你的問題開始</p><h2>今天想弄清楚什麼？</h2><p class="section-lede">選一條路，工具會帶你從設定走到檢視假設。</p></div><a routerLink="/strategies" class="text-link">認識策略 →</a></div>
     <div class="template-grid">
-      <a class="template-card intent-card" routerLink="/backtest" [queryParams]="{symbol:'0050',strategy:'ma-crossover'}"><span class="intent-icon">↔</span><span class="template-number">比較投入方式</span><strong>定期定額和一次投入，差在哪裡？</strong><p>用同一標的與期間比較現金流情境，再檢視風險指標和限制。</p><span class="template-meta">約 5 分鐘 · 使用 0050 範例 <b>→</b></span></a>
-      <a class="template-card intent-card" routerLink="/backtest" [queryParams]="{symbol:'2330',strategy:'rsi-reversion'}"><span class="intent-icon">⌁</span><span class="template-number">測試一條規則</span><strong>這個買賣條件曾經如何表現？</strong><p>從明確規則開始，檢視歷史結果、成本假設與可能失效的情境。</p><span class="template-meta">約 5 分鐘 · RSI 範例 <b>→</b></span></a>
-      <a class="template-card intent-card" routerLink="/decision-practice"><span class="intent-icon">◉</span><span class="template-number">練習投資決策</span><strong>市場波動時，我會怎麼選？</strong><p>用合成情境練習判斷和記錄理由；情境不是即時或真實行情。</p><span class="template-meta">約 3 分鐘 · 決策練習 <b>→</b></span></a>
+      <a class="template-card intent-card" routerLink="/backtest" [queryParams]="{symbol:'0050',strategy:'ma-crossover'}"><span class="intent-icon">↔</span><span class="template-number">比較投入方式</span><strong>定期定額和一次投入，差在哪裡？</strong><p>用同一標的與期間比較現金流情境，再檢視風險指標和限制。</p><span class="template-meta">研究工作台 · 0050 範例 <b>→</b></span></a>
+      <a class="template-card intent-card" routerLink="/backtest" [queryParams]="{symbol:'2330',strategy:'rsi-reversion'}"><span class="intent-icon">⌁</span><span class="template-number">測試一條規則</span><strong>這個買賣條件曾經如何表現？</strong><p>從明確規則開始，檢視歷史結果、成本假設與可能失效的情境。</p><span class="template-meta">規則回測 · RSI 範例 <b>→</b></span></a>
+      <a class="template-card intent-card" routerLink="/decision-practice"><span class="intent-icon">◉</span><span class="template-number">練習投資決策</span><strong>市場波動時，我會怎麼選？</strong><p>用合成情境練習判斷和記錄理由；情境不是即時或真實行情。</p><span class="template-meta">合成情境 · 決策練習 <b>→</b></span></a>
     </div>
   </section>
   <section class="page-wrap home-bottom"><div><span class="mini-icon">⌕</span><h2>還不知道從哪裡開始？</h2><p>先搜尋一檔股票，查看目錄資訊與目前資料限制。</p></div><a class="button-outline" routerLink="/explore">探索台股標的</a></section>
