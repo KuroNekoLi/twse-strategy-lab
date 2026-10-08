@@ -13,11 +13,14 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TwseMarketDataClient {
+  private static final Logger log = LoggerFactory.getLogger(TwseMarketDataClient.class);
   private final JsonMapper mapper;
   private final URI endpoint;
   private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
@@ -39,11 +42,24 @@ public class TwseMarketDataClient {
 
   private List<DailyBar> loadMonth(String symbol, YearMonth month) {
     String query = "?date=" + month.atDay(1).toString().replace("-", "") + "&stockNo=" + URLEncoder.encode(symbol, StandardCharsets.UTF_8) + "&response=json";
-    URI uri = endpoint.resolve(query);
+    // URI.resolve("?query") treats the endpoint's last path segment as a file
+    // and replaces it, dropping STOCK_DAY. Append the query to preserve it.
+    URI uri = URI.create(endpoint.toString() + query);
     try {
       HttpResponse<String> response = fetch(uri);
       if (response.statusCode() < 200 || response.statusCode() >= 300) throw new IllegalStateException("證交所行情服務回應 " + response.statusCode() + "（" + month + "）。");
-      JsonNode root = mapper.readTree(response.body());
+      JsonNode root;
+      try {
+        root = mapper.readTree(response.body());
+      } catch (Exception e) {
+        log.warn("TWSE response was not valid JSON: symbol={}, month={}, status={}, contentType={}, server={}, upstreamRequestId={}, bodyLength={}, firstCharacter={}",
+            symbol, month, response.statusCode(),
+            response.headers().firstValue("content-type").orElse("missing"),
+            response.headers().firstValue("server").orElse("missing"),
+            response.headers().firstValue("x-request-id").orElse("missing"),
+            response.body().length(), response.body().isEmpty() ? "empty" : response.body().substring(0, 1), e);
+        throw e;
+      }
       String stat = root.path("stat").asText("");
       if (!"OK".equals(stat)) {
         if (stat.isBlank() || stat.matches(".*(查詢日期小於|查詢日期大於|查無資料|無符合).*")) return List.of();
@@ -59,8 +75,22 @@ public class TwseMarketDataClient {
         if (close > 0) rows.add(new DailyBar(LocalDate.of(year, Integer.parseInt(dateParts[1]), Integer.parseInt(dateParts[2])), close));
       }
       return rows;
-    } catch (IllegalStateException e) { throw e; }
-    catch (Exception e) { throw new IllegalStateException("無法讀取證交所 " + month + " 行情，請稍後再試。", e); }
+    } catch (IllegalStateException e) {
+      log.warn("TWSE data request failed: symbol={}, month={}, exceptionType={}, reason={}",
+          symbol, month, e.getClass().getName(), e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      Throwable root = rootCause(e);
+      log.warn("TWSE data request failed: symbol={}, month={}, exceptionType={}, rootCauseType={}, rootCauseReason={}",
+          symbol, month, e.getClass().getName(), root.getClass().getName(), root.getMessage(), e);
+      throw new IllegalStateException("無法讀取證交所 " + month + " 行情，請稍後再試。", e);
+    }
+  }
+
+  private Throwable rootCause(Throwable error) {
+    Throwable root = error;
+    while (root.getCause() != null && root.getCause() != root) root = root.getCause();
+    return root;
   }
 
   private HttpResponse<String> fetch(URI start) throws Exception {
