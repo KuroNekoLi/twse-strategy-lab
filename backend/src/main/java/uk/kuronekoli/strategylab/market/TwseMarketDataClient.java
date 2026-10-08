@@ -98,14 +98,29 @@ public class TwseMarketDataClient {
   private HttpResponse<String> fetch(URI start) throws Exception {
     URI current = start;
     for (int hop = 0; hop < 4; hop++) {
-      HttpRequest request = HttpRequest.newBuilder(current).timeout(java.time.Duration.ofSeconds(20))
-          .header("Accept", "application/json, text/plain, */*")
-          .header("Accept-Language", "zh-TW,zh;q=0.9,en;q=0.8")
-          .header("Referer", "https://www.twse.com.tw/")
-          .header("User-Agent", "Mozilla/5.0 (compatible; TWSEStrategyLab/1.0)").GET().build();
-      HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+      HttpResponse<String> response = null;
+      for (int attempt = 0; attempt < 3; attempt++) {
+        HttpRequest request = HttpRequest.newBuilder(current).timeout(java.time.Duration.ofSeconds(20))
+            .header("Accept", "application/json, text/plain, */*")
+            .header("Accept-Language", "zh-TW,zh;q=0.9,en;q=0.8")
+            .header("Referer", "https://www.twse.com.tw/")
+            .header("User-Agent", "Mozilla/5.0 (compatible; TWSEStrategyLab/1.0)").GET().build();
+        response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        boolean redirectWithoutLocation = response.statusCode() >= 300 && response.statusCode() <= 399
+            && response.headers().firstValue("location").isEmpty();
+        if (!redirectWithoutLocation || attempt == 2) break;
+        Thread.sleep(250L * (attempt + 1));
+      }
       if (response.statusCode() < 300 || response.statusCode() > 399) return response;
-      String location = response.headers().firstValue("location").orElseThrow(() -> new IllegalStateException("證交所回應轉址但未提供目的位址。"));
+      var locationHeader = response.headers().firstValue("location");
+      if (locationHeader.isEmpty()) {
+        throw new IllegalStateException("證交所回應轉址但未提供目的位址（status=" + response.statusCode()
+            + ", server=" + response.headers().firstValue("server").orElse("missing")
+            + ", requestId=" + response.headers().firstValue("x-request-id").orElse("missing")
+            + ", contentType=" + response.headers().firstValue("content-type").orElse("missing")
+            + ", bodyLength=" + response.body().length() + "）。");
+      }
+      String location = locationHeader.get();
       URI next = current.resolve(location);
       String host = next.getHost() == null ? "" : next.getHost().toLowerCase();
       if (!"https".equalsIgnoreCase(next.getScheme()) || !(host.equals("twse.com.tw") || host.endsWith(".twse.com.tw"))) throw new IllegalStateException("證交所行情服務導向非證交所網址，已停止請求。");
