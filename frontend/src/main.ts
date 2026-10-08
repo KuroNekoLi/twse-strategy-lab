@@ -7,6 +7,7 @@ import { ResearchLibraryComponent } from './app/research-library.component';
 import { PaperTradingComponent } from './app/paper-trading.component';
 import { DecisionChallengeComponent } from './app/decision-challenge.component';
 import { RobustnessLabComponent } from './app/robustness-lab.component';
+import { ResearchJournalComponent } from './app/research-journal.component';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -17,6 +18,7 @@ bootstrapApplication(AppComponent, {
       { path: 'strategies', component: StrategiesPageComponent, title: '策略庫｜策略實驗室' },
       { path: 'backtest', component: BacktestWorkspaceComponent, title: '回測工作台｜策略實驗室' },
       { path: 'my-research', component: ResearchLibraryComponent, title: '我的研究｜策略實驗室' },
+      { path: 'journal', component: ResearchJournalComponent, title: '研究筆記｜策略實驗室' },
       { path: 'paper', component: PaperTradingComponent, title: '模擬交易｜策略實驗室' },
       { path: 'decision-practice', component: DecisionChallengeComponent, title: '決策練習｜策略實驗室' },
       { path: 'robustness', component: RobustnessLabComponent, title: '穩健性實驗室｜策略實驗室' },
