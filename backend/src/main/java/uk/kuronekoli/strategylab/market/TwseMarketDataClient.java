@@ -68,11 +68,13 @@ public class TwseMarketDataClient {
       List<DailyBar> rows = new ArrayList<>();
       for (JsonNode row : root.path("data")) {
         if (row.size() < 7) continue;
-        String[] dateParts = row.get(0).asText().split("/");
+        String[] dateParts = row.get(0).asText().trim().split("/");
         if (dateParts.length != 3) continue;
-        int year = Integer.parseInt(dateParts[0]); if (year < 1911) year += 1911;
-        double close = Double.parseDouble(row.get(6).asText().replace(",", ""));
-        if (close > 0) rows.add(new DailyBar(LocalDate.of(year, Integer.parseInt(dateParts[1]), Integer.parseInt(dateParts[2])), close));
+        int year = Integer.parseInt(dateParts[0].trim()); if (year < 1911) year += 1911;
+        int monthNumber = Integer.parseInt(dateParts[1].trim());
+        int day = Integer.parseInt(dateParts[2].trim());
+        double close = Double.parseDouble(row.get(6).asText().replace(",", "").trim());
+        if (close > 0) rows.add(new DailyBar(LocalDate.of(year, monthNumber, day), close));
       }
       return rows;
     } catch (IllegalStateException e) {
