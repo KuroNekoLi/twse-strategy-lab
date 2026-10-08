@@ -167,17 +167,27 @@ export class BacktestWorkspaceComponent {
   catalogMessage = '';
   private catalogRequestId = 0;
   private catalogDebounce?: ReturnType<typeof setTimeout>;
+  private loadedDraftQuery = '';
 
   constructor() {
+    this.readDrafts();
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const requestedSymbols = (params.get('symbols') ?? params.get('symbol') ?? '').split(',').map((code) => code.trim());
       const validSymbols = requestedSymbols.filter((code) => /^\d{4,6}$/.test(code)).slice(0, 3);
       if (validSymbols.length) this.symbols = [...new Set(validSymbols)];
       const requestedStrategy = params.get('strategy');
       if (requestedStrategy && strategyIds.includes(requestedStrategy as StrategyId)) this.strategy = requestedStrategy as StrategyId;
+      const draftId = params.get('draft') ?? '';
+      const versionId = params.get('version') ?? '';
+      const draftSelection = `${draftId}:${versionId}`;
+      if (draftId && draftSelection !== this.loadedDraftQuery) {
+        const draft = this.draftStore.drafts.find((item) => item.id === draftId);
+        const selected = draft?.versions.find((version) => version.id === versionId)
+          ?? draft?.versions.reduce((current, version) => version.version > current.version ? version : current);
+        if (draft && selected) { this.loadDraftVersion(draft, selected); this.loadedDraftQuery = draftSelection; }
+      } else if (!draftId) this.loadedDraftQuery = '';
       this.changeDetector.markForCheck();
     });
-    this.readDrafts();
   }
 
   private readDrafts(): void {

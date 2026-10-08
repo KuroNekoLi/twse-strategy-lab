@@ -2,6 +2,8 @@
 
 此紀錄接續 `docs/quality/M0_DELIVERY_REPORT.md`。原始 `產品規劃.md` 保留使用者既有 staged／unstaged 變更，未被本次修改。
 
+> 2026-10-09 更新：M2–M4 新增可操作產品切片的最新範圍、瀏覽器 QA 與剩餘阻塞，見 [`M2-M4_PRODUCT_SLICES_REPORT.md`](M2-M4_PRODUCT_SLICES_REPORT.md)。以下舊表格保留當時進度背景；M2–M4 狀態以該報告為準。
+
 ## 安裝
 
 - 來源套件 `.agents/skills/` 與 `.agents/universal-team/` 安裝到目標同路徑，共 52 個檔案；合併通用協作規則到根 `AGENTS.md`，保留既有專案規範。

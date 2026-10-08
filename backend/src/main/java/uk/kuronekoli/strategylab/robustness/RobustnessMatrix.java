@@ -33,23 +33,13 @@ public final class RobustnessMatrix {
   /** Runs each listed variant in input order; no ranking or market access is performed. */
   public static Result run(BacktestRequest base, String symbol, List<DailyBar> suppliedBars,
       BigDecimal appliedTaxRate, List<Variant> variants) {
-    if (variants == null || variants.isEmpty() || variants.size() > MAX_CASES)
-      throw BacktestException.input("穩健性矩陣需包含 1 至 " + MAX_CASES + " 個案例。");
     if (base == null || symbol == null || symbol.isBlank()) throw BacktestException.input("請提供有效的回測基準與標的。");
     BacktestValidation.bars(suppliedBars);
-    Set<String> ids = new HashSet<>();
-    Set<String> configurations = new HashSet<>();
+    validateVariants(base, appliedTaxRate, variants);
     List<CaseResult> results = new ArrayList<>();
     for (Variant variant : variants) {
-      validateVariant(variant, base);
-      if (!ids.add(variant.id())) throw BacktestException.input("穩健性矩陣案例識別碼不可重複。");
       BacktestRequest request = apply(base, variant);
-      BacktestValidation.parameters(request);
       BigDecimal tax = variant.sellTaxRate() == null ? appliedTaxRate : variant.sellTaxRate();
-      BacktestValidation.costs(request.commissionRate(), tax);
-      String configuration = request.fastWindow() + "|" + request.slowWindow() + "|"
-          + request.commissionRate().stripTrailingZeros().toPlainString() + "|" + tax.stripTrailingZeros().toPlainString();
-      if (!configurations.add(configuration)) throw BacktestException.input("穩健性矩陣不可包含重複參數案例。");
       StrategyResult active = BacktestEngine.run(request, symbol, suppliedBars, tax).get(0);
       Double annualized = active.annualizedReturn();
       Double volatility = active.annualizedRealizedVolatility();
@@ -60,6 +50,26 @@ public final class RobustnessMatrix {
           new Metrics(active.totalReturn(), annualized, active.maxDrawdown(), volatility)));
     }
     return new Result(List.copyOf(results), aggregate(results));
+  }
+
+  /** Validates all cases without needing market data, so an invalid request causes no upstream load. */
+  public static void validateVariants(BacktestRequest base, BigDecimal appliedTaxRate, List<Variant> variants) {
+    if (base == null) throw BacktestException.input("請提供有效的回測基準。");
+    if (variants == null || variants.isEmpty() || variants.size() > MAX_CASES)
+      throw BacktestException.input("穩健性矩陣需包含 1 至 " + MAX_CASES + " 個案例。");
+    Set<String> ids = new HashSet<>();
+    Set<String> configurations = new HashSet<>();
+    for (Variant variant : variants) {
+      validateVariant(variant, base);
+      if (!ids.add(variant.id())) throw BacktestException.input("穩健性矩陣案例識別碼不可重複。");
+      BacktestRequest request = apply(base, variant);
+      BacktestValidation.parameters(request);
+      BigDecimal tax = variant.sellTaxRate() == null ? appliedTaxRate : variant.sellTaxRate();
+      BacktestValidation.costs(request.commissionRate(), tax);
+      String configuration = request.fastWindow() + "|" + request.slowWindow() + "|"
+          + request.commissionRate().stripTrailingZeros().toPlainString() + "|" + tax.stripTrailingZeros().toPlainString();
+      if (!configurations.add(configuration)) throw BacktestException.input("穩健性矩陣不可包含重複參數案例。");
+    }
   }
 
   private static void validateVariant(Variant v, BacktestRequest base) {

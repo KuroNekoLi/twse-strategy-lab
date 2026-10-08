@@ -23,6 +23,12 @@ const strategies = [
       <a routerLink="/explore" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">探索</a>
       <a routerLink="/strategies" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">策略庫</a>
       <a routerLink="/backtest" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeMenu()">回測工作台</a>
+      <a routerLink="/my-research" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">我的研究</a>
+      <a routerLink="/paper" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">模擬交易</a>
+      <details #advancedMenu class="nav-group" routerLinkActive="active-group">
+        <summary>進階研究</summary>
+        <div class="nav-submenu"><a routerLink="/decision-practice" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" aria-label="決策練習" (click)="closeMenu()">決策練習</a><a routerLink="/robustness" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" aria-label="穩健性分析" (click)="closeMenu()">穩健性分析</a></div>
+      </details>
       <a routerLink="/methods" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">方法說明</a>
     </nav><span class="site-status"><i></i>{{ apiBaseUrl ? '台股研究工具' : '研究環境' }}</span>
   </header>
@@ -33,9 +39,11 @@ export class AppComponent {
   readonly apiBaseUrl = apiBaseUrl;
   menuOpen = false;
   @ViewChild('menuToggle') private menuToggle?: ElementRef<HTMLButtonElement>;
+  @ViewChild('advancedMenu') private advancedMenu?: ElementRef<HTMLDetailsElement>;
   closeMenu(event?: Event): void {
-    if (event) { event.preventDefault(); this.menuOpen = false; this.menuToggle?.nativeElement.focus(); return; }
+    if (event) { event.preventDefault(); this.menuOpen = false; this.advancedMenu?.nativeElement.removeAttribute('open'); this.menuToggle?.nativeElement.focus(); return; }
     this.menuOpen = false;
+    this.advancedMenu?.nativeElement.removeAttribute('open');
   }
   skipToMain(event: Event): void { event.preventDefault(); document.getElementById('main-content')?.focus(); }
   focusMain(): void { requestAnimationFrame(() => document.querySelector<HTMLElement>('#main-content h1')?.focus({ preventScroll: true })); }
