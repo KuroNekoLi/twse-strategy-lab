@@ -2,7 +2,8 @@ import { runBacktest, type BacktestInput, type DailyBar } from "./backtest-engin
 import { adjustKnownSplits, splitAssumptions } from "./corporate-actions";
 
 type TwseMonth = { stat?: string; data?: string[][] };
-const symbols = new Set(["0050", "0056", "2330"]);
+const isTaiwanStockCode = (symbol: string) => /^\d{4,6}$/.test(symbol);
+const defaultSellTaxRate = (symbol: string) => /^00\d{2,4}$/.test(symbol) ? 0.001 : 0.003;
 const monthKey = (year: number, month: number) => `${year}-${String(month).padStart(2, "0")}`;
 
 function monthsBetween(from: string, to: string) {
@@ -92,8 +93,8 @@ async function loadBars(symbol: string, months: string[]) {
 
 export async function handleBacktest(input: BacktestInput) {
   try {
-    const selectedSymbols = [...new Set(input.symbols?.length ? input.symbols : [input.symbol])];
-    if (!selectedSymbols.length || selectedSymbols.length > 3 || selectedSymbols.some((symbol) => !symbols.has(symbol))) return { status: 400, body: { error: "請選擇 1 至 3 檔示範標的：0050、0056 或 2330。" } };
+    const selectedSymbols = [...new Set((input.symbols?.length ? input.symbols : [input.symbol]).map((symbol) => String(symbol ?? "").trim()))];
+    if (!selectedSymbols.length || selectedSymbols.length > 3 || selectedSymbols.some((symbol) => !isTaiwanStockCode(symbol))) return { status: 400, body: { error: "請輸入 1 至 3 個 4 至 6 位數字的台股代碼。" } };
     const today = new Date().toISOString().slice(0, 10);
     if (!/^2010-\d\d-\d\d$/.test(input.from) || !/^\d{4}-\d\d-\d\d$/.test(input.to) || input.from > input.to || input.from > today) return { status: 400, body: { error: "回測日期格式不正確；此資料服務目前提供 2010 年起的行情。" } };
     const effectiveTo = input.to > today ? today : input.to;
@@ -112,13 +113,13 @@ export async function handleBacktest(input: BacktestInput) {
       const rawBars = (await loadBars(symbol, months)).filter((bar) => bar.date >= input.from && bar.date <= effectiveTo);
       if (!rawBars.length) return { status: 404, body: { error: `${symbol} 在這段期間沒有找到可用的證交所日行情。` } };
       const bars = adjustKnownSplits(symbol, rawBars);
-      const sellTaxRate = input.useMarketTaxDefaults ? (symbol === "2330" ? 0.003 : 0.001) : input.sellTaxRate;
+      const sellTaxRate = input.useMarketTaxDefaults ? defaultSellTaxRate(symbol) : input.sellTaxRate;
       results.push(...runBacktest({ ...input, symbol, sellTaxRate }, bars));
       assets.push({ symbol, from: bars[0].date, to: bars.at(-1)!.date, tradingDays: bars.length });
     }
     return { status: 200, body: {
       symbol: selectedSymbols[0], symbols: selectedSymbols, from: assets[0].from, to: assets[0].to, tradingDays: assets[0].tradingDays, assets,
-      dataSource: "臺灣證券交易所 STOCK_DAY", assumptions: ["日收盤價", "不含配息", "月初投入", `買賣手續費 ${input.commissionRate * 100}%`, ...(input.useMarketTaxDefaults ? selectedSymbols.map((symbol) => `${symbol} 賣出交易稅 ${symbol === "2330" ? 0.3 : 0.1}%`) : [`賣出交易稅 ${input.sellTaxRate * 100}%`]), "未計券商最低手續費", "不含滑價", "訊號使用前一交易日資料，於當日收盤執行", "報酬採時間加權", "回撤依月末收盤估算", ...selectedSymbols.flatMap((symbol) => splitAssumptions(symbol))], results,
+      dataSource: "臺灣證券交易所 STOCK_DAY", assumptions: ["日收盤價", "不含配息", "月初投入", `買賣手續費 ${input.commissionRate * 100}%`, ...(input.useMarketTaxDefaults ? selectedSymbols.map((symbol) => `${symbol} 賣出交易稅 ${defaultSellTaxRate(symbol) * 100}%（依台股 ETF／股票預設分類估算）`) : [`賣出交易稅 ${input.sellTaxRate * 100}%`]), "未計券商最低手續費", "不含滑價", "訊號使用前一交易日資料，於當日收盤執行", "報酬採時間加權", "回撤依月末收盤估算", ...selectedSymbols.flatMap((symbol) => splitAssumptions(symbol))], results,
     } };
   } catch (error) {
     const message = error instanceof Error ? error.message : "回測服務發生錯誤。";

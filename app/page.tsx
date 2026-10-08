@@ -47,6 +47,7 @@ function LineChart({ results }: { results: StrategyResult[] }) {
 
 export default function Home() {
   const [symbols, setSymbols] = useState(["0050"]);
+  const [symbolInput, setSymbolInput] = useState("");
   const [strategy, setStrategy] = useState("ma-crossover");
   const [fromYear, setFromYear] = useState("2010");
   const [toYear, setToYear] = useState("2026");
@@ -85,6 +86,13 @@ export default function Home() {
   const leading = useMemo(() => response?.results.slice().sort((a, b) => b.endingValue - a.endingValue)[0], [response]);
   const years = Array.from({ length: 17 }, (_, index) => String(2010 + index));
   const toggleSymbol = (value: string) => setSymbols((current) => current.includes(value) ? current.length > 1 ? current.filter((item) => item !== value) : current : current.length < 3 ? [...current, value] : current);
+  const addSymbol = () => {
+    const code = symbolInput.trim().toUpperCase();
+    if (!/^\d{4,6}$/.test(code)) { setError("請輸入 4 至 6 位數字的台股代碼。"); return; }
+    if (symbols.includes(code)) { setError(`${code} 已在比較清單中。`); return; }
+    if (symbols.length >= 3) { setError("一次最多比較 3 檔，請先移除一檔再新增。"); return; }
+    setError(""); setSymbols((current) => [...current, code]); setSymbolInput("");
+  };
   const strategyOptions = [
     ["ma-crossover", "雙均線交叉", "短均線高於長均線持有；反向時退場"],
     ["rsi-reversion", "RSI 均值回歸", "RSI 低於買進門檻進場，高於賣出門檻出場"],
@@ -100,7 +108,7 @@ export default function Home() {
       <section className="workspace">
         <aside className="config-panel">
           <div className="panel-heading"><div><span className="step">01</span><h2>設定回測</h2></div><span className="tiny-label">PARAMETERS</span></div>
-          <div className="field"><label>比較標的（最多 3 檔）</label><div className="symbol-options">{[["0050", "元大台灣50"], ["0056", "元大高股息"], ["2330", "台積電"]].map(([code, name]) => <label key={code} className={symbols.includes(code) ? "symbol-option selected" : "symbol-option"}><input type="checkbox" checked={symbols.includes(code)} onChange={() => toggleSymbol(code)}/><span><strong>{code}</strong><small>{name}</small></span></label>)}</div><span className="field-hint">同一策略、期間與投入假設，橫向比較標的</span></div>
+          <div className="field"><label>回測標的（最多 3 檔）</label><div className="symbol-add"><input aria-label="輸入台股代碼" inputMode="numeric" placeholder="輸入代碼，例如 2603" value={symbolInput} onChange={(e) => setSymbolInput(e.target.value.replace(/\D/g, "").slice(0, 6))} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSymbol(); } }} /><button type="button" onClick={addSymbol} disabled={symbols.length >= 3}>加入</button></div><div className="selected-symbols" aria-label="已選標的">{symbols.map((code) => <span className="selected-symbol" key={code}>{code}<button type="button" aria-label={`移除 ${code}`} onClick={() => toggleSymbol(code)} disabled={symbols.length <= 1}>×</button></span>)}</div><div className="symbol-presets"><span>快速加入</span>{[["0050", "台灣50"], ["0056", "高股息"], ["2330", "台積電"]].map(([code, name]) => <button type="button" key={code} onClick={() => { if (!symbols.includes(code) && symbols.length < 3) setSymbols((current) => [...current, code]); }} disabled={symbols.includes(code) || symbols.length >= 3}>{code} {name}</button>)}</div><span className="field-hint">輸入 TWSE 上市股票代碼即可回測；快速選項僅供方便，不限於這三檔。</span></div>
           <div className="field"><label>回測期間</label><div className="range-inputs"><select aria-label="起始年度" value={fromYear} onChange={(e) => setFromYear(e.target.value)}>{years.map((year) => <option key={year}>{year}</option>)}</select><span>至</span><select aria-label="結束年度" value={toYear} onChange={(e) => setToYear(e.target.value)}>{years.map((year) => <option key={year}>{year}</option>)}</select></div><span className="field-hint">證交所此行情端點提供 2010 年起資料</span></div>
           <div className="field"><label htmlFor="strategy">策略範本</label><select id="strategy" value={strategy} onChange={(e) => setStrategy(e.target.value)}>{strategyOptions.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select><div className="strategy-chip"><span className="strategy-icon">⌁</span><span><strong>{strategyOptions.find(([id]) => id === strategy)?.[1]}</strong><small>{strategyOptions.find(([id]) => id === strategy)?.[2]}</small></span><span className="custom-tag">可調參數</span></div>
             {strategy === "ma-crossover" && <div className="range-inputs window-inputs"><label>短均線<input type="number" min="2" max="250" value={fast} onChange={(e) => setFast(e.target.value)} aria-label="短均線交易日"/><span>日</span></label><label>長均線<input type="number" min="3" max="500" value={slow} onChange={(e) => setSlow(e.target.value)} aria-label="長均線交易日"/><span>日</span></label></div>}
