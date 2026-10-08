@@ -37,7 +37,7 @@ async function loadMonth(symbol: string, month: string): Promise<DailyBar[]> {
   const request = new Request(url.toString(), { headers: { Accept: "application/json" } });
   // Sites Workers do not grant access to the account-wide default Cache API.
   // Fetch the public TWSE endpoint directly instead of touching caches.default.
-  const response = await fetch(request, { signal: AbortSignal.timeout(15000) });
+  const response = await fetchTwse(request);
   if (!response.ok) throw new Error(`證交所行情服務回應 ${response.status}（${month}）。`);
   const body = await response.json() as TwseMonth;
   if (body.stat !== "OK") {
@@ -45,6 +45,22 @@ async function loadMonth(symbol: string, month: string): Promise<DailyBar[]> {
     throw new Error(`證交所暫時無法提供 ${month} 的行情：${body.stat}`);
   }
   return toBars(body);
+}
+
+async function fetchTwse(request: Request) {
+  let current = request;
+  for (let hop = 0; hop < 4; hop++) {
+    const response = await fetch(current, { redirect: "manual", signal: AbortSignal.timeout(15000) });
+    if (![301, 302, 303, 307, 308].includes(response.status)) return response;
+    const location = response.headers.get("location");
+    if (!location) return response;
+    const nextUrl = new URL(location, current.url);
+    if (nextUrl.protocol !== "https:" || !(nextUrl.hostname === "twse.com.tw" || nextUrl.hostname.endsWith(".twse.com.tw"))) {
+      throw new Error("證交所行情服務導向了非證交所網址，已停止請求。");
+    }
+    current = new Request(nextUrl, { headers: { Accept: "application/json" } });
+  }
+  throw new Error("證交所行情服務轉址次數過多，請稍後再試。");
 }
 
 async function loadBars(symbol: string, months: string[]) {
