@@ -50,13 +50,14 @@
             <ul *ngIf="catalog.items.length > 0">
               <li *ngFor="let item of catalog.items">
                 <span class="catalog-item-name"><strong>{{ item.code }}</strong><span>{{ item.name }}</span></span>
-                <span class="catalog-item-meta">{{ item.kind === 'STOCK' ? '上市公司' : item.kind === 'FUND' ? '基金目錄' : '未分類目錄項目' }} · 出表 {{ item.asOf || '未提供' }}</span>
+                <span class="catalog-item-meta">{{ item.market === 'TPEX' ? '上櫃公司' : item.kind === 'STOCK' ? '上市公司' : item.kind === 'FUND' ? '上市基金目錄' : '未分類目錄項目' }} · 出表 {{ item.asOf || '未提供' }}</span>
                 <button type="button" (click)="addCatalogItem(item)"
                   [disabled]="!canAddCatalogItem(item)"
                   [attr.aria-label]="canAddCatalogItem(item) ? '加入 ' + item.code + ' ' + item.name : item.code + ' 目前無法加入回測清單'">
                   {{ !isCompatibleCatalogCode(item.code) ? '不支援' : symbols.includes(item.code) ? '已加入' : symbols.length >= 3 ? '已達上限' : '加入' }}
                 </button>
-                <small *ngIf="!isCompatibleCatalogCode(item.code)" class="catalog-item-limit">代碼格式不相容：目前行情與回測只接受 4 至 6 位數字代碼。</small>
+                <small *ngIf="item.backtestSupported === false" class="catalog-item-limit">已可搜尋；目前回測行情來源尚未支援此市場。</small>
+                <small *ngIf="item.backtestSupported !== false && !isCompatibleCatalogCode(item.code)" class="catalog-item-limit">代碼格式不相容：目前行情與回測只接受 4 至 6 位數字代碼。</small>
               </li>
             </ul>
             <p class="catalog-count">最多顯示 {{ catalog.items.length }} / {{ catalog.totalMatches }} 筆符合項目。</p>
@@ -64,7 +65,7 @@
               <summary>目錄來源與限制</summary>
               <div *ngFor="let source of catalog.sources" class="catalog-source">
                 <strong>{{ source.title }}</strong> · {{ source.provider }}
-                <span>更新頻率：{{ source.updateFrequency }}；來源出表：{{ source.asOfFrom }} 至 {{ source.asOfTo }}；取得時間：{{ source.fetchedAt }}；快取：{{ source.cacheTtlSeconds }} 秒。</span>
+                <span>更新頻率：{{ source.updateFrequency }}；來源出表：{{ source.asOfFrom }} 至 {{ source.asOfTo }}；取得時間：{{ source.fetchedAt }}；上游回應快取期限：{{ source.cacheTtlSeconds }} 秒。</span>
                 <span>授權：{{ source.license }} · <a [href]="source.licenseUrl" target="_blank" rel="noopener noreferrer">授權說明</a> · <a [href]="source.datasetUrl" target="_blank" rel="noopener noreferrer">資料集</a></span>
               </div>
               <ul><li *ngFor="let limitation of catalog.limitations">{{ limitation }}</li></ul>

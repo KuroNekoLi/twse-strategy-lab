@@ -1,5 +1,35 @@
 [
   {
+    "name": "Explore page searches public directory and shows market/source availability",
+    "status": "PASS",
+    "detail": {
+      "query": "2330",
+      "row": "2330\n台積電\n上市 · 公司 · 出表 2026-10-08\n可帶入回測\n帶入工作台 →"
+    }
+  },
+  {
+    "name": "Explore accepts one-character Chinese name search",
+    "status": "PASS",
+    "detail": {
+      "query": "台",
+      "results": [
+        "1240\n台灣測試\n上櫃 · 公司 · 出表 2026-10-08\n目前回測行情來源尚未支援\n尚未支援",
+        "1301\n台塑\n上市 · 公司 · 出表 2026-10-08\n可帶入回測\n帶入工作台 →",
+        "2308\n台達電\n上市 · 公司 · 出表 2026-10-08\n可帶入回測\n帶入工作台 →",
+        "2330\n台積電\n上市 · 公司 · 出表 2026-10-08\n可帶入回測\n帶入工作台 →",
+        "0050\n元大台灣50\n上市 · 基金 · 出表 2026-10-08\n可帶入回測\n帶入工作台 →"
+      ]
+    }
+  },
+  {
+    "name": "Explore page labels OTC as searchable but unsupported for current backtest",
+    "status": "PASS",
+    "detail": {
+      "query": "1240",
+      "row": "1240\n台灣測試\n上櫃 · 公司 · 出表 2026-10-08\n目前回測行情來源尚未支援\n尚未支援"
+    }
+  },
+  {
     "name": "Code search, transient loading, rendered result and company label",
     "status": "PASS",
     "detail": {
@@ -9,10 +39,36 @@
     }
   },
   {
+    "name": "Prefix code search returns 0050 and 0051",
+    "status": "PASS",
+    "detail": {
+      "query": "005",
+      "results": [
+        "0050\n元大台灣50\n上市基金目錄 · 出表 2026-10-08\n已加入",
+        "0051\n元大中型100\n上市基金目錄 · 出表 2026-10-08\n加入",
+        "0056\n高股息基金\n上市基金目錄 · 出表 2026-10-08\n加入"
+      ]
+    }
+  },
+  {
+    "name": "Chinese name search prioritizes common stock names",
+    "status": "PASS",
+    "detail": {
+      "query": "台",
+      "results": [
+        "1240\n台灣測試\n上櫃公司 · 出表 2026-10-08\n加入\n已可搜尋；目前回測行情來源尚未支援此市場。",
+        "1301\n台塑\n上市公司 · 出表 2026-10-08\n加入",
+        "2308\n台達電\n上市公司 · 出表 2026-10-08\n加入",
+        "2330\n台積電\n上市公司 · 出表 2026-10-08\n加入",
+        "0050\n元大台灣50\n上市基金目錄 · 出表 2026-10-08\n已加入"
+      ]
+    }
+  },
+  {
     "name": "Source/license attribution and limitations",
     "status": "PASS",
     "detail": {
-      "provenance": "目錄來源與限制\n上市公司基本資料\n· 臺灣證券交易所\n更新頻率：MONTHLY；來源出表：2026-10-08 至 2026-10-08；取得時間：2026-10-08T22:11:47.802019Z；快取：900 秒。\n授權：政府資料開放授權條款第1版（OGDL v1.0） · 授權說明 · 資料集\n基金基本資料\n· 臺灣證券交易所\n更新頻率：MONTHLY；來源出表：2026-10-08 至 2026-10-08；取得時間：2026-10-08T22:11:47.987873Z；快取：900 秒。\n授權：政府資料開放授權條款第1版（OGDL v1.0） · 授權說明 · 資料集\n來源公布更新頻率為每月；fetchedAt 只代表取得時間，asOf 為來源出表日期，快取不保證資料即時或完整。\n只保留代碼、名稱、來源類型與出表日期；未回傳公司聯絡資料或個人欄位。\nFUND 表示基金基本資料來源，未將所有基金推定為 ETF；名錄存在不保證本平台行情或回測可用。\n停牌、上市／下市生命週期與公司行動仍未驗證；此名錄不解除回測發布阻擋。",
+      "provenance": "目錄來源與限制\n上市公司基本資料\n· 臺灣證券交易所\n更新頻率：MONTHLY；來源出表：2026-10-08 至 2026-10-08；取得時間：2026-10-08T23:28:35.777428Z；上游回應快取期限：900 秒。\n授權：政府資料開放授權條款第1版（OGDL v1.0） · 授權說明 · 資料集\n基金基本資料\n· 臺灣證券交易所\n更新頻率：MONTHLY；來源出表：2026-10-08 至 2026-10-08；取得時間：2026-10-08T23:28:35.962374Z；上游回應快取期限：900 秒。\n授權：政府資料開放授權條款第1版（OGDL v1.0） · 授權說明 · 資料集\n上櫃公司基本資料\n· 櫃買中心\n更新頻率：DAILY；來源出表：2026-10-08 至 2026-10-08；取得時間：2026-10-08T23:28:36.148542Z；上游回應快取期限：900 秒。\n授權：政府資料開放授權條款第1版（OGDL v1.0） · 授權說明 · 資料集\n名錄含上市公司、上市基金與上櫃公司；來源更新頻率不同，fetchedAt 代表本服務取得時間，asOf 為來源出表日期。\n只保留代碼、名稱、來源類型與出表日期；未回傳公司聯絡資料或個人欄位。\n上櫃標的可搜尋，但目前平台行情與回測只支援 TWSE；目錄存在不代表該代碼已可回測。\nFUND 表示基金基本資料來源，未將所有基金推定為 ETF；名錄存在不保證行情完整或可回測。\n停牌、上市／下市生命週期與公司行動仍未驗證；此名錄不解除回測發布阻擋。",
       "links": [
         {
           "text": "授權說明",
@@ -29,6 +85,14 @@
         {
           "text": "資料集",
           "href": "https://data.gov.tw/dataset/157399"
+        },
+        {
+          "text": "授權說明",
+          "href": "https://data.gov.tw/license"
+        },
+        {
+          "text": "資料集",
+          "href": "https://data.gov.tw/dataset/25036"
         }
       ]
     }
@@ -50,10 +114,18 @@
     }
   },
   {
+    "name": "OTC item is searchable but unavailable to TWSE backtest",
+    "status": "PASS",
+    "detail": {
+      "row": "1240\n台灣測試\n上櫃公司 · 出表 2026-10-08\n加入\n已可搜尋；目前回測行情來源尚未支援此市場。",
+      "disabled": true
+    }
+  },
+  {
     "name": "Alphanumeric fund is disabled with incompatibility explanation",
     "status": "PASS",
     "detail": {
-      "row": "00400A\n合成主動基金A\n基金目錄 · 出表 2026-10-08\n不支援\n代碼格式不相容：目前行情與回測只接受 4 至 6 位數字代碼。",
+      "row": "00400A\n合成主動基金A\n上市基金目錄 · 出表 2026-10-08\n不支援\n代碼格式不相容：目前行情與回測只接受 4 至 6 位數字代碼。",
       "disabled": true
     }
   },

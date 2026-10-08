@@ -35,11 +35,14 @@ public class InstrumentCatalogClient {
   private static final int MAX_ROWS = 20000;
   private static final int MAX_BODY_BYTES = 10 * 1024 * 1024;
   enum Resource {
-    COMPANY("companies", "上市公司基本資料", "18419", "公司代號", "公司名稱", "STOCK"),
-    FUND("funds", "基金基本資料", "157399", "基金代號", "基金簡稱", "FUND");
-    final String id, title, dataset, codeField, nameField, kind;
-    Resource(String id, String title, String dataset, String codeField, String nameField, String kind) {
-      this.id = id; this.title = title; this.dataset = dataset; this.codeField = codeField; this.nameField = nameField; this.kind = kind;
+    COMPANY("companies", "上市公司基本資料", "18419", "公司代號", "公司名稱", "STOCK", "TWSE", true),
+    FUND("funds", "基金基本資料", "157399", "基金代號", "基金簡稱", "FUND", "TWSE", true),
+    TPEX_COMPANY("tpexCompanies", "上櫃公司基本資料", "25036", "SecuritiesCompanyCode", "CompanyAbbreviation", "STOCK", "TPEX", false);
+    final String id, title, dataset, codeField, nameField, kind, market;
+    final boolean backtestSupported;
+    Resource(String id, String title, String dataset, String codeField, String nameField, String kind, String market, boolean backtestSupported) {
+      this.id = id; this.title = title; this.dataset = dataset; this.codeField = codeField; this.nameField = nameField;
+      this.kind = kind; this.market = market; this.backtestSupported = backtestSupported;
     }
   }
   record TransportResponse(int status, String body) {}
@@ -50,24 +53,28 @@ public class InstrumentCatalogClient {
   private final Duration ttl;
   private final Clock clock;
   private final Transport transport;
-  // Only two resource keys and whitelisted normalized rows are retained in memory.
+  // Only whitelisted normalized rows are retained in memory.
   private final Map<Resource, Snapshot> cache = new ConcurrentHashMap<>();
-  private final Map<Resource, Object> locks = Map.of(Resource.COMPANY, new Object(), Resource.FUND, new Object());
+  private final Map<Resource, Object> locks = Map.of(Resource.COMPANY, new Object(), Resource.FUND, new Object(), Resource.TPEX_COMPANY, new Object());
 
   @Autowired
   public InstrumentCatalogClient(JsonMapper mapper,
       @Value("${app.catalog.company-url:https://openapi.twse.com.tw/v1/opendata/t187ap03_L}") String companyUrl,
       @Value("${app.catalog.fund-url:https://openapi.twse.com.tw/v1/opendata/t187ap47_L}") String fundUrl,
+      @Value("${app.catalog.tpex-company-url:https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O}") String tpexCompanyUrl,
       @Value("${app.catalog.cache-ttl-seconds:900}") long ttlSeconds) {
-    this(mapper, URI.create(companyUrl), URI.create(fundUrl), Duration.ofSeconds(ttlSeconds), Clock.systemUTC(), httpTransport());
+    this(mapper, URI.create(companyUrl), URI.create(fundUrl), URI.create(tpexCompanyUrl), Duration.ofSeconds(ttlSeconds), Clock.systemUTC(), httpTransport());
   }
   InstrumentCatalogClient(JsonMapper mapper, URI companyUrl, URI fundUrl, Duration ttl, Clock clock, Transport transport) {
+    this(mapper, companyUrl, fundUrl, URI.create("https://example.invalid/tpex-company"), ttl, clock, transport);
+  }
+  InstrumentCatalogClient(JsonMapper mapper, URI companyUrl, URI fundUrl, URI tpexCompanyUrl, Duration ttl, Clock clock, Transport transport) {
     if (ttl.isNegative() || ttl.isZero() || ttl.compareTo(Duration.ofDays(1)) > 0) throw new IllegalArgumentException("Catalog cache TTL must be positive and at most one day");
     this.mapper = mapper.rebuild().enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS).enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build();
-    this.endpoints = Map.of(Resource.COMPANY, companyUrl, Resource.FUND, fundUrl);
+    this.endpoints = Map.of(Resource.COMPANY, companyUrl, Resource.FUND, fundUrl, Resource.TPEX_COMPANY, tpexCompanyUrl);
     this.ttl = ttl; this.clock = clock; this.transport = transport;
   }
-  List<Snapshot> snapshots() { return List.of(snapshot(Resource.COMPANY), snapshot(Resource.FUND)); }
+  List<Snapshot> snapshots() { return List.of(snapshot(Resource.COMPANY), snapshot(Resource.FUND), snapshot(Resource.TPEX_COMPANY)); }
   private Snapshot snapshot(Resource resource) {
     synchronized (locks.get(resource)) {
       Instant now = clock.instant(); Snapshot saved = cache.get(resource);
@@ -87,8 +94,8 @@ public class InstrumentCatalogClient {
       Instant fetched = clock.instant();
       String minDate = rows.stream().map(Instrument::asOf).min(String::compareTo).orElseThrow();
       String maxDate = rows.stream().map(Instrument::asOf).max(String::compareTo).orElseThrow();
-      Source source = new Source(resource.id, resource.title, "臺灣證券交易所", "https://data.gov.tw/dataset/" + resource.dataset,
-          endpoint.toString(), "政府資料開放授權條款第1版（OGDL v1.0）", "https://data.gov.tw/license", "MONTHLY",
+      Source source = new Source(resource.id, resource.title, resource.market.equals("TPEX") ? "櫃買中心" : "臺灣證券交易所", "https://data.gov.tw/dataset/" + resource.dataset,
+          endpoint.toString(), "政府資料開放授權條款第1版（OGDL v1.0）", "https://data.gov.tw/license", resource.market.equals("TPEX") ? "DAILY" : "MONTHLY",
           fetched.toString(), minDate, maxDate, ttl.toSeconds());
       Snapshot loaded = new Snapshot(rows, source, fetched.plus(ttl)); cache.put(resource, loaded); return loaded;
     }
@@ -103,10 +110,14 @@ public class InstrumentCatalogClient {
     List<Instrument> rows = new ArrayList<>(); Set<String> seen = new HashSet<>();
     for (JsonNode row : root) {
       if (!row.isObject()) throw CatalogException.schema(resource.title);
-      String code = text(row, resource.codeField, resource), name = text(row, resource.nameField, resource);
+      String code = text(row, resource.codeField, resource), name = switch (resource) {
+        case COMPANY -> optionalText(row, "公司簡稱", text(row, resource.nameField, resource));
+        case TPEX_COMPANY -> optionalText(row, "CompanyAbbreviation", text(row, "CompanyName", resource));
+        case FUND -> text(row, resource.nameField, resource);
+      };
       if (!code.matches("[0-9]{4,6}[A-Z]?") || name.length() > 200 || name.codePoints().anyMatch(Character::isISOControl) || !seen.add(code)) throw CatalogException.schema(resource.title);
-      String date = date(text(row, "出表日期", resource), resource);
-      rows.add(new Instrument(code, name, resource.kind, date));
+      String date = date(text(row, resource == Resource.TPEX_COMPANY ? "Date" : "出表日期", resource), resource);
+      rows.add(new Instrument(code, name, resource.kind, date, resource.market, resource.backtestSupported));
     }
     rows.sort(Comparator.comparing(Instrument::code)); return List.copyOf(rows);
   }
@@ -114,6 +125,10 @@ public class InstrumentCatalogClient {
     JsonNode value = row.path(field);
     if (!value.isTextual() || value.asText().isBlank()) throw CatalogException.schema(resource.title);
     return value.asText().strip();
+  }
+  private String optionalText(JsonNode row, String field, String fallback) {
+    JsonNode value = row.path(field);
+    return value.isTextual() && !value.asText().isBlank() ? value.asText().strip() : fallback;
   }
   private String date(String value, Resource resource) {
     try {

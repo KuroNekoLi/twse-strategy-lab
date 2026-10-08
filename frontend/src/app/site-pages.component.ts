@@ -81,13 +81,13 @@ export class HomePageComponent {
 }
 
 @Component({ selector: 'app-explore-page', standalone: true, imports: [CommonModule, FormsModule, RouterLink], template: `
-  <section class="page-wrap subpage"><p class="eyebrow">EXPLORE · 標的目錄</p><h1 tabindex="-1">先找到值得研究的標的。</h1><p class="subpage-lede">搜尋上市公司與基金目錄，了解目前能否帶入回測。出現在目錄中不代表有可用行情。</p>
-    <div class="explore-search"><label for="asset-search">搜尋代碼或名稱</label><div class="search-control"><span aria-hidden="true">⌕</span><input id="asset-search" type="search" [(ngModel)]="query" (ngModelChange)="search($event)" (keydown.enter)="$event.preventDefault()" placeholder="例如 2330 或 台積電" autocomplete="off"><span *ngIf="busy" role="status">搜尋中…</span></div><p class="form-hint">至少輸入 2 個字元。目錄只提供標的基本資訊。</p>
+  <section class="page-wrap subpage"><p class="eyebrow">EXPLORE · 標的目錄</p><h1 tabindex="-1">先找到值得研究的標的。</h1><p class="subpage-lede">搜尋上市、上櫃公司與上市基金目錄，了解目前能否帶入回測。出現在目錄中不代表有可用行情。</p>
+    <div class="explore-search"><label for="asset-search">搜尋代碼或名稱</label><div class="search-control"><span aria-hidden="true">⌕</span><input id="asset-search" type="search" [(ngModel)]="query" (ngModelChange)="search($event)" (keydown.enter)="$event.preventDefault()" placeholder="例如 2330、005 或 台" autocomplete="off"><span *ngIf="busy" role="status">搜尋中…</span></div><p class="form-hint">輸入 1 個字元即可搜尋。目錄只提供標的基本資訊。</p>
     <p *ngIf="error" class="notice-error" role="alert">{{error}}</p><p *ngIf="message" class="notice" role="status">{{message}}</p>
-    <div class="explore-results" *ngIf="results"><p class="result-count" role="status" aria-live="polite">找到 {{results.totalMatches}} 筆 · 顯示 {{results.items.length}} 筆</p><article class="asset-row" *ngFor="let item of results.items"><div class="asset-code">{{item.code}}</div><div class="asset-info"><strong>{{item.name}}</strong><span>{{item.kind === 'STOCK' ? '上市公司' : item.kind === 'FUND' ? '基金目錄' : '目錄項目'}} · 出表 {{item.asOf || '未提供'}}</span></div><span class="asset-availability" [class.unavailable]="!compatible(item.code)">{{compatible(item.code) ? '代碼格式可帶入；行情執行時驗證' : '目前格式不支援'}}</span><a *ngIf="compatible(item.code)" [routerLink]="'/backtest'" [queryParams]="{symbol:item.code}" class="small-action">帶入工作台 →</a><span *ngIf="!compatible(item.code)" class="small-action muted">代碼格式不支援</span></article><div class="source-note"><strong>目錄資料與行情分開</strong><p>商品類型與代碼取自公開目錄；實際行情期間、公司行動與完整授權狀態，須在方法說明及回測結果中另行確認。</p><a *ngFor="let source of results.sources" [href]="source.licenseUrl" target="_blank" rel="noopener noreferrer">{{source.provider}} 授權 ↗</a></div></div>
+    <div class="explore-results" *ngIf="results"><p class="result-count" role="status" aria-live="polite">找到 {{results.totalMatches}} 筆 · 顯示 {{results.items.length}} 筆</p><article class="asset-row" *ngFor="let item of results.items"><div class="asset-code">{{item.code}}</div><div class="asset-info"><strong>{{item.name}}</strong><span>{{marketName(item.market)}} · {{item.kind === 'STOCK' ? '公司' : item.kind === 'FUND' ? '基金' : '目錄項目'}} · 出表 {{item.asOf || '未提供'}}</span></div><span class="asset-availability" [class.unavailable]="!compatible(item)">{{compatible(item) ? '可帶入回測' : '目前回測行情來源尚未支援'}}</span><a *ngIf="compatible(item)" [routerLink]="'/backtest'" [queryParams]="{symbol:item.code}" class="small-action">帶入工作台 →</a><span *ngIf="!compatible(item)" class="small-action muted">尚未支援</span></article><div class="source-note"><strong>目錄資料與行情分開</strong><p>商品類型與代碼取自公開目錄；實際行情期間、公司行動與完整授權狀態，須在方法說明及回測結果中另行確認。</p><a *ngFor="let source of results.sources" [href]="source.licenseUrl" target="_blank" rel="noopener noreferrer">{{source.provider}} 授權 ↗</a></div></div>
     <div class="explore-empty" *ngIf="!results && !busy"><span aria-hidden="true">⌕</span><strong>從代碼或名稱開始搜尋</strong><p>也可以先從常見研究範本開始。</p><a routerLink="/backtest" [queryParams]="{symbol:'0050',strategy:'ma-crossover'}">前往 0050 均線範本 →</a></div>
   </div>
-  <aside class="page-side-note"><strong>目前目錄範圍</strong><p>目前搜尋資料來自 TWSE 公開公司與基金基本資料目錄。搜尋結果不等同完整 ETF 清單，也不保證行情端點支援。</p><a routerLink="/methods">查看資料限制 →</a></aside>
+  <aside class="page-side-note"><strong>目前目錄範圍</strong><p>目前搜尋資料來自 TWSE 上市公司、上市基金與 TPEx 上櫃公司公開目錄。搜尋結果不等同所有台灣金融商品，也不保證行情端點支援。</p><a routerLink="/methods">查看資料限制 →</a></aside>
   </section>
 ` })
 export class ExplorePageComponent {
@@ -101,7 +101,7 @@ export class ExplorePageComponent {
   }
   search(value: string): void {
     this.query = value.trim().slice(0, 60); this.error = ''; this.message = ''; if (this.timer) clearTimeout(this.timer);
-    const id = ++this.requestNo; if (this.query.length < 2) { this.results = null; this.busy = false; return; }
+    const id = ++this.requestNo; if (this.query.length < 1) { this.results = null; this.busy = false; return; }
     this.results = null; this.busy = true;
     this.timer = setTimeout(() => void this.load(this.query, id), 300);
   }
@@ -110,7 +110,8 @@ export class ExplorePageComponent {
     try { const response = await firstValueFrom(this.http.get<any>(`${apiBaseUrl}/api/v1/instruments`, {params:{query,limit:'20'}})); if (id === this.requestNo) { this.results = response; this.busy = false; this.changeDetector.markForCheck(); } }
     catch (error) { if (id === this.requestNo) { this.busy = false; this.error = error instanceof HttpErrorResponse && error.status === 0 ? '目前無法連線至標的目錄，請稍後重試。' : '標的目錄查詢失敗，請稍後重試。'; this.changeDetector.markForCheck(); } }
   }
-  compatible(code: string): boolean { return /^\d{4,6}$/.test(code); }
+  compatible(item: { code: string; backtestSupported?: boolean }): boolean { return item.backtestSupported !== false && /^\d{4,6}$/.test(item.code); }
+  marketName(market?: string): string { return market === 'TPEX' ? '上櫃' : market === 'TWSE' ? '上市' : '市場未提供'; }
 }
 
 @Component({ selector: 'app-strategies-page', standalone: true, imports: [CommonModule, RouterLink], template: `

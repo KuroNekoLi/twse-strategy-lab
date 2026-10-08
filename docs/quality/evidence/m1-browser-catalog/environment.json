@@ -3,8 +3,8 @@
     "BROWSER_RUNTIME",
     "AUTOMATED_TEST"
   ],
-  "runtimeIdentity": "/root/m1_catalog_browser",
-  "taskId": "M1-CATALOG-BROWSER",
+  "runtimeIdentity": "/root/catalog-db-browser-qa",
+  "taskId": "CATALOG-DB-SEARCH",
   "browser": {
     "name": "Google Chrome",
     "version": "154.0.8037.98",
@@ -26,19 +26,23 @@
   "fixtureOnly": true,
   "liveMarketData": false,
   "artifactHashes": {
-    "company-search-attribution.png": "2134dfca84520d67fe3657fd05b9cd9c231bdb328498a2bea72ae8a761902f65",
-    "selected-company.png": "03e772bb002a506a0ce405a53be20b853acc0c9f7829ae12cb7d5745e8ebcbc8",
-    "latest-query-result.png": "57e571cac70879b286cc09242744b5f7598ca41c5ca025878cac27117c5ae22f",
-    "catalog-trace.zip": "5d564f74cc365cca9b708c4402d158ad9813531194725620659477d814fd5296"
+    "company-search-attribution.png": "f1b6a653e9678bd30fbdd6f2d50028508f8e3c55fa0d66c6885e40147ed13a1c",
+    "selected-company.png": "e68b8b8909ad6ed1ae1b89a7c193081a2673f23725b5e01bea6753171c8e76c2",
+    "latest-query-result.png": "440870fb5744ccb0878ff048ae6b90c81d9708527e12889d44414ef291afb4ab",
+    "catalog-trace.zip": "166515eb5b3d8d9f35b4e3a3921213533e9d87e161afca500f88116f81263ec3"
   },
   "upstreamRequests": [
     {
       "path": "/company",
-      "at": "2026-10-08T22:11:47.590Z"
+      "at": "2026-10-08T23:28:35.578Z"
     },
     {
       "path": "/fund",
-      "at": "2026-10-08T22:11:47.804Z"
+      "at": "2026-10-08T23:28:35.778Z"
+    },
+    {
+      "path": "/tpex",
+      "at": "2026-10-08T23:28:35.963Z"
     }
   ],
   "expectedConsoleErrors": [

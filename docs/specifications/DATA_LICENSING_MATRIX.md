@@ -48,7 +48,7 @@
 | R-05 公司目錄／股利 OpenAPI：未接入 | Swagger 列介面 | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | 逐一找精確資料集、授權、ETF 與歷史範圍；不能憑 OpenAPI 總體說明一律套用 |
 | R-06 分割／除權息／停牌等公告事件集：無管線 | 單一 0050 官方公告可讀 | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | 需通用事件資源與公告可知時間、欄位授權；事實核對不等於全文重製授權 |
 | R-07 Data E-Shop 每日收盤行情：候選、`NOT_ACQUIRED` | 商品說明可讀 | UNKNOWN | NOT_ACQUIRED | NOT_ACQUIRED | UNKNOWN | NOT_ACQUIRED | 需選內部／外部用途、取得最新訂購條款／契約與使用者範圍確認；內部商品明確不可對外公開 |
-| R-08 TPEx／其他供應商：未查核／未接入 | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | 另有來源與契約，不在本次 TWSE 查核範圍；M0 不宣稱上市櫃通用覆蓋 |
+| R-08 TPEx 上櫃公司目錄：已接入目錄同步；TPEx 行情未接入 | TPEx OpenAPI + dataset 25036 資源級 OGDL v1.0 | 僅目錄欄位 YES* | 僅目錄欄位 YES* | 僅目錄欄位 YES* | 僅目錄欄位 YES* | 僅目錄欄位 YES* | 不代表行情、其他 TPEx 資料或完整上櫃商品覆蓋；API 呼叫頻率及 SLA 未取得保證 |
 | R-09 M0 synthetic fixtures：由專案創作的價格／日期 | 本地測試資產 | 不需市場資料供應授權 | 合成資料可納入版本控制 | 非市場原始資料 | 僅測試／示例，不當市場研究證據 | 不在本次產品實作範圍 | 與市場資料及其授權分開；保留 synthetic 標記與來源說明 |
 
 R-01 也沒有已核准的呼叫速率或批次抓取證據。目前 [TwseMarketDataClient](../../backend/src/main/java/uk/kuronekoli/strategylab/market/TwseMarketDataClient.java) 仍有三個月份並行、批次間約 120ms，以及特定轉址異常重試；這是實作觀察，不是符合來源流量政策的證據。若授權需限定速率，必須由來源條款／書面答覆取得，不在文件自行宣稱合法安全值。
@@ -81,7 +81,8 @@ M0-DATA 授權盤點已完成；公開 gate 維持 `BLOCKED`：目前 monthly �
 |---|---|---|---|
 | 上市公司 | TWSE OpenAPI `/opendata/t187ap03_L`（Swagger 名稱：上市公司基本資料）；[data.gov.tw dataset/18419](https://data.gov.tw/dataset/18419) | OGDL v1.0、免費、月更新；欄位含公司代號、公司簡稱／名稱；詮釋資料更新時間 2024-11-25 | 僅映射代號、名稱、出表日期及市場種類。來源另有公司及個人聯絡資料，禁止在本產品 API／UI暴露不必要欄位 |
 | 上市基金／ETF | TWSE OpenAPI `/opendata/t187ap47_L`（Swagger 名稱：基金基本資料彙總表）；[data.gov.tw dataset/157399](https://data.gov.tw/dataset/157399) | 資料集說明為 ETF 基本資料；OGDL v1.0、免費、月更新；欄位含基金代號、基金簡稱／中文名稱；詮釋資料更新時間 2025-01-03 | 僅映射代號、名稱、出表日期及基金種類；目錄可搜尋不代表歷史行情支援、行情完整或可發布 |
+| 上櫃公司 | TPEx OpenAPI `/openapi/v1/mopsfin_t187ap03_O`；[data.gov.tw dataset/25036](https://data.gov.tw/dataset/25036) | OGDL v1.0、免費、每日更新；API 欄位使用英文名稱（`SecuritiesCompanyCode`、`CompanyAbbreviation`、`Date`） | 僅映射代號、簡稱、出表日期及市場；不暴露聯絡資料；目前只提供目錄搜尋，回測行情尚未接通 TPEx |
 
-上列資料集記錄均引用 [TWSE 官方 OpenAPI 說明](https://openapi.twse.com.tw/)；OpenAPI 中的 endpoint 名稱與資料集名稱相符。2026-10-09 僅作一次唯讀 GET schema/摘要抽樣（不保存完整回應）：公司資源 HTTP 200、1,095 筆，包含 `公司代號`、`公司名稱`、`出表日期`；基金資源 HTTP 200、271 筆，包含 `基金代號`、`基金簡稱`、`出表日期`。抽樣只佐證介接欄位與當時行數，不是目錄長期完整性、API 可用性或更新 SLA 的保證。
+TWSE 資料集引用 [TWSE 官方 OpenAPI 說明](https://openapi.twse.com.tw/)；TPEx 上櫃公司資源由 [TPEx OpenAPI](https://www.tpex.org.tw/openapi/) 提供。2026-10-09 僅作唯讀 GET schema/摘要抽樣（不保存完整回應）：TWSE 上市公司 HTTP 200、1,095 筆；基金 HTTP 200、271 筆；TPEx 上櫃公司 API HTTP 200，欄位含 `SecuritiesCompanyCode`、`CompanyAbbreviation`、`Date`。抽樣只佐證介接欄位與當時行數，不是目錄長期完整性、API 可用性或更新 SLA 的保證。
 
 產品須保留逐筆 `出表日期`、提供者、資料集識別碼及來源連結，並附政府資料開放授權顯名。只讀取必要欄位、即時搜尋呈現；不保存完整來源檔、不提供企業負責人／地址／電話／電子郵件等聯絡資料。目錄的 OGDL 授權不能延伸至月歷史行情端點 `/rwd/zh/afterTrading/STOCK_DAY`、歷史資料保存或衍生回測結果；那些用途仍依 R-01 維持 `UNKNOWN`／發布 `BLOCKED`。

@@ -92,7 +92,7 @@ type SavedConfig = {
 type SavedVersion = { id: string; version: number; savedAt: string; config: SavedConfig };
 type SavedDraft = { id: string; name: string; versions: SavedVersion[] };
 type SavedDraftStore = { schemaVersion: 1; drafts: SavedDraft[] };
-type CatalogItem = { code: string; name: string; kind: 'STOCK' | 'FUND' | string; asOf: string };
+type CatalogItem = { code: string; name: string; kind: 'STOCK' | 'FUND' | string; asOf: string; market?: string; backtestSupported?: boolean };
 type CatalogSource = {
   id: string; title: string; provider: string; datasetUrl: string; resourceUrl: string;
   license: string; licenseUrl: string; updateFrequency: string; fetchedAt: string;
@@ -569,7 +569,7 @@ export class BacktestWorkspaceComponent {
     this.catalogError = '';
     if (this.catalogDebounce) clearTimeout(this.catalogDebounce);
     const requestId = ++this.catalogRequestId;
-    if (this.catalogQuery.trim().length < 2) {
+    if (this.catalogQuery.trim().length < 1) {
       this.catalogResults = null;
       this.catalogBusy = false;
       this.changeDetector.markForCheck();
@@ -610,7 +610,7 @@ export class BacktestWorkspaceComponent {
   }
 
   canAddCatalogItem(item: CatalogItem): boolean {
-    return this.isCompatibleCatalogCode(item.code) && !this.symbols.includes(item.code) && this.symbols.length < 3;
+    return item.backtestSupported !== false && this.isCompatibleCatalogCode(item.code) && !this.symbols.includes(item.code) && this.symbols.length < 3;
   }
 
   isCompatibleCatalogCode(code: string): boolean {
@@ -618,6 +618,10 @@ export class BacktestWorkspaceComponent {
   }
 
   addCatalogItem(item: CatalogItem): void {
+    if (item.backtestSupported === false) {
+      this.catalogMessage = `${item.code} ${item.name} 已收錄於 ${item.market === 'TPEX' ? '上櫃' : '此市場'}名錄，但目前回測行情來源尚未支援。`;
+      return;
+    }
     if (!/^\d{4,6}$/.test(item.code)) {
       this.catalogMessage = `${item.code} 是基金目錄項目，但目前行情與回測介面只接受 4 至 6 位數字代碼，尚不能加入。`;
       return;
