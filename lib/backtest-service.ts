@@ -92,22 +92,33 @@ async function loadBars(symbol: string, months: string[]) {
 
 export async function handleBacktest(input: BacktestInput) {
   try {
-    if (!symbols.has(input.symbol)) return { status: 400, body: { error: "目前示範標的為 0050、0056 與 2330。" } };
+    const selectedSymbols = [...new Set(input.symbols?.length ? input.symbols : [input.symbol])];
+    if (!selectedSymbols.length || selectedSymbols.length > 3 || selectedSymbols.some((symbol) => !symbols.has(symbol))) return { status: 400, body: { error: "請選擇 1 至 3 檔示範標的：0050、0056 或 2330。" } };
     const today = new Date().toISOString().slice(0, 10);
     if (!/^2010-\d\d-\d\d$/.test(input.from) || !/^\d{4}-\d\d-\d\d$/.test(input.to) || input.from > input.to || input.from > today) return { status: 400, body: { error: "回測日期格式不正確；此資料服務目前提供 2010 年起的行情。" } };
     const effectiveTo = input.to > today ? today : input.to;
     const months = monthsBetween(input.from.slice(0, 7), effectiveTo.slice(0, 7));
     if (months.length > 204) return { status: 400, body: { error: "單次回測最多 17 年，請縮短期間。" } };
-    if (!Number.isInteger(input.fastWindow) || !Number.isInteger(input.slowWindow) || input.fastWindow < 2 || input.fastWindow >= input.slowWindow || input.slowWindow > 500) return { status: 400, body: { error: "請確認均線日數，短均線需小於長均線。" } };
+    const strategy = input.strategy ?? "ma-crossover";
+    if (!["ma-crossover", "rsi-reversion", "bollinger-reversion", "breakout", "drawdown-entry"].includes(strategy)) return { status: 400, body: { error: "請選擇有效的策略範本。" } };
+    if (!Number.isInteger(input.fastWindow) || !Number.isInteger(input.slowWindow) || input.fastWindow < 2 || (strategy === "ma-crossover" && input.fastWindow >= input.slowWindow) || input.slowWindow > 500) return { status: 400, body: { error: "請確認均線日數，短均線需小於長均線。" } };
+    const bounded = (value: number | undefined, min: number, max: number, fallback: number) => Number.isFinite(value ?? fallback) && (value ?? fallback) >= min && (value ?? fallback) <= max;
+    if (!bounded(input.rsiWindow, 2, 100, 14) || !bounded(input.rsiBuyThreshold, 1, 49, 30) || !bounded(input.rsiSellThreshold, 51, 99, 55) || !bounded(input.bollingerWindow, 2, 200, 20) || !bounded(input.bollingerMultiplier, 0.5, 5, 2) || !bounded(input.breakoutWindow, 2, 250, 20) || !bounded(input.drawdownBuyPercent, 1, 80, 20) || !bounded(input.profitSellPercent, 1, 200, 20)) return { status: 400, body: { error: "策略參數超出可用範圍，請調整後再試。" } };
     if (![input.monthlyContribution, input.initialCapital, input.commissionRate, input.sellTaxRate].every((value) => Number.isFinite(value) && value >= 0) || input.initialCapital <= 0) return { status: 400, body: { error: "投入金額和交易成本需為有效的非負數值。" } };
 
-    const rawBars = (await loadBars(input.symbol, months)).filter((bar) => bar.date >= input.from && bar.date <= effectiveTo);
-    if (!rawBars.length) return { status: 404, body: { error: "這段期間沒有找到可用的證交所日行情。" } };
-    const bars = adjustKnownSplits(input.symbol, rawBars);
-    const results = runBacktest(input, bars);
+    const assets: Array<{ symbol: string; from: string; to: string; tradingDays: number }> = [];
+    const results = [];
+    for (const symbol of selectedSymbols) {
+      const rawBars = (await loadBars(symbol, months)).filter((bar) => bar.date >= input.from && bar.date <= effectiveTo);
+      if (!rawBars.length) return { status: 404, body: { error: `${symbol} 在這段期間沒有找到可用的證交所日行情。` } };
+      const bars = adjustKnownSplits(symbol, rawBars);
+      const sellTaxRate = input.useMarketTaxDefaults ? (symbol === "2330" ? 0.003 : 0.001) : input.sellTaxRate;
+      results.push(...runBacktest({ ...input, symbol, sellTaxRate }, bars));
+      assets.push({ symbol, from: bars[0].date, to: bars.at(-1)!.date, tradingDays: bars.length });
+    }
     return { status: 200, body: {
-      symbol: input.symbol, from: bars[0].date, to: bars.at(-1)!.date, tradingDays: bars.length,
-      dataSource: "臺灣證券交易所 STOCK_DAY", assumptions: ["日收盤價", "不含配息", "月初投入", `買賣手續費 ${input.commissionRate * 100}%`, `賣出交易稅 ${input.sellTaxRate * 100}%`, "未計券商最低手續費", "不含滑價", "報酬採時間加權", "回撤依月末收盤估算", ...splitAssumptions(input.symbol)], results,
+      symbol: selectedSymbols[0], symbols: selectedSymbols, from: assets[0].from, to: assets[0].to, tradingDays: assets[0].tradingDays, assets,
+      dataSource: "臺灣證券交易所 STOCK_DAY", assumptions: ["日收盤價", "不含配息", "月初投入", `買賣手續費 ${input.commissionRate * 100}%`, ...(input.useMarketTaxDefaults ? selectedSymbols.map((symbol) => `${symbol} 賣出交易稅 ${symbol === "2330" ? 0.3 : 0.1}%`) : [`賣出交易稅 ${input.sellTaxRate * 100}%`]), "未計券商最低手續費", "不含滑價", "訊號使用前一交易日資料，於當日收盤執行", "報酬採時間加權", "回撤依月末收盤估算", ...selectedSymbols.flatMap((symbol) => splitAssumptions(symbol))], results,
     } };
   } catch (error) {
     const message = error instanceof Error ? error.message : "回測服務發生錯誤。";
