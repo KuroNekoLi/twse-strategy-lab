@@ -11,3 +11,5 @@ app:
     allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:4200,https://kuronekoli.github.io,https://finance.kuronekoli.uk}
   twse:
     base-url: https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY
+  market-history:
+    enabled: ${APP_MARKET_HISTORY_ENABLED:false}

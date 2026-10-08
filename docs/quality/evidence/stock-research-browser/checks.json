@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Explore search opens the stock research page",
+    "status": "PASS",
+    "detail": {
+      "url": "http://127.0.0.1:18392/#/stocks/2330",
+      "name": "台積電\n\n2330 · 臺灣證券交易所上市\n\n歷史資料研究",
+      "source": "來源：合成測試資料（非市場行情）\n本次取得：2026-10-08T23:44:14.821Z\n未調整原始收盤價 · 非即時"
+    }
+  },
+  {
+    "name": "Direct stock route renders accessible close-price chart",
+    "status": "PASS",
+    "detail": {
+      "url": "http://127.0.0.1:18392/#/stocks/2330",
+      "label": "台積電每日收盤價趨勢圖，期間 2025-10-15 至 2026-09-15",
+      "source": "來源：合成測試資料（非市場行情）\n本次取得：2026-10-08T23:44:14.821Z\n未調整原始收盤價 · 非即時",
+      "pointCount": 1
+    }
+  },
+  {
+    "name": "3-year period updates request, selected state and plotted series",
+    "status": "PASS",
+    "detail": {
+      "selected": "3年",
+      "state": {
+        "pressed": "true",
+        "selected": true,
+        "disabled": false
+      },
+      "summary": "+87.50%\n區間變化\n36 個交易觀察",
+      "chartPathChanged": true,
+      "requests": [
+        {
+          "path": "/api/v1/stocks/2330/history",
+          "query": "?from=2023-10-09&to=2026-10-09"
+        }
+      ]
+    }
+  },
+  {
+    "name": "5-year period request succeeds",
+    "status": "PASS",
+    "detail": {
+      "selected": "5年",
+      "summary": "+147.50%\n區間變化\n60 個交易觀察",
+      "requests": [
+        {
+          "path": "/api/v1/stocks/2330/history",
+          "query": "?from=2021-10-09&to=2026-10-09"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Backtest CTA carries the selected symbol",
+    "status": "PASS",
+    "detail": {
+      "url": "http://127.0.0.1:18392/#/backtest?symbol=2330"
+    }
+  },
+  {
+    "name": "Data limitation notice explains OHLC, corporate actions, authorization and non-realtime status",
+    "status": "PASS",
+    "detail": {
+      "notice": "i\n資料範圍與限制\n\n目前圖表只呈現日收盤價，沒有 OHLC K 線、成交量、股利或公司行動資料。缺漏、停牌與上市生命週期狀態尚未驗證；歷史行情授權及衍生圖表展示權尚待確認，因此公開發布狀態仍為 BLOCKED。\n\n查看 TWSE OpenAPI ↗",
+      "foot": "來源：合成測試資料（非市場行情）\n本次取得：2026-10-08T23:44:15.290Z\n未調整原始收盤價 · 非即時"
+    }
+  },
+  {
+    "name": "Unsupported symbol direct route shows a useful error and return link",
+    "status": "PASS",
+    "detail": {
+      "error": "找不到可用的上市標的資訊\n目前只提供已確認支援的上市標的研究頁；此代碼尚未列入可用範圍。\n返回標的探索"
+    }
+  },
+  {
+    "name": "Same-tab 2330 to 9999 route parameter change refreshes the instrument and error state",
+    "status": "PASS",
+    "detail": {
+      "url": "http://127.0.0.1:18392/#/stocks/9999",
+      "error": "找不到可用的上市標的資訊\n目前只提供已確認支援的上市標的研究頁；此代碼尚未列入可用範圍。\n返回標的探索"
+    }
+  },
+  {
+    "name": "History API no-data error is visible and retryable",
+    "status": "PASS",
+    "detail": {
+      "error": "目前無法載入走勢\n此期間沒有可用的收盤資料，請選擇其他期間。\n重新載入"
+    }
+  },
+  {
+    "name": "390px narrow browser viewport has no horizontal overflow",
+    "status": "PASS",
+    "detail": {
+      "innerWidth": 390,
+      "docWidth": 390,
+      "chartWidth": 330,
+      "ctaWidth": 356
+    }
+  }
+]

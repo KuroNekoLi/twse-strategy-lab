@@ -1,0 +1,94 @@
+{
+  "evidenceLabels": [
+    "BROWSER_RUNTIME",
+    "AUTOMATED_TEST"
+  ],
+  "runtimeIdentity": "/root/browser_acceptance",
+  "browser": {
+    "name": "Google Chrome",
+    "version": "154.0.8037.98",
+    "headless": true
+  },
+  "device": "Desktop Chrome; 390px browser viewport is not a native device/simulator",
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "target": "http://127.0.0.1:18392",
+  "fixtureOnly": true,
+  "liveMarketData": false,
+  "syntheticDataSource": "合成測試資料（非市場行情）",
+  "mockApiRequests": [
+    {
+      "path": "/api/v1/instruments",
+      "query": "?query=2330&limit=20"
+    },
+    {
+      "path": "/api/v1/instruments",
+      "query": "?query=2330&limit=20"
+    },
+    {
+      "path": "/api/v1/stocks/2330/history",
+      "query": "?from=2025-10-09&to=2026-10-09"
+    },
+    {
+      "path": "/api/v1/stocks/2330/history",
+      "query": "?from=2023-10-09&to=2026-10-09"
+    },
+    {
+      "path": "/api/v1/stocks/2330/history",
+      "query": "?from=2021-10-09&to=2026-10-09"
+    },
+    {
+      "path": "/api/v1/instruments",
+      "query": "?query=2330&limit=20"
+    },
+    {
+      "path": "/api/v1/stocks/2330/history",
+      "query": "?from=2025-10-09&to=2026-10-09"
+    },
+    {
+      "path": "/api/v1/instruments",
+      "query": "?query=9999&limit=20"
+    },
+    {
+      "path": "/api/v1/instruments",
+      "query": "?query=2330&limit=20"
+    },
+    {
+      "path": "/api/v1/stocks/2330/history",
+      "query": "?from=2025-10-09&to=2026-10-09"
+    },
+    {
+      "path": "/api/v1/instruments",
+      "query": "?query=9999&limit=20"
+    },
+    {
+      "path": "/api/v1/instruments",
+      "query": "?query=2330&limit=20"
+    },
+    {
+      "path": "/api/v1/stocks/2330/history",
+      "query": "?from=2025-10-09&to=2026-10-09"
+    },
+    {
+      "path": "/api/v1/instruments",
+      "query": "?query=2330&limit=20"
+    },
+    {
+      "path": "/api/v1/stocks/2330/history",
+      "query": "?from=2025-10-09&to=2026-10-09"
+    }
+  ],
+  "expectedConsoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "unexpectedConsoleErrors": [],
+  "pageErrors": []
+}

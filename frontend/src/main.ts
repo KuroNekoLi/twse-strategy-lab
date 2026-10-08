@@ -8,6 +8,7 @@ import { PaperTradingComponent } from './app/paper-trading.component';
 import { DecisionChallengeComponent } from './app/decision-challenge.component';
 import { RobustnessLabComponent } from './app/robustness-lab.component';
 import { ResearchJournalComponent } from './app/research-journal.component';
+import { StockResearchPageComponent } from './app/stock-research.component';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -15,6 +16,7 @@ bootstrapApplication(AppComponent, {
     provideRouter([
       { path: '', component: HomePageComponent, title: '研究首頁｜策略實驗室' },
       { path: 'explore', component: ExplorePageComponent, title: '探索標的｜策略實驗室' },
+      { path: 'stocks/:symbol', component: StockResearchPageComponent, title: '個股研究｜策略實驗室' },
       { path: 'strategies', component: StrategiesPageComponent, title: '策略庫｜策略實驗室' },
       { path: 'backtest', component: BacktestWorkspaceComponent, title: '回測工作台｜策略實驗室' },
       { path: 'my-research', component: ResearchLibraryComponent, title: '我的研究｜策略實驗室' },

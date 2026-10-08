@@ -24,7 +24,7 @@ import uk.kuronekoli.strategylab.market.TwseMarketDataClient;
 
 /** Real local HTTP + Spring startup, with a synthetic primary market source; no live calls. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = "app.twse.base-url=https://example.invalid/STOCK_DAY")
+    properties = {"app.twse.base-url=https://example.invalid/STOCK_DAY", "app.market-history.enabled=true"})
 @ActiveProfiles("local")
 @Import(BacktestHttpContractTest.SyntheticMarket.class)
 class BacktestHttpContractTest {
@@ -70,6 +70,25 @@ class BacktestHttpContractTest {
     var json = mapper.readTree(response.body());
     assertEquals("ok", json.path("status").asText());
     assertEquals("ok", json.path("database").asText());
+  }
+  @Test void stockHistoryReturnsCloseOnlyBarsAndExplicitResearchLimitations() throws Exception {
+    var response = http.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1/stocks/2330/history?from=2024-01-01&to=2024-01-05")).GET().build(), HttpResponse.BodyHandlers.ofString());
+    assertEquals(200, response.statusCode(), response.body());
+    var json = mapper.readTree(response.body());
+    assertEquals("2330", json.path("symbol").asText());
+    assertEquals("UNKNOWN", json.path("licensingStatus").asText());
+    assertEquals("2024-01-01", json.path("observedFrom").asText());
+    assertEquals("2024-01-05", json.path("observedTo").asText());
+    assertEquals(5, json.path("bars").size());
+    assertTrue(json.path("bars").get(0).has("close"));
+    assertFalse(json.path("bars").get(0).has("open"));
+    assertTrue(json.path("limitations").toString().contains("非即時") || json.path("limitations").toString().contains("授權"));
+  }
+  @Test void stockHistoryAcceptsFiveYearWindowAndRejectsLongerRange() throws Exception {
+    var allowed = http.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1/stocks/2330/history?from=2021-01-01&to=2026-01-01")).GET().build(), HttpResponse.BodyHandlers.ofString());
+    assertEquals(200, allowed.statusCode(), allowed.body());
+    var rejected = http.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1/stocks/2330/history?from=2020-12-31&to=2026-01-01")).GET().build(), HttpResponse.BodyHandlers.ofString());
+    assertEquals(400, rejected.statusCode(), rejected.body());
   }
   @Test void localProfileCreatesReplayTablesAndPersistsDecisionWithoutChangingApiShape() throws Exception {
     assertEquals(2, jdbc.queryForObject("select count(*) from information_schema.tables where table_schema = 'PUBLIC' and table_name in ('REPLAY_SESSION', 'REPLAY_DECISION')", Integer.class));
