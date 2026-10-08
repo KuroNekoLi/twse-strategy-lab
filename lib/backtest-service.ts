@@ -34,7 +34,12 @@ async function loadMonth(symbol: string, month: string): Promise<DailyBar[]> {
   url.searchParams.set("date", `${year}${String(monthNumber).padStart(2, "0")}01`);
   url.searchParams.set("stockNo", symbol);
   url.searchParams.set("response", "json");
-  const request = new Request(url.toString(), { headers: { Accept: "application/json" } });
+  const request = new Request(url.toString(), { headers: {
+    Accept: "application/json, text/plain, */*",
+    "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
+    Referer: "https://www.twse.com.tw/",
+    "User-Agent": "Mozilla/5.0 (compatible; TWSEStrategyLab/1.0)",
+  } });
   // Sites Workers do not grant access to the account-wide default Cache API.
   // Fetch the public TWSE endpoint directly instead of touching caches.default.
   const response = await fetchTwse(request);
@@ -58,7 +63,7 @@ async function fetchTwse(request: Request) {
     if (nextUrl.protocol !== "https:" || !(nextUrl.hostname === "twse.com.tw" || nextUrl.hostname.endsWith(".twse.com.tw"))) {
       throw new Error("證交所行情服務導向了非證交所網址，已停止請求。");
     }
-    current = new Request(nextUrl, { headers: { Accept: "application/json" } });
+    current = new Request(nextUrl, { headers: request.headers });
   }
   throw new Error("證交所行情服務轉址次數過多，請稍後再試。");
 }
