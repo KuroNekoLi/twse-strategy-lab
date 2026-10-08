@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 
@@ -38,6 +38,7 @@ const colors = ['#21c7a8', '#b3c2d4', '#f0a84b', '#6f8fe8', '#d780a8', '#73a86c'
 })
 export class AppComponent {
   private readonly http = inject(HttpClient);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   readonly apiBaseUrl = (window.APP_CONFIG?.apiBaseUrl ?? '').replace(/\/$/, '');
   readonly yearOptions = Array.from({ length: new Date().getFullYear() - 2010 + 1 }, (_, index) => String(2010 + index));
   readonly strategyOptions: StrategyOption[] = [
@@ -222,6 +223,9 @@ export class AppComponent {
       }
     } finally {
       this.busy = false;
+      // Angular 22 uses zoneless change detection by default. The async HTTP
+      // continuation must notify Angular after updating plain component fields.
+      this.changeDetector.markForCheck();
     }
   }
 }
