@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 type DraftConfig = { symbols: string[]; strategy: string; fromYear: string; toYear: string };
 type DraftVersion = { id: string; version: number; savedAt: string; config: DraftConfig };
 type Draft = { id: string; name: string; versions: DraftVersion[] };
-type JournalEntry = { id: string; createdAt: string; question: string; hypothesis: string; failureCondition: string; reflection: string; draftId: string; versionId: string };
+type JournalEntry = { id: string; createdAt: string; question: string; hypothesis: string; failureCondition: string; reflection: string; draftId: string; versionId: string; symbol?: string };
 type JournalStore = { schemaVersion: 1; entries: JournalEntry[] };
 
 const JOURNAL_KEY = 'twse-strategy-lab.research-journal';
@@ -35,6 +35,7 @@ const STRATEGY_NAMES: Record<string, string> = {
           <p class="eyebrow">研究前</p><h2 id="journal-form-title">先寫下可檢驗的想法</h2>
           <form (ngSubmit)="createEntry()">
             <label>我想弄清楚什麼？<textarea name="question" [(ngModel)]="question" maxlength="240" rows="2" placeholder="例如：這條均線規則在不同投入方式下差異多大？" [disabled]="!writable"></textarea><small>{{question.length}} / 240</small></label>
+            <p *ngIf="symbolContext" class="journal-symbol-context">這則筆記會標記標的 {{symbolContext}}，之後可從筆記回到個股頁。</p>
             <label>我目前的假設<textarea name="hypothesis" [(ngModel)]="hypothesis" maxlength="500" rows="3" placeholder="寫下你預期會看到的現象，以及原因。" [disabled]="!writable"></textarea><small>{{hypothesis.length}} / 500</small></label>
             <label>什麼情況會讓我改變看法？<textarea name="failureCondition" [(ngModel)]="failureCondition" maxlength="500" rows="2" placeholder="例如：換一段期間或加入成本後，差異就消失。" [disabled]="!writable"></textarea><small>{{failureCondition.length}} / 500</small></label>
             <label *ngIf="draftOptions.length">連結一份已保存的研究設定（選填）<select name="draftVersion" [(ngModel)]="draftVersionKey" [disabled]="!writable"><option value="">稍後再選</option><option *ngFor="let option of draftOptions" [value]="option.draft.id + ':' + option.version.id">{{option.draft.name}} · v{{option.version.version}} · {{option.version.config.symbols.join('、')}} {{strategyName(option.version.config.strategy)}}</option></select></label>
@@ -48,6 +49,7 @@ const STRATEGY_NAMES: Record<string, string> = {
           <div *ngIf="!entries.length" class="journal-empty"><span aria-hidden="true">✳</span><strong>第一則筆記從一個問題開始</strong><p>記下原先想法，研究後回來補充觀察；先不用把每個欄位都寫得完整。</p></div>
           <article class="journal-entry" *ngFor="let entry of newestFirst">
             <div class="journal-entry-top"><time>{{entry.createdAt | date:'yyyy/MM/dd HH:mm'}}</time><button type="button" class="journal-delete" [disabled]="!writable" (click)="pendingDeleteId = entry.id">刪除此筆記</button></div>
+            <a *ngIf="entry.symbol" class="journal-linked" [routerLink]="'/stocks/' + entry.symbol">標的研究：{{entry.symbol}} 個股頁 →</a>
             <div *ngIf="pendingDeleteId === entry.id" class="journal-confirm" role="group" aria-label="確認刪除筆記"><span>刪除後無法復原，要繼續嗎？</span><button type="button" class="journal-delete-confirm" (click)="deleteEntry(entry)">確認刪除</button><button type="button" class="journal-delete-cancel" (click)="pendingDeleteId = ''">取消</button></div>
             <h3>{{entry.question}}</h3><div class="journal-thought"><span>當時的假設</span><p>{{entry.hypothesis}}</p></div>
             <div class="journal-thought"><span>改變看法的條件</span><p>{{entry.failureCondition || '尚未設定'}}</p></div>
@@ -74,9 +76,14 @@ export class ResearchJournalComponent {
   savedNotice = '';
   writable = true;
   pendingDeleteId = '';
+  symbolContext = '';
   private saveTimer?: ReturnType<typeof setTimeout>;
 
-  constructor() { this.load(); }
+  constructor(route: ActivatedRoute) {
+    const symbol = route.snapshot.queryParamMap.get('symbol') ?? '';
+    this.symbolContext = /^\d{4,6}$/.test(symbol) ? symbol : '';
+    this.load();
+  }
 
   get newestFirst(): JournalEntry[] { return [...this.entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)); }
   strategyName(id: string): string { return STRATEGY_NAMES[id] ?? '研究設定'; }
@@ -116,6 +123,7 @@ export class ResearchJournalComponent {
     return value['entries'].every((entry) => this.record(entry) && typeof entry['id'] === 'string' && !!entry['id'] && !ids.has(entry['id'])
       && (ids.add(entry['id']), typeof entry['createdAt'] === 'string' && Number.isFinite(Date.parse(entry['createdAt']))
         && ['question','hypothesis','failureCondition','reflection','draftId','versionId'].every((key) => typeof entry[key] === 'string')
+        && (entry['symbol'] === undefined || (typeof entry['symbol'] === 'string' && /^\d{4,6}$/.test(entry['symbol'])))
         && entry['question'].length <= 240 && entry['hypothesis'].length <= 500 && entry['failureCondition'].length <= 500 && entry['reflection'].length <= 1000));
   }
 
@@ -125,7 +133,7 @@ export class ResearchJournalComponent {
     this.saveError = '';
     if (!this.writable || !this.question.trim() || !this.hypothesis.trim() || this.entries.length >= this.maxEntries) return;
     const [draftId = '', versionId = ''] = this.draftVersionKey.split(':');
-    const entry: JournalEntry = { id: crypto.randomUUID(), createdAt: new Date().toISOString(), question: this.question.trim(), hypothesis: this.hypothesis.trim(), failureCondition: this.failureCondition.trim(), reflection: '', draftId, versionId };
+    const entry: JournalEntry = { id: crypto.randomUUID(), createdAt: new Date().toISOString(), question: this.question.trim(), hypothesis: this.hypothesis.trim(), failureCondition: this.failureCondition.trim(), reflection: '', draftId, versionId, ...(this.symbolContext ? { symbol: this.symbolContext } : {}) };
     const next = { schemaVersion: 1 as const, entries: [...this.entries, entry] };
     if (!this.persist(next)) return;
     this.entries = next.entries;

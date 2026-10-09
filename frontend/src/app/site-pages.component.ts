@@ -21,6 +21,7 @@ const strategies = [
     <button #menuToggle class="menu-toggle" type="button" [attr.aria-expanded]="menuOpen" aria-controls="primary-navigation" (click)="menuOpen = !menuOpen"><span>{{ menuOpen ? '關閉選單' : '開啟選單' }}</span><span aria-hidden="true">{{ menuOpen ? '×' : '☰' }}</span></button>
     <nav id="primary-navigation" class="primary-navigation" [class.is-open]="menuOpen" aria-label="主要導覽">
       <a routerLink="/explore" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">標的</a>
+      <a routerLink="/watchlist" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeMenu()">觀察清單</a>
       <a routerLink="/strategies" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">策略</a>
       <a routerLink="/backtest" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeMenu()">回測工作台</a>
       <a routerLink="/journal" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">研究筆記</a>
@@ -58,7 +59,19 @@ export class AppComponent {
 @Component({ selector: 'app-home-page', standalone: true, imports: [CommonModule, FormsModule, RouterLink], template: `
   <section class="home-hero page-wrap">
     <div class="hero-copy"><p class="eyebrow">台股研究工作台</p><h1 tabindex="-1">從個股行情，<br><span>開始策略研究。</span></h1><p class="hero-lede">先看歷史走勢與 K 線，再把觀察帶進回測。每次研究都能核對資料期間與計算假設。</p>
-      <form class="home-search" (ngSubmit)="search()"><label for="home-search-input">搜尋台股標的</label><div class="home-search-control"><span aria-hidden="true">⌕</span><input id="home-search-input" name="symbol" [(ngModel)]="symbol" maxlength="30" placeholder="輸入代碼或名稱，例如 2330、台積電"><button type="submit" aria-label="搜尋標的">搜尋</button></div><span class="home-search-hint">搜尋上市、上櫃與上市基金目錄；行情支援狀態會另外標示。</span></form>
+      <form class="home-search" (ngSubmit)="submitSearch()" (focusout)="scheduleClose()"><label for="home-search-input">搜尋台股標的</label><div class="home-search-control"><span aria-hidden="true">⌕</span><input id="home-search-input" name="symbol" type="search" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" [attr.aria-controls]="searchOpen ? 'home-search-listbox' : null" [attr.aria-expanded]="searchOpen" [attr.aria-activedescendant]="activeOptionId" [(ngModel)]="symbol" (ngModelChange)="searchCatalog($event)" (focus)="openSearch()" (keydown)="onSearchKeydown($event)" maxlength="60" autocomplete="off" placeholder="輸入代碼或名稱，例如 2330、台積電"><button type="submit" aria-label="查看全部搜尋結果">搜尋</button></div><span class="home-search-hint">搜尋上市、上櫃與上市基金目錄；行情支援狀態會另外標示。</span>
+        <div id="home-search-popup" class="home-search-popover" *ngIf="searchOpen" (mousedown)="$event.preventDefault()">
+          <p class="home-search-popover-title" *ngIf="!symbol.trim()">常用研究範例</p>
+          <p class="home-search-popover-title" *ngIf="symbol.trim() && searchBusy" role="status">搜尋目錄中…</p>
+          <p class="home-search-popover-title home-search-error" *ngIf="symbol.trim() && searchError" role="alert">{{searchError}}</p>
+          <p class="home-search-popover-title" *ngIf="symbol.trim() && !searchBusy && !searchError && searchResults.length === 0">沒有符合的標的</p>
+          <ul id="home-search-listbox" role="listbox" [attr.aria-label]="symbol.trim() ? '標的搜尋結果' : '常用研究範例'">
+            <ng-container *ngIf="!symbol.trim(); else matchingInstruments"><li *ngFor="let item of quickSearches; let i = index"><button type="button" role="option" [id]="'home-search-option-' + i" [attr.aria-selected]="i === activeIndex" (mouseenter)="activeIndex = i" (click)="openQuickSearch(item)"><span class="home-search-code">{{item.code}}</span><span class="home-search-name">{{item.label}}</span><span class="home-search-kind">範例</span></button></li></ng-container>
+            <ng-template #matchingInstruments><li *ngFor="let item of searchResults; let i = index"><button type="button" role="option" [id]="'home-search-option-' + i" [attr.aria-selected]="i === activeIndex" (mouseenter)="activeIndex = i" (click)="openInstrument(item)"><span class="home-search-code"><ng-container *ngFor="let part of highlight(item.code)"><span [class.search-match]="part.match">{{part.text}}</span></ng-container></span><span class="home-search-name"><ng-container *ngFor="let part of highlight(item.name)"><span [class.search-match]="part.match">{{part.text}}</span></ng-container></span><span class="home-search-kind" [class.unsupported]="!item.backtestSupported">{{item.backtestSupported ? '可研究' : '尚未支援'}}</span></button></li></ng-template>
+          </ul>
+          <a *ngIf="symbol.trim()" class="home-search-all" [routerLink]="['/explore']" [queryParams]="{q:symbol.trim()}" (click)="closeSearch()">查看「{{symbol.trim()}}」搜尋結果 <span aria-hidden="true">→</span></a>
+        </div>
+      </form>
       <p class="hero-disclosure">歷史模擬不代表未來績效 · 研究用途，非投資建議</p>
     </div>
     <aside class="hero-card quick-start" aria-label="快速研究入口"><p class="card-kicker">快速開始</p><h2>你現在想做什麼？</h2><nav aria-label="研究任務">
@@ -77,10 +90,138 @@ export class AppComponent {
   <section class="page-wrap home-bottom"><div><span class="mini-icon">i</span><h2>開始研究前，先了解資料範圍</h2><p>行情完整度、成交模型與授權狀態都會影響結果解讀。</p></div><a class="button-outline" routerLink="/methods">閱讀資料與方法</a></section>
 ` })
 export class HomePageComponent {
+  private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private searchTimer?: ReturnType<typeof setTimeout>;
+  private closeTimer?: ReturnType<typeof setTimeout>;
+  private searchRequest = 0;
   symbol = '';
-  search(): void { const q = this.symbol.trim(); void this.router.navigate(['/explore'], { queryParams: q ? { q } : {} }); }
+  searchOpen = false;
+  searchBusy = false;
+  searchError = '';
+  searchResults: HomeInstrument[] = [];
+  activeIndex = -1;
+  readonly quickSearches = [
+    { code: '0050', label: '0050 均線範例' },
+    { code: '2330', label: '2330 RSI 範例' },
+    { code: '0056', label: '0056 回跌範例' },
+  ];
+  get activeOptionId(): string | null { return this.searchOpen && this.activeIndex >= 0 ? `home-search-option-${this.activeIndex}` : null; }
+
+  openSearch(): void {
+    if (this.closeTimer) clearTimeout(this.closeTimer);
+    this.searchOpen = true;
+    if (this.symbol.trim()) this.searchCatalog(this.symbol);
+  }
+
+  closeSearch(): void {
+    this.searchOpen = false;
+    this.activeIndex = -1;
+  }
+
+  scheduleClose(): void {
+    if (this.closeTimer) clearTimeout(this.closeTimer);
+    this.closeTimer = setTimeout(() => this.closeSearch(), 120);
+  }
+
+  searchCatalog(value: string): void {
+    this.symbol = value.slice(0, 60);
+    this.searchOpen = true;
+    this.activeIndex = -1;
+    this.searchError = '';
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    const query = this.symbol.trim();
+    const request = ++this.searchRequest;
+    if (!query) {
+      this.searchResults = [];
+      this.searchBusy = false;
+      return;
+    }
+    if (!apiBaseUrl) {
+      this.searchResults = [];
+      this.searchBusy = false;
+      this.searchError = '標的目錄目前無法使用；可查看完整搜尋頁。';
+      return;
+    }
+    this.searchResults = [];
+    this.searchBusy = true;
+    this.searchTimer = setTimeout(() => void this.loadSearchResults(query, request), 250);
+  }
+
+  async loadSearchResults(query: string, request: number): Promise<void> {
+    try {
+      const response = await firstValueFrom(this.http.get<{items: HomeInstrument[]}>(`${apiBaseUrl}/api/v1/instruments`, { params: { query, limit: '8' } }));
+      if (request !== this.searchRequest) return;
+      this.searchResults = response.items ?? [];
+      this.searchBusy = false;
+    } catch (error) {
+      if (request !== this.searchRequest) return;
+      this.searchResults = [];
+      this.searchBusy = false;
+      this.searchError = error instanceof HttpErrorResponse && error.status === 0 ? '目前無法連線至標的目錄。' : '標的目錄查詢失敗，請稍後重試。';
+    }
+    this.cdr.markForCheck();
+  }
+
+  onSearchKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.closeSearch();
+      return;
+    }
+    const optionCount = this.symbol.trim() ? this.searchResults.length : this.quickSearches.length;
+    if (event.key === 'ArrowDown' && this.searchOpen && optionCount > 0) {
+      event.preventDefault();
+      this.activeIndex = (this.activeIndex + 1) % optionCount;
+    } else if (event.key === 'ArrowUp' && this.searchOpen && optionCount > 0) {
+      event.preventDefault();
+      this.activeIndex = this.activeIndex <= 0 ? optionCount - 1 : this.activeIndex - 1;
+    } else if (event.key === 'Enter' && this.searchOpen && this.activeIndex >= 0) {
+      event.preventDefault();
+      if (this.symbol.trim()) this.openInstrument(this.searchResults[this.activeIndex]);
+      else this.openQuickSearch(this.quickSearches[this.activeIndex]);
+    }
+  }
+
+  openQuickSearch(item: {code: string}): void {
+    this.closeSearch();
+    void this.router.navigate(['/stocks', item.code]);
+  }
+
+  openInstrument(item: HomeInstrument): void {
+    this.closeSearch();
+    if (item.backtestSupported && /^\d{4,6}$/.test(item.code)) void this.router.navigate(['/stocks', item.code]);
+    else void this.router.navigate(['/explore'], { queryParams: { q: item.code } });
+  }
+
+  submitSearch(): void {
+    const query = this.symbol.trim();
+    this.closeSearch();
+    void this.router.navigate(['/explore'], { queryParams: query ? { q: query } : {} });
+  }
+
+  highlight(value: string): Array<{text: string; match: boolean}> {
+    const query = this.symbol.trim().toLocaleLowerCase();
+    if (!query) return [{ text: value, match: false }];
+    const lower = value.toLocaleLowerCase();
+    const parts: Array<{text: string; match: boolean}> = [];
+    let cursor = 0;
+    let found = lower.indexOf(query, cursor);
+    while (found >= 0) {
+      if (found > cursor) parts.push({ text: value.slice(cursor, found), match: false });
+      const end = found + query.length;
+      parts.push({ text: value.slice(found, end), match: true });
+      cursor = end;
+      found = lower.indexOf(query, cursor);
+    }
+    if (cursor < value.length) parts.push({ text: value.slice(cursor), match: false });
+    return parts.length ? parts : [{ text: value, match: false }];
+  }
 }
+
+type HomeInstrument = { code: string; name: string; kind: string; market: string; backtestSupported: boolean };
 
 @Component({ selector: 'app-explore-page', standalone: true, imports: [CommonModule, FormsModule, RouterLink], template: `
   <section class="page-wrap subpage"><p class="eyebrow">EXPLORE · 標的目錄</p><h1 tabindex="-1">先找到值得研究的標的。</h1><p class="subpage-lede">搜尋上市、上櫃公司與上市基金目錄，了解目前能否帶入回測。出現在目錄中不代表有可用行情。</p>

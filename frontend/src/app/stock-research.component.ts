@@ -35,10 +35,11 @@ const localLiveEnabled = liveDataOptIn && localBrowser;
                 <div class="stock-periods" role="group" aria-label="走勢顯示期間"><button *ngFor="let period of periods" type="button" [disabled]="busy" [class.selected]="selectedPeriod === period" [attr.aria-pressed]="selectedPeriod === period" (click)="changePeriod(period)">{{period}}</button></div>
                 <div class="stock-periods stock-modes" role="group" aria-label="圖表類型"><button type="button" [class.selected]="chartMode === 'line'" [attr.aria-pressed]="chartMode === 'line'" (click)="setMode('line')">走勢</button><button type="button" [disabled]="!hasOhlc" [class.selected]="chartMode === 'candles'" [attr.aria-pressed]="chartMode === 'candles'" [attr.title]="hasOhlc ? '顯示 OHLC K 線' : '此資料來源尚未提供開高低收資料'" (click)="setMode('candles')">K 線</button></div>
                 <div class="stock-periods stock-indicators" role="group" aria-label="簡單移動平均線"><button type="button" [class.selected]="showSma20" [attr.aria-pressed]="showSma20" aria-label="切換 20 日簡單移動平均線" (click)="showSma20 = !showSma20">MA 20</button><button type="button" [class.selected]="showSma60" [attr.aria-pressed]="showSma60" aria-label="切換 60 日簡單移動平均線" (click)="showSma60 = !showSma60">MA 60</button></div>
+                <div class="stock-periods stock-indicators" role="group" aria-label="成交量圖層"><button type="button" [disabled]="!hasVolume" [class.selected]="showVolume" [attr.aria-pressed]="showVolume" [attr.title]="hasVolume ? '切換成交量圖層' : '此資料來源尚未提供成交量'" (click)="showVolume = !showVolume">成交量</button></div>
                 <span class="indicator-note" *ngIf="showSma20 || showSma60">以收盤價計算簡單移動平均；交易日數不足時不繪製。</span>
               </div>
             </div>
-            <div class="stock-chart-summary"><span [class.negative]="periodChange < 0" [class.positive]="periodChange > 0">{{periodChange >= 0 ? '+' : ''}}{{periodChange | number:'1.2-2'}}%</span><span>區間變化</span><span class="chart-summary-divider"></span><span>{{chartBars.length}} 個交易日</span><span *ngIf="chartMode === 'candles' && hasVolume" class="chart-legend"><i class="legend-up"></i>上漲 <i class="legend-down"></i>下跌</span></div>
+            <div class="stock-chart-summary"><span [class.negative]="periodChange < 0" [class.positive]="periodChange > 0">{{periodChange >= 0 ? '+' : ''}}{{periodChange | number:'1.2-2'}}%</span><span>區間變化</span><span class="chart-summary-divider"></span><span>{{chartBars.length}} 個交易日</span><span *ngIf="showVolume && hasVolume" class="chart-legend"><i class="legend-up"></i>上漲 <i class="legend-down"></i>下跌</span></div>
             <div class="stock-selected-quote" aria-live="polite" aria-atomic="true" *ngIf="selectedBar as quote">
               <strong>{{quote.date}}</strong>
               <span [class.positive]="selectedDailyChange !== null && selectedDailyChange > 0" [class.negative]="selectedDailyChange !== null && selectedDailyChange < 0">
@@ -56,20 +57,20 @@ const localLiveEnabled = liveDataOptIn && localBrowser;
             <div class="stock-chart-frame" *ngIf="chartBars.length > 1; else noPoints">
               <svg class="stock-price-svg" viewBox="0 0 940 350" role="img" [attr.aria-label]="chartDescription(item.name, data)">
                 <g class="chart-grid"><line x1="64" y1="22" x2="920" y2="22"/><line x1="64" y1="89" x2="920" y2="89"/><line x1="64" y1="156" x2="920" y2="156"/><line x1="64" y1="224" x2="920" y2="224"/></g>
-                <g class="chart-axis-labels"><text x="3" y="27">{{priceTicks[0] | number:'1.0-0'}}</text><text x="3" y="94">{{priceTicks[1] | number:'1.0-0'}}</text><text x="3" y="161">{{priceTicks[2] | number:'1.0-0'}}</text><text x="3" y="229">{{priceTicks[3] | number:'1.0-0'}}</text><text x="64" y="344">{{data.observedFrom}}</text><text x="920" y="344" text-anchor="end">{{data.observedTo}}</text><text *ngIf="chartMode === 'candles' && hasVolume" x="64" y="244" class="volume-axis-title">成交量</text></g>
+                <g class="chart-axis-labels"><text x="3" y="27">{{priceTicks[0] | number:'1.0-0'}}</text><text x="3" y="94">{{priceTicks[1] | number:'1.0-0'}}</text><text x="3" y="161">{{priceTicks[2] | number:'1.0-0'}}</text><text x="3" y="229">{{priceTicks[3] | number:'1.0-0'}}</text><text x="64" y="344">{{data.observedFrom}}</text><text x="920" y="344" text-anchor="end">{{data.observedTo}}</text><text *ngIf="showVolume && hasVolume" x="64" y="244" class="volume-axis-title">成交量</text></g>
                 <path *ngIf="chartMode === 'line'" class="chart-area" [class.chart-area-up]="periodChange > 0" [class.chart-area-down]="periodChange < 0" [attr.d]="areaPath"/><path *ngIf="chartMode === 'line'" class="chart-line" [class.chart-line-up]="periodChange > 0" [class.chart-line-down]="periodChange < 0" [attr.d]="linePath"/>
                 <g *ngFor="let bar of chartBars; let i = index" class="chart-mark" [class.chart-mark-active]="activeIndex === i" (mouseenter)="selectBar(i)" (click)="selectBar(i)">
                   <rect class="chart-hit-area" [attr.x]="Math.max(plot.left, bar.x - hitWidth / 2)" y="22" [attr.width]="hitWidth" height="202"/>
                   <line *ngIf="chartMode === 'candles' && hasOhlc" class="candle-wick" [class.up]="bar.up" [class.down]="!bar.up" [attr.x1]="bar.x" [attr.x2]="bar.x" [attr.y1]="bar.highY" [attr.y2]="bar.lowY"/>
                   <rect *ngIf="chartMode === 'candles' && hasOhlc" class="candle-body" [class.up]="bar.up" [class.down]="!bar.up" [attr.x]="bar.x - candleWidth / 2" [attr.y]="bar.candleY" [attr.width]="candleWidth" [attr.height]="bar.candleHeight" rx=".5"/>
                   <circle *ngIf="chartMode === 'line'" class="line-focus-point" [class.active]="activeIndex === i" [attr.cx]="bar.x" [attr.cy]="bar.closeY" [attr.r]="activeIndex === i ? 4 : 1.7"/>
-                  <rect *ngIf="chartMode === 'candles' && hasVolume && bar.volume !== null" class="volume-bar" [class.up]="bar.up" [class.down]="!bar.up" [attr.x]="bar.x - candleWidth / 2" [attr.y]="bar.volumeY" [attr.width]="candleWidth" [attr.height]="bar.volumeHeight"/>
+                  <rect *ngIf="showVolume && hasVolume && bar.volume !== null" class="volume-bar" [class.up]="bar.up" [class.down]="!bar.up" [attr.x]="bar.x - candleWidth / 2" [attr.y]="bar.volumeY" [attr.width]="candleWidth" [attr.height]="bar.volumeHeight"/>
                 </g>
                 <path *ngIf="showSma20" class="moving-average-line moving-average-20" [attr.d]="sma20Path"/><path *ngIf="showSma60" class="moving-average-line moving-average-60" [attr.d]="sma60Path"/>
                 <line *ngIf="activeBar" class="chart-crosshair" [attr.x1]="activeBar.x" [attr.x2]="activeBar.x" y1="18" y2="224"/>
                 <ng-container *ngIf="liveState === 'live' && liveQuote && liveQuote.price >= priceScaleLow && liveQuote.price <= priceScaleHigh"><line class="live-price-line" x1="64" x2="920" [attr.y1]="liveQuoteY" [attr.y2]="liveQuoteY"/><text class="live-price-tag" x="914" [attr.y]="liveQuoteY - 4" text-anchor="end">LIVE {{liveQuote.price | number:'1.2-2'}}</text></ng-container>
               </svg>
-              <div *ngIf="chartMode === 'candles' && hasVolume" class="volume-caption"><span>成交量</span><span>{{selectedBar?.volume === null || selectedBar?.volume === undefined ? '此筆無資料' : (selectedBar.volume | number)}}</span></div>
+              <div *ngIf="showVolume && hasVolume" class="volume-caption"><span>所選日成交量</span><span>{{selectedBar?.volume === null || selectedBar?.volume === undefined ? '此筆無資料' : (selectedBar.volume | number)}}</span></div>
               <label class="sr-only" for="chart-point-selector">選擇圖表日期</label><input id="chart-point-selector" class="chart-point-selector" type="range" min="0" [max]="chartBars.length - 1" [value]="activeIndex" (input)="selectBar(+$any($event.target).value)" [attr.aria-valuetext]="selectedBar?.date + ' 收盤 ' + selectedBar?.close + ' 元'"/>
               <p class="sr-only">{{chartDescription(item.name, data)}}。圖表日期可使用下方滑桿逐日檢視。</p>
             </div>
@@ -81,7 +82,7 @@ const localLiveEnabled = liveDataOptIn && localBrowser;
             </section>
             <div class="stock-data-foot"><span>來源：{{data.source}}</span><span>擷取時間：{{data.fetchedAt}}</span><span>價格調整：{{data.adjustmentPolicy || '未提供'}}</span><span class="data-status">{{data.licensingStatus === 'CONFIRMED' ? '展示授權已確認' : '資料展示授權尚未確認'}}</span></div>
           </section>
-          <section class="stock-next-step"><div><p class="eyebrow">接續研究</p><h2>把觀察變成可檢驗的問題</h2><p>選擇策略與期間，檢視歷史表現及計算假設。</p></div><a class="button-primary" [routerLink]="'/backtest'" [queryParams]="{symbol:item.code}">用 {{item.code}} 開始回測 <span aria-hidden="true">→</span></a></section>
+          <section class="stock-next-step"><div><p class="eyebrow">同一標的，接續研究</p><h2>從觀察走向檢驗與紀錄</h2><p>把 {{item.code}} 帶到回測或研究筆記；資料仍是歷史資料。</p></div><nav class="stock-context-nav" aria-label="個股研究導覽"><a href="#stock-chart-title" aria-current="location">走勢</a><a class="button-primary" [routerLink]="'/backtest'" [queryParams]="{symbol:item.code}">回測 {{item.code}} →</a><a class="button-outline" [routerLink]="'/journal'" [queryParams]="{symbol:item.code}">寫研究筆記 →</a><a class="button-quiet" routerLink="/watchlist">觀察清單</a></nav></section>
           <section class="stock-data-notice"><div class="notice-mark" aria-hidden="true">i</div><div><strong>資料範圍與限制</strong><p>圖表呈現 {{hasOhlc ? '開、高、低、收' : '收盤'}}歷史行情{{hasVolume ? '與成交量' : ''}}，屬歷史資料，不代表即時報價或可交易價格。股利、公司行動及交易日曆完整性可能影響比較；來源限制：{{data.limitations.join('、') || '無其他說明'}}。資料授權狀態：{{data.licensingStatus || '未知'}}。</p><a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">查看 TWSE OpenAPI ↗</a></div></section>
         </ng-container>
       </ng-container>
@@ -102,6 +103,7 @@ export class StockResearchPageComponent {
   chartMode: 'line' | 'candles' = 'line';
   showSma20 = false;
   showSma60 = false;
+  showVolume = true;
   busy = false;
   error = '';
   chartBars: ChartBar[] = [];
@@ -189,7 +191,7 @@ export class StockResearchPageComponent {
   }
 
   chartDescription(name: string, data: History): string {
-    return `${name}${this.chartMode === 'candles' ? '日 K 線與成交量' : '每日收盤走勢'}，${data.observedFrom} 至 ${data.observedTo}，歷史資料，非即時報價`;
+    return `${name}${this.chartMode === 'candles' ? '日 K 線' : '每日收盤走勢'}${this.showVolume && this.hasVolume ? '與成交量' : ''}，${data.observedFrom} 至 ${data.observedTo}，歷史資料，非即時報價`;
   }
 
   formatTime(value: string): string {
