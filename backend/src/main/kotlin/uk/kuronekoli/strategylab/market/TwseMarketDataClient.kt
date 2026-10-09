@@ -106,13 +106,15 @@ class TwseMarketDataClient(private val mapper: JsonMapper, @Value("\${app.twse.b
         return root
     }
 
-    private fun fetch(start: URI): HttpResponse<String> {
+    private fun fetch(start: URI): HttpResponse<String> = fetch(start) { request -> http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)) }
+
+    internal fun fetch(start: URI, send: (HttpRequest) -> HttpResponse<String>): HttpResponse<String> {
         var current = start
         repeat(4) {
             var response: HttpResponse<String>? = null
             for (attempt in 0..2) {
                 val request = HttpRequest.newBuilder(current).timeout(Duration.ofSeconds(20)).header("Accept", "application/json, text/plain, */*").header("Accept-Language", "zh-TW,zh;q=0.9,en;q=0.8").header("Referer", "https://www.twse.com.tw/").header("User-Agent", "Mozilla/5.0 (compatible; TWSEStrategyLab/1.0)").GET().build()
-                response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
+                response = send(request)
                 val noLocation = response.statusCode() in 300..399 && response.headers().firstValue("location").isEmpty
                 if (!noLocation || attempt == 2) break
                 Thread.sleep(250L * (attempt + 1))
@@ -120,12 +122,26 @@ class TwseMarketDataClient(private val mapper: JsonMapper, @Value("\${app.twse.b
             val result = response!!
             if (result.statusCode() !in 300..399) return result
             val locationHeader = result.headers().firstValue("location")
-            if (locationHeader.isEmpty) throw IllegalStateException("證交所回應轉址但未提供目的位址（status=${result.statusCode()}, server=${result.headers().firstValue("server").orElse("missing")}, requestId=${result.headers().firstValue("x-request-id").orElse("missing")}, contentType=${result.headers().firstValue("content-type").orElse("missing")}, bodyLength=${result.body().length}）。")
+            if (locationHeader.isEmpty) {
+                val fallback = missingLocationFallback(current)
+                if (result.statusCode() == 307 && fallback != null && current != fallback) {
+                    log.warn("TWSE rwd endpoint returned 307 without Location; retrying equivalent exchangeReport endpoint: symbolQueryPresent={}", !current.rawQuery.isNullOrBlank())
+                    current = fallback
+                    return@repeat
+                }
+                throw IllegalStateException("證交所回應轉址但未提供目的位址（status=${result.statusCode()}, server=${result.headers().firstValue("server").orElse("missing")}, requestId=${result.headers().firstValue("x-request-id").orElse("missing")}, contentType=${result.headers().firstValue("content-type").orElse("missing")}, bodyLength=${result.body().length}）。")
+            }
             val next = current.resolve(locationHeader.get())
             val host = next.host?.lowercase() ?: ""
             if (!next.scheme.equals("https", true) || !(host == "twse.com.tw" || host.endsWith(".twse.com.tw"))) throw IllegalStateException("證交所行情服務導向非證交所網址，已停止請求。")
             current = next
         }
         throw IllegalStateException("證交所行情服務轉址次數過多，請稍後再試。")
+    }
+
+    internal fun missingLocationFallback(uri: URI): URI? {
+        if (uri.scheme != "https" || uri.host?.lowercase() != "www.twse.com.tw" || uri.path != "/rwd/zh/afterTrading/STOCK_DAY") return null
+        val query = uri.rawQuery ?: return null
+        return URI.create("https://www.twse.com.tw/exchangeReport/STOCK_DAY?$query")
     }
 }
