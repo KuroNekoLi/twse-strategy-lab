@@ -2,7 +2,7 @@
   <div class="content">
     <div class="page-intro">
       <div>
-        <p class="eyebrow">STRATEGY BACKTESTING WORKSPACE</p>
+        <p class="eyebrow">策略研究 / 回測工作台</p>
         <h1 tabindex="-1">讓策略接受歷史考驗。</h1>
         <p class="intro-copy">比較策略、定期定額與買進持有；各標的實際行情期間會分別列出。</p>
       </div>
@@ -13,7 +13,6 @@
       <aside class="config-panel">
         <div class="panel-heading">
           <div><span class="step">01</span><h2>設定回測</h2></div>
-          <span class="tiny-label">PARAMETERS</span>
         </div>
 
         <div class="field">
@@ -135,7 +134,9 @@
           </div>
         </details>
 
-        <section class="draft-manager" aria-labelledby="draft-heading">
+        <details class="draft-details">
+          <summary>保存與載入研究設定</summary>
+          <section class="draft-manager" aria-labelledby="draft-heading">
           <h3 id="draft-heading">本機研究設定</h3>
           <p class="draft-disclosure">只保存在此裝置／瀏覽器，沒有登入或雲端同步；清除瀏覽器資料會刪除設定。僅保存表單參數，不保存行情或回測結果。</p>
           <label class="draft-name-label" for="draft-name">設定名稱</label>
@@ -157,7 +158,8 @@
             </article>
           </div>
           <ng-template #noDrafts><p class="draft-empty">尚無已保存設定。</p></ng-template>
-        </section>
+          </section>
+        </details>
 
         <button class="run-button" type="button" (click)="runBacktest()" [disabled]="busy || symbols.length === 0 || isInvalid()">
           <ng-container *ngIf="busy; else runLabel"><span class="spinner"></span>讀取行情並計算中…</ng-container>
@@ -177,7 +179,7 @@
           <div class="range-badge" *ngIf="response">請求期間 {{ requestedFrom }} — {{ requestedTo }}</div>
         </div>
 
-        <div class="loading-state" *ngIf="busy"><span class="spinner dark"></span><strong>正在整理證交所歷史行情</strong><span>首次載入較長期間可能需要一點時間。</span></div>
+        <div class="loading-state" *ngIf="busy" role="status"><span class="spinner dark"></span><strong>正在讀取行情並計算</strong><span>標的 {{ symbols.join('、') }} · 期間 {{ fromYear }}–{{ toYear }} 年；首次載入較長期間可能需要一點時間。</span></div>
 
         <ng-container *ngIf="!busy && response as result">
           <div class="metric-row">
@@ -282,12 +284,7 @@
         </ng-container>
 
         <div class="empty-result" *ngIf="!busy && !response">
-          <div class="empty-chart">
-            <div class="empty-y"><span>資產價值</span><i>$</i><i>$</i><i>$</i></div>
-            <svg viewBox="0 0 620 190" aria-hidden="true"><path d="M0 155H620M0 108H620M0 60H620M0 14H620" class="empty-rule"></path><path d="M0 160 C36 146,46 136,78 142 S127 153,153 127 S184 120,209 133 S257 111,279 117 S313 100,337 106 S366 84,393 99 S421 76,449 85 S473 61,499 75 S532 47,555 59 S585 24,620 18" class="ghost-line"></path></svg>
-            <div class="empty-x"><span>開始日</span><span>回測期間</span><span>結束日</span></div>
-          </div>
-          <div class="empty-message"><span class="empty-spark">✳</span><div><strong>你的策略，會走出自己的曲線。</strong><p>設定標的與期間，開始比較策略和定期定額。</p></div></div>
+          <div class="empty-message"><span class="empty-index">研究 01</span><div><strong>先設定一個可回答的問題。</strong><p>選擇標的、期間與規則，再執行回測。結果會列出各自實際涵蓋的行情期間與計算限制。</p></div></div>
         </div>
 
         <div class="comparison-preview" *ngIf="!busy && !response">

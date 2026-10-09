@@ -20,15 +20,14 @@ const strategies = [
     <a routerLink="/" class="brand" aria-label="策略實驗室首頁" (click)="closeMenu()"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>策略<span class="brand-light">實驗室</span></span></a>
     <button #menuToggle class="menu-toggle" type="button" [attr.aria-expanded]="menuOpen" aria-controls="primary-navigation" (click)="menuOpen = !menuOpen"><span>{{ menuOpen ? '關閉選單' : '開啟選單' }}</span><span aria-hidden="true">{{ menuOpen ? '×' : '☰' }}</span></button>
     <nav id="primary-navigation" class="primary-navigation" [class.is-open]="menuOpen" aria-label="主要導覽">
+      <a routerLink="/explore" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">標的</a>
+      <a routerLink="/strategies" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">策略</a>
+      <a routerLink="/backtest" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeMenu()">回測工作台</a>
+      <a routerLink="/journal" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">研究筆記</a>
       <details class="nav-group" routerLinkActive="active-group">
-        <summary>研究工具</summary>
-        <div class="nav-submenu"><a routerLink="/explore" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">探索標的</a><a routerLink="/strategies" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">策略庫</a><a routerLink="/backtest" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeMenu()">回測工作台</a><a routerLink="/my-research" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">研究設定</a><a routerLink="/journal" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">研究筆記</a><a routerLink="/robustness" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">穩健性分析</a></div>
+        <summary>更多</summary>
+        <div class="nav-submenu"><a routerLink="/my-research" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">研究設定</a><a routerLink="/robustness" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">穩健性分析</a><a routerLink="/paper" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">模擬交易</a><a routerLink="/decision-practice" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">決策練習</a><a routerLink="/methods" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">方法說明</a></div>
       </details>
-      <details class="nav-group" routerLinkActive="active-group">
-        <summary>練習</summary>
-        <div class="nav-submenu"><a routerLink="/paper" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">模擬交易</a><a routerLink="/decision-practice" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">決策練習</a></div>
-      </details>
-      <a routerLink="/methods" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page" (click)="closeMenu()">方法說明</a>
     </nav><span class="site-status"><i></i>{{ apiBaseUrl ? '台股研究工具' : '研究環境' }}</span>
   </header>
   <main id="main-content" class="route-content" tabindex="-1" aria-label="主要內容"><router-outlet (activate)="focusMain()" /></main>
@@ -58,21 +57,24 @@ export class AppComponent {
 
 @Component({ selector: 'app-home-page', standalone: true, imports: [CommonModule, FormsModule, RouterLink], template: `
   <section class="home-hero page-wrap">
-    <div class="hero-copy"><p class="eyebrow">台股策略研究工作台</p><h1 tabindex="-1">把投資想法，<br><span>變成可檢驗的問題。</span></h1><p class="hero-lede">比較投入方式、測試一條規則，或練習面對市場情境。每一步都能查看資料範圍與研究假設。</p>
-      <form class="home-search" (ngSubmit)="search()"><label for="home-search-input">搜尋股票或 ETF</label><div class="home-search-control"><span aria-hidden="true">⌕</span><input id="home-search-input" name="symbol" [(ngModel)]="symbol" maxlength="30" placeholder="輸入代碼或名稱，例如 2330 / 台積電"><button type="submit" aria-label="搜尋標的">搜尋 →</button></div><span class="home-search-hint">也可以直接使用下方研究範本開始。</span></form>
-      <div class="hero-actions"><a class="button-primary" routerLink="/backtest" [queryParams]="{symbol:'0050',strategy:'ma-crossover'}">開始一份示範研究 <span aria-hidden="true">→</span></a><a class="button-quiet" routerLink="/journal">先寫下研究問題</a></div>
+    <div class="hero-copy"><p class="eyebrow">台股研究工作台</p><h1 tabindex="-1">從個股行情，<br><span>開始策略研究。</span></h1><p class="hero-lede">先看歷史走勢與 K 線，再把觀察帶進回測。每次研究都能核對資料期間與計算假設。</p>
+      <form class="home-search" (ngSubmit)="search()"><label for="home-search-input">搜尋台股標的</label><div class="home-search-control"><span aria-hidden="true">⌕</span><input id="home-search-input" name="symbol" [(ngModel)]="symbol" maxlength="30" placeholder="輸入代碼或名稱，例如 2330、台積電"><button type="submit" aria-label="搜尋標的">搜尋</button></div><span class="home-search-hint">搜尋上市、上櫃與上市基金目錄；行情支援狀態會另外標示。</span></form>
       <p class="hero-disclosure">歷史模擬不代表未來績效 · 研究用途，非投資建議</p>
     </div>
-    <aside class="hero-card" aria-label="研究流程"><p class="card-kicker">從假設走到理解</p><div class="journey-step"><span>01</span><div><strong>選一個研究問題</strong><small>標的、策略與期間</small></div></div><div class="journey-line"></div><div class="journey-step"><span>02</span><div><strong>檢視績效與風險</strong><small>與相同投入方式比較</small></div></div><div class="journey-line"></div><div class="journey-step"><span>03</span><div><strong>理解計算假設</strong><small>資料、成本與成交模型</small></div></div><a routerLink="/methods" class="text-link">先了解研究方法 <span aria-hidden="true">↗</span></a></aside>
+    <aside class="hero-card quick-start" aria-label="快速研究入口"><p class="card-kicker">快速開始</p><h2>你現在想做什麼？</h2><nav aria-label="研究任務">
+      <a routerLink="/explore"><span><strong>找一檔股票</strong><small>搜尋代碼、名稱與行情支援狀態</small></span><b aria-hidden="true">→</b></a>
+      <a routerLink="/stocks/2330"><span><strong>查看個股走勢</strong><small>以 2330 台積電示範歷史研究頁</small></span><b aria-hidden="true">→</b></a>
+      <a routerLink="/backtest" [queryParams]="{symbol:'0050',strategy:'ma-crossover'}"><span><strong>開始策略回測</strong><small>0050 與雙均線範本</small></span><b aria-hidden="true">→</b></a>
+    </nav></aside>
   </section>
-  <section class="page-wrap section-block"><div class="section-heading"><div><p class="eyebrow">從你的問題開始</p><h2>今天想弄清楚什麼？</h2><p class="section-lede">選一條路，工具會帶你從設定走到檢視假設。</p></div><a routerLink="/strategies" class="text-link">認識策略 →</a></div>
+  <section class="page-wrap section-block"><div class="section-heading"><div><p class="eyebrow">研究範本</p><h2>從一個明確的比較開始</h2><p class="section-lede">範本會帶入工作台；執行前仍可調整標的、期間與假設。</p></div><a routerLink="/strategies" class="text-link">查看全部策略 →</a></div>
     <div class="template-grid">
       <a class="template-card intent-card" routerLink="/backtest" [queryParams]="{symbol:'0050',strategy:'ma-crossover'}"><span class="intent-icon">↔</span><span class="template-number">比較投入方式</span><strong>定期定額和一次投入，差在哪裡？</strong><p>用同一標的與期間比較現金流情境，再檢視風險指標和限制。</p><span class="template-meta">研究工作台 · 0050 範例 <b>→</b></span></a>
       <a class="template-card intent-card" routerLink="/backtest" [queryParams]="{symbol:'2330',strategy:'rsi-reversion'}"><span class="intent-icon">⌁</span><span class="template-number">測試一條規則</span><strong>這個買賣條件曾經如何表現？</strong><p>從明確規則開始，檢視歷史結果、成本假設與可能失效的情境。</p><span class="template-meta">規則回測 · RSI 範例 <b>→</b></span></a>
       <a class="template-card intent-card" routerLink="/decision-practice"><span class="intent-icon">◉</span><span class="template-number">練習投資決策</span><strong>市場波動時，我會怎麼選？</strong><p>用合成情境練習判斷和記錄理由；情境不是即時或真實行情。</p><span class="template-meta">合成情境 · 決策練習 <b>→</b></span></a>
     </div>
   </section>
-  <section class="page-wrap home-bottom"><div><span class="mini-icon">⌕</span><h2>還不知道從哪裡開始？</h2><p>先搜尋一檔股票，查看目錄資訊與目前資料限制。</p></div><a class="button-outline" routerLink="/explore">探索台股標的</a></section>
+  <section class="page-wrap home-bottom"><div><span class="mini-icon">i</span><h2>開始研究前，先了解資料範圍</h2><p>行情完整度、成交模型與授權狀態都會影響結果解讀。</p></div><a class="button-outline" routerLink="/methods">閱讀資料與方法</a></section>
 ` })
 export class HomePageComponent {
   private readonly router = inject(Router);
