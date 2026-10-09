@@ -19,12 +19,14 @@ import uk.kuronekoli.strategylab.api.BacktestException
 import uk.kuronekoli.strategylab.backtest.BacktestValidation
 
 @Component
-class TwseMarketDataClient(private val mapper: JsonMapper, @Value("\${app.twse.base-url}") endpoint: String) {
+class TwseMarketDataClient(private val mapper: JsonMapper, @Value("\${app.twse.base-url}") endpoint: String) : HistoricalMarketDataProvider {
     private val log = LoggerFactory.getLogger(TwseMarketDataClient::class.java)
     private val endpoint = URI.create(endpoint)
     private val http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NEVER).build()
 
-    fun load(symbol: String, first: YearMonth, last: YearMonth): List<DailyBar> {
+    override val sourceName: String = "TWSE STOCK_DAY（月歷史端點）"
+
+    override fun load(symbol: String, first: YearMonth, last: YearMonth): List<DailyBar> {
         val bars = mutableListOf<DailyBar>()
         var groupStart = first
         while (!groupStart.isAfter(last)) {
@@ -69,18 +71,33 @@ class TwseMarketDataClient(private val mapper: JsonMapper, @Value("\${app.twse.b
         if (data.size() > 31) throw BacktestException.data("${context}月份行情筆數超出上限。")
         val rows = mutableListOf<DailyBar>()
         for (row in data) try {
-            if (!row.isArray || row.size() < 7 || !row[0].isTextual || !row[6].isTextual) throw IllegalArgumentException("row shape")
+            if (!row.isArray || row.size() < 9 || (0..8).any { !row[it].isTextual }) throw IllegalArgumentException("row shape")
             val dateText = row[0].asText().trim()
             if (!dateText.matches(Regex("\\d{2,4}/\\d{1,2}/\\d{1,2}"))) throw IllegalArgumentException("date shape")
             val parts = dateText.split("/"); var year = parts[0].toInt(); if (year < 1911) year += 1911
             val date = LocalDate.of(year, parts[1].toInt(), parts[2].toInt())
             if (YearMonth.from(date) != month) throw IllegalArgumentException("wrong month")
-            val price = row[6].asText().trim()
-            if (!price.matches(Regex("(?:\\d+|\\d{1,3}(?:,\\d{3})+)(?:\\.\\d+)?"))) throw IllegalArgumentException("price shape")
-            rows += DailyBar(date, BigDecimal(price.replace(",", "")))
-        } catch (_: RuntimeException) { throw BacktestException.data("${context}行情列含無效日期或收盤價；不跳過錯誤列，已停止計算。") }
+            val volume = parseInteger(row[1].asText(), "volume")
+            val open = parsePrice(row[3].asText())
+            val high = parsePrice(row[4].asText())
+            val low = parsePrice(row[5].asText())
+            val close = parsePrice(row[6].asText())
+            rows += DailyBar(date, close, open, high, low, volume)
+        } catch (_: RuntimeException) { throw BacktestException.data("${context}行情列含無效日期、OHLC 價格或成交量；不跳過錯誤列，已停止計算。") }
         try { BacktestValidation.bars(rows) } catch (e: BacktestException) { throw BacktestException.data(context + e.message) }
         return rows.toList()
+    }
+
+    private fun parsePrice(raw: String): BigDecimal {
+        val price = raw.trim()
+        if (!price.matches(Regex("(?:\\d+|\\d{1,3}(?:,\\d{3})+)(?:\\.\\d+)?"))) throw IllegalArgumentException("price shape")
+        return BigDecimal(price.replace(",", "")).also { require(it.signum() > 0) }
+    }
+
+    private fun parseInteger(raw: String, field: String): Long {
+        val value = raw.trim()
+        if (!value.matches(Regex("(?:\\d+|\\d{1,3}(?:,\\d{3})+)"))) throw IllegalArgumentException("$field shape")
+        return value.replace(",", "").toLong()
     }
 
     private fun rootCause(error: Throwable): Throwable {

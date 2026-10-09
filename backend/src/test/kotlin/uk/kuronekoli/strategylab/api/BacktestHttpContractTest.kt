@@ -47,7 +47,7 @@ class BacktestHttpContractTest {
     fun fixtureMarketClient(mapper: JsonMapper): TwseMarketDataClient =
       object : TwseMarketDataClient(mapper, "https://example.invalid/STOCK_DAY") {
         override fun load(symbol: String, first: YearMonth, last: YearMonth): List<DailyBar> =
-          (0..4).map { index -> DailyBar(LocalDate.of(2024, 1, 1).plusDays(index.toLong()), 100.0) }
+          (0..4).map { index -> DailyBar(LocalDate.of(2024, 1, 1).plusDays(index.toLong()), java.math.BigDecimal("100"), java.math.BigDecimal("99"), java.math.BigDecimal("101"), java.math.BigDecimal("98"), 1000L) }
       }
   }
 
@@ -100,7 +100,7 @@ class BacktestHttpContractTest {
   }
 
   @Test
-  fun stockHistoryReturnsCloseOnlyBarsAndExplicitResearchLimitations() {
+  fun stockHistoryReturnsValidatedOhlcvBarsAndExplicitResearchLimitations() {
     val response = http.send(
       HttpRequest.newBuilder(URI.create("http://localhost:$port/api/v1/stocks/2330/history?from=2024-01-01&to=2024-01-05")).GET().build(),
       HttpResponse.BodyHandlers.ofString()
@@ -113,7 +113,12 @@ class BacktestHttpContractTest {
     assertEquals("2024-01-05", json.path("observedTo").asText())
     assertEquals(5, json.path("bars").size())
     assertTrue(json.path("bars").get(0).has("close"))
-    assertFalse(json.path("bars").get(0).has("open"))
+    assertEquals("99", json.path("bars").get(0).path("open").asText())
+    assertEquals("101", json.path("bars").get(0).path("high").asText())
+    assertEquals("98", json.path("bars").get(0).path("low").asText())
+    assertEquals(1000, json.path("bars").get(0).path("volume").asInt())
+    assertFalse(json.path("realtime").asBoolean())
+    assertTrue(json.path("limitations").toString().contains("fetchedAt"))
     assertTrue(json.path("limitations").toString().contains("非即時") || json.path("limitations").toString().contains("授權"))
   }
 
@@ -129,6 +134,18 @@ class BacktestHttpContractTest {
       HttpResponse.BodyHandlers.ofString()
     )
     assertEquals(400, rejected.statusCode(), rejected.body())
+  }
+
+  @Test
+  fun localLiveQuoteEndpointFailsClosedWhenProviderIsNotExplicitlyEnabled() {
+    val response = http.send(
+      HttpRequest.newBuilder(URI.create("http://localhost:$port/api/v1/stocks/2330/live")).header("Accept", "text/event-stream").GET().build(),
+      HttpResponse.BodyHandlers.ofString()
+    )
+    assertEquals(200, response.statusCode(), response.body())
+    assertTrue(response.headers().firstValue("Content-Type").orElse("").startsWith("text/event-stream"))
+    assertTrue(response.body().contains("event:stream-error"))
+    assertTrue(response.body().contains("LIVE_MARKET_DATA_UNAVAILABLE"))
   }
 
   @Test

@@ -13,3 +13,5 @@ app:
     base-url: https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY
   market-history:
     enabled: ${APP_MARKET_HISTORY_ENABLED:false}
+  live-market-data:
+    enabled: ${APP_LIVE_MARKET_DATA_ENABLED:false}

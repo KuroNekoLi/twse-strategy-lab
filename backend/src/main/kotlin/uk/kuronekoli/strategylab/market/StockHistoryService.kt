@@ -12,9 +12,9 @@ import uk.kuronekoli.strategylab.api.BacktestException
 import uk.kuronekoli.strategylab.backtest.BacktestValidation
 
 @Service
-class StockHistoryService @Autowired constructor(private val marketData: TwseMarketDataClient, @Value("${'$'}{app.market-history.enabled:false}") private val enabled: Boolean) {
+class StockHistoryService @Autowired constructor(private val marketData: HistoricalMarketDataProvider, @Value("${'$'}{app.market-history.enabled:false}") private val enabled: Boolean) {
     private val clock: Clock = Clock.system(ZoneId.of("Asia/Taipei"))
-    internal constructor(marketData: TwseMarketDataClient, clock: Clock, enabled: Boolean) : this(marketData, enabled) { this.injectedClock = clock }
+    internal constructor(marketData: HistoricalMarketDataProvider, clock: Clock, enabled: Boolean) : this(marketData, enabled) { this.injectedClock = clock }
     private var injectedClock: Clock = clock
     private val timeClock get() = injectedClock
     fun history(symbol: String?, fromText: String, toText: String): StockHistoryResponse {
@@ -25,8 +25,11 @@ class StockHistoryService @Autowired constructor(private val marketData: TwseMar
         val loaded = marketData.load(symbol, YearMonth.from(from), YearMonth.from(to)); BacktestValidation.bars(loaded)
         val bars = loaded.filter { !it.date.isBefore(from) && !it.date.isAfter(to) }
         if (bars.isEmpty()) throw BacktestException("NO_MARKET_DATA", "$symbol 在此日期範圍沒有可用收盤資料。", 404)
-        return StockHistoryResponse(symbol, from.toString(), to.toString(), bars.first().date.toString(), bars.last().date.toString(), java.time.OffsetDateTime.now(timeClock).toString(), "TWSE STOCK_DAY（月歷史端點）", "1d", "UNKNOWN", "未調整原始收盤價", bars.map { StockHistoryResponse.Bar(it.date.toString(), it.close.toPlainString()) }, listOf(
-            "目前只呈現每日收盤價；無 OHLC、成交量、股利或公司行動資料。", "行情授權、歷史完整性與衍生圖表展示權尚未確認；公開發布狀態 BLOCKED。", "資料缺漏與停牌原因未知；資料不代表即時行情。"))
+        val fetchedAt = java.time.OffsetDateTime.now(timeClock).toString()
+        val completeOhlcv = bars.all { it.hasOhlcv }
+        val limitations = mutableListOf("TWSE STOCK_DAY 是按月提供的歷史日資料，不是即時報價；fetchedAt 是本服務擷取時間，observedTo 是最後一筆資料日期。", "行情授權、歷史完整性與衍生圖表展示權尚未確認；公開發布狀態 BLOCKED。", "資料缺漏與停牌原因未知；價格為未調整資料，未處理股利與公司行動。")
+        if (!completeOhlcv) limitations += "此來源回應未提供完整 OHLCV；部分欄位為 null，不可視為 K 線或零成交量。"
+        return StockHistoryResponse(symbol, from.toString(), to.toString(), bars.first().date.toString(), bars.last().date.toString(), fetchedAt, marketData.sourceName, "1d", "UNKNOWN", "未調整原始價格", bars.map { StockHistoryResponse.Bar(it.date.toString(), it.close.toPlainString(), it.open?.toPlainString(), it.high?.toPlainString(), it.low?.toPlainString(), it.volume) }, limitations, realtime = false)
     }
     private fun parseDate(value: String): LocalDate = try { LocalDate.parse(value) } catch (_: RuntimeException) { throw BacktestException.input("日期格式不正確；請使用 YYYY-MM-DD。") }
     companion object { private val SYMBOL = Pattern.compile("\\d{4,6}") }

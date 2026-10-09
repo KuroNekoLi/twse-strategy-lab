@@ -20,6 +20,8 @@ cd backend
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
+IntelliJ IDEA 也可直接選擇共用的 **Backend Local** Run Configuration。`local` profile 預設使用 `http://localhost:8081`，避免和本機既有 Docker 服務的 8080 埠衝突；前端本機設定已指向 8081。個股研究頁會載入歷史 OHLCV 日線，並可切換走勢圖與 K 線。即時行情需要自行在 Run Configuration 的環境變數設定 `FUGLE_API_KEY`；沒有 key 時歷史圖仍可使用，即時面板會顯示不可用。授權與限制詳見 [本機行情設定](backend/LOCAL_MARKET_DATA.md)。
+
 `local` profile 使用 H2 記憶體資料庫；啟動時由 Hibernate 建立本機資料表。資料庫連線狀態可用 `GET /api/health/database` 檢查。正式環境需透過 `SPRING_DATASOURCE_URL`、`SPRING_DATASOURCE_USERNAME`、`SPRING_DATASOURCE_PASSWORD` 提供連線設定，並以 `SPRING_JPA_HIBERNATE_DDL_AUTO=update` 管理 schema；程式不提供預設正式資料庫網址或憑證。Zeabur 上可使用 MySQL 私有網路位址。既有 CORS 設定仍由 `CORS_ALLOWED_ORIGIN_PATTERNS` 控制。
 
 目前持久化合成回放 session／決策，以及上市公司、上市基金與上櫃公司名錄白名單。名錄首次搜尋時會完整讀取各官方來源並寫入資料庫，後續搜尋只查資料庫；每天排程更新，只有全部來源成功驗證才整批替換。上櫃標的可搜尋，但 TWSE 回測行情尚未支援。schema 選擇理由與欄位見 [MySQL schema proposal](docs/database/MYSQL_SCHEMA_PROPOSAL.md)。服務依賴儲存介面與 Spring Data JPA adapter；切換其他資料庫時可替換 adapter／連線設定，但仍須驗證 driver、Hibernate dialect、鎖定及 schema 更新行為。TWSE 歷史行情快取與回測輸出因授權尚未確認而不寫入資料庫。
@@ -32,7 +34,7 @@ npm ci
 npm start
 ```
 
-開啟 `http://localhost:4200`。Angular 開發環境預設呼叫 `http://localhost:8080`。如需更換，編輯 `frontend/public/config.js`。
+開啟 `http://localhost:4200`。Angular 本機設定預設呼叫 `http://localhost:8081`。如需更換，編輯 `frontend/public/config.js`。
 
 ## GitHub Pages 部署
 

@@ -1,14 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 
 type Instrument = { code: string; name: string; kind: string; asOf: string; market: string; backtestSupported: boolean };
-type PricePoint = { date: string; close: string };
-type History = { symbol: string; from: string; to: string; observedFrom: string; observedTo: string; fetchedAt: string; source: string; interval: string; licensingStatus: string; adjustmentPolicy: string; bars: PricePoint[]; limitations: string[] };
+type PriceBar = { date: string; open?: number | string | null; high?: number | string | null; low?: number | string | null; close: number | string; volume?: number | string | null };
+type History = { symbol: string; from: string; to: string; observedFrom: string; observedTo: string; fetchedAt: string; source: string; interval: string; licensingStatus: string; adjustmentPolicy: string; bars: PriceBar[]; limitations: string[] };
+type ChartBar = { date: string; open: number; high: number; low: number; close: number; volume: number | null; x: number; openY: number; highY: number; lowY: number; closeY: number; volumeY: number; volumeHeight: number; candleY: number; candleHeight: number; up: boolean };
+type LiveQuote = { symbol: string; price: number; size: number | null; volume: number | null; eventTime: string; receivedAt: string; source: string; freshness: 'LIVE' };
+type LiveState = 'disabled' | 'connecting' | 'waiting' | 'live' | 'stale' | 'network' | 'error' | 'unavailable' | 'disconnected';
 const apiBaseUrl = (window.APP_CONFIG?.apiBaseUrl ?? '').replace(/\/$/, '');
+const liveDataOptIn = (window.APP_CONFIG as (Window['APP_CONFIG'] & { liveMarketDataEnabled?: boolean }) | undefined)?.liveMarketDataEnabled === true;
+const localBrowser = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname);
+const localLiveEnabled = liveDataOptIn && localBrowser;
 
 @Component({
   selector: 'app-stock-research-page', standalone: true, imports: [CommonModule, RouterLink],
@@ -18,28 +24,56 @@ const apiBaseUrl = (window.APP_CONFIG?.apiBaseUrl ?? '').replace(/\/$/, '');
       <p class="eyebrow">STOCK RESEARCH · 個股研究檔案</p>
       <ng-container *ngIf="instrument as item; else loadingInstrument">
         <div class="stock-heading"><div><h1 tabindex="-1">{{item.name}}</h1><p class="stock-identity">{{item.code}} <span>·</span> {{item.market === 'TWSE' ? '臺灣證券交易所上市' : '市場未確認'}}</p></div><span class="stock-status"><i></i>歷史資料研究</span></div>
-        <p class="subpage-lede">從這檔標的開始，查看可取得的歷史收盤趨勢，再把研究問題帶入策略驗證。</p>
+        <p class="subpage-lede">用歷史行情檢視價格變化、成交量與研究區間，再把觀察帶入策略驗證。</p>
 
-        <div *ngIf="error" class="stock-error" role="alert"><strong>目前無法載入走勢</strong><span>{{error}}</span><button type="button" (click)="loadHistory()">重新載入</button></div>
-        <div *ngIf="busy" class="stock-loading" role="status">正在取得歷史收盤資料…</div>
+        <div *ngIf="error" class="stock-error" role="alert"><strong>目前無法載入行情</strong><span>{{error}}</span><button type="button" (click)="loadHistory()">重新載入</button></div>
+        <div *ngIf="busy" class="stock-loading" role="status">正在取得歷史行情…</div>
         <ng-container *ngIf="history as data">
           <section class="stock-chart-card" aria-labelledby="stock-chart-title">
-            <div class="stock-chart-heading"><div><p class="eyebrow">PRICE HISTORY · 日收盤</p><h2 id="stock-chart-title">{{latestClose | number:'1.2-2'}} <small>元</small></h2><p class="stock-date-line">觀察區間 {{data.observedFrom}} – {{data.observedTo}}</p></div><div class="stock-periods" role="group" aria-label="走勢顯示期間"><button *ngFor="let period of periods" type="button" [disabled]="busy" [class.selected]="selectedPeriod === period" [attr.aria-pressed]="selectedPeriod === period" (click)="changePeriod(period)">{{period}}</button></div></div>
-            <div class="stock-chart-summary"><span [class.negative]="periodChange < 0">{{periodChange >= 0 ? '+' : ''}}{{periodChange | number:'1.2-2'}}%</span><span>區間變化</span><span class="chart-summary-divider"></span><span>{{data.bars.length}} 個交易觀察</span></div>
-            <div class="stock-chart-frame" *ngIf="points.length > 1; else noPoints">
-              <svg viewBox="0 0 900 300" role="img" [attr.aria-label]="item.name + '每日收盤價趨勢圖，期間 ' + data.observedFrom + ' 至 ' + data.observedTo">
-                <defs><linearGradient id="stock-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1c9b83" stop-opacity=".2"/><stop offset="100%" stop-color="#1c9b83" stop-opacity="0"/></linearGradient></defs>
-                <g class="chart-grid"><line x1="58" y1="34" x2="884" y2="34"/><line x1="58" y1="110" x2="884" y2="110"/><line x1="58" y1="186" x2="884" y2="186"/><line x1="58" y1="262" x2="884" y2="262"/></g>
-                <g class="chart-axis-labels"><text x="4" y="39">{{priceTicks[0] | number:'1.0-0'}}</text><text x="4" y="115">{{priceTicks[1] | number:'1.0-0'}}</text><text x="4" y="191">{{priceTicks[2] | number:'1.0-0'}}</text><text x="4" y="267">{{priceTicks[3] | number:'1.0-0'}}</text><text x="58" y="292">{{data.observedFrom}}</text><text x="884" y="292" text-anchor="end">{{data.observedTo}}</text></g>
-                <path class="chart-area" [attr.d]="areaPath"/><path class="chart-line" [attr.d]="linePath"/><circle class="chart-current" [attr.cx]="points[points.length - 1].x" [attr.cy]="points[points.length - 1].y" r="5"/>
-              </svg>
-              <p class="sr-only">走勢摘要：起始收盤 {{firstClose | number:'1.2-2'}} 元，期間最高 {{highClose | number:'1.2-2'}} 元，最低 {{lowClose | number:'1.2-2'}} 元，最新收盤 {{latestClose | number:'1.2-2'}} 元，區間變化 {{periodChange | number:'1.2-2'}}%。</p>
+            <div class="stock-live-label"><span class="stock-status-dot" aria-hidden="true"></span><strong>歷史日線資料</strong><span>最後行情日 {{data.observedTo}}</span><span class="daily-data-label">EOD · 非即時</span></div>
+            <section class="live-quote-panel" [class.live-quote-active]="liveState === 'live'" [class.live-quote-warning]="liveState === 'stale' || liveState === 'network' || liveState === 'error'" aria-label="即時行情狀態" aria-live="polite" aria-atomic="true">
+              <div class="live-quote-heading"><strong>即時行情</strong><span class="live-state-pill" [class.live-state-on]="liveState === 'live'">{{liveStateLabel}}</span></div>
+              <ng-container *ngIf="liveQuote as quote; else noLiveQuote"><div class="live-quote-value"><strong>{{quote.price | number:'1.2-2'}} <small>元</small></strong><span>{{quote.symbol}} · {{liveState === 'live' ? 'LIVE' : '最近報價'}}</span></div><div class="live-quote-meta"><span>事件時間 {{formatTime(quote.eventTime)}}</span><span>收到時間 {{formatTime(quote.receivedAt)}}</span><span>來源 {{quote.source || '未提供'}}</span><span *ngIf="quote.size !== null">單筆量 {{quote.size | number}}</span><span *ngIf="quote.volume !== null">累計量 {{quote.volume | number}}</span></div><p class="live-quote-note">即時報價獨立呈現；下方圖表仍是日線歷史行情，不會將報價併入日 K。</p></ng-container>
+              <ng-template #noLiveQuote><p class="live-quote-message">{{liveStateMessage}}</p></ng-template>
+            </section>
+            <div class="stock-chart-heading">
+              <div><p class="eyebrow">{{selectedBar?.date ?? data.observedTo}} 收盤</p><h2 id="stock-chart-title">{{(selectedBar?.close ?? latestClose) | number:'1.2-2'}} <small>元</small></h2><p class="stock-date-line">觀察區間 {{data.observedFrom}} – {{data.observedTo}}</p></div>
+              <div class="stock-chart-controls">
+                <div class="stock-periods" role="group" aria-label="走勢顯示期間"><button *ngFor="let period of periods" type="button" [disabled]="busy" [class.selected]="selectedPeriod === period" [attr.aria-pressed]="selectedPeriod === period" (click)="changePeriod(period)">{{period}}</button></div>
+                <div class="stock-periods stock-modes" role="group" aria-label="圖表類型"><button type="button" [class.selected]="chartMode === 'line'" [attr.aria-pressed]="chartMode === 'line'" (click)="setMode('line')">走勢</button><button type="button" [disabled]="!hasOhlc" [class.selected]="chartMode === 'candles'" [attr.aria-pressed]="chartMode === 'candles'" [attr.title]="hasOhlc ? '顯示 OHLC K 線' : '此資料來源尚未提供開高低收資料'" (click)="setMode('candles')">K 線</button></div>
+              </div>
             </div>
-            <ng-template #noPoints><div class="stock-no-points">此期間沒有足夠資料繪製走勢。</div></ng-template>
-            <div class="stock-data-foot"><span>來源：{{data.source}}</span><span>本次取得：{{data.fetchedAt}}</span><span>未調整原始收盤價 · 非即時</span></div>
+            <div class="stock-chart-summary"><span [class.negative]="periodChange < 0">{{periodChange >= 0 ? '+' : ''}}{{periodChange | number:'1.2-2'}}%</span><span>區間變化</span><span class="chart-summary-divider"></span><span>{{chartBars.length}} 個交易日</span><span *ngIf="chartMode === 'candles' && hasVolume" class="chart-legend"><i class="legend-up"></i>上漲 <i class="legend-down"></i>下跌</span></div>
+
+            <div class="stock-chart-frame" *ngIf="chartBars.length > 1; else noPoints">
+              <svg class="stock-price-svg" viewBox="0 0 940 350" role="img" [attr.aria-label]="chartDescription(item.name, data)">
+                <g class="chart-grid"><line x1="64" y1="22" x2="920" y2="22"/><line x1="64" y1="89" x2="920" y2="89"/><line x1="64" y1="156" x2="920" y2="156"/><line x1="64" y1="224" x2="920" y2="224"/></g>
+                <g class="chart-axis-labels"><text x="3" y="27">{{priceTicks[0] | number:'1.0-0'}}</text><text x="3" y="94">{{priceTicks[1] | number:'1.0-0'}}</text><text x="3" y="161">{{priceTicks[2] | number:'1.0-0'}}</text><text x="3" y="229">{{priceTicks[3] | number:'1.0-0'}}</text><text x="64" y="344">{{data.observedFrom}}</text><text x="920" y="344" text-anchor="end">{{data.observedTo}}</text><text *ngIf="chartMode === 'candles' && hasVolume" x="64" y="244" class="volume-axis-title">成交量</text></g>
+                <path *ngIf="chartMode === 'line'" class="chart-area" [attr.d]="areaPath"/><path *ngIf="chartMode === 'line'" class="chart-line" [attr.d]="linePath"/>
+                <g *ngFor="let bar of chartBars; let i = index" class="chart-mark" [class.chart-mark-active]="activeIndex === i" (mouseenter)="selectBar(i)" (click)="selectBar(i)">
+                  <rect class="chart-hit-area" [attr.x]="Math.max(plot.left, bar.x - hitWidth / 2)" y="22" [attr.width]="hitWidth" height="202"/>
+                  <line *ngIf="chartMode === 'candles' && hasOhlc" class="candle-wick" [class.up]="bar.up" [class.down]="!bar.up" [attr.x1]="bar.x" [attr.x2]="bar.x" [attr.y1]="bar.highY" [attr.y2]="bar.lowY"/>
+                  <rect *ngIf="chartMode === 'candles' && hasOhlc" class="candle-body" [class.up]="bar.up" [class.down]="!bar.up" [attr.x]="bar.x - candleWidth / 2" [attr.y]="bar.candleY" [attr.width]="candleWidth" [attr.height]="bar.candleHeight" rx=".5"/>
+                  <circle *ngIf="chartMode === 'line'" class="line-focus-point" [class.active]="activeIndex === i" [attr.cx]="bar.x" [attr.cy]="bar.closeY" [attr.r]="activeIndex === i ? 4 : 1.7"/>
+                  <rect *ngIf="chartMode === 'candles' && hasVolume && bar.volume !== null" class="volume-bar" [class.up]="bar.up" [class.down]="!bar.up" [attr.x]="bar.x - candleWidth / 2" [attr.y]="bar.volumeY" [attr.width]="candleWidth" [attr.height]="bar.volumeHeight"/>
+                </g>
+                <line *ngIf="activeBar" class="chart-crosshair" [attr.x1]="activeBar.x" [attr.x2]="activeBar.x" y1="18" y2="224"/>
+                <ng-container *ngIf="liveState === 'live' && liveQuote && liveQuote.price >= priceScaleLow && liveQuote.price <= priceScaleHigh"><line class="live-price-line" x1="64" x2="920" [attr.y1]="liveQuoteY" [attr.y2]="liveQuoteY"/><text class="live-price-tag" x="914" [attr.y]="liveQuoteY - 4" text-anchor="end">LIVE {{liveQuote.price | number:'1.2-2'}}</text></ng-container>
+              </svg>
+              <div *ngIf="chartMode === 'candles' && hasVolume" class="volume-caption"><span>成交量</span><span>{{selectedBar?.volume === null || selectedBar?.volume === undefined ? '此筆無資料' : (selectedBar.volume | number)}}</span></div>
+              <div class="chart-selected-detail" aria-live="polite" aria-atomic="true">
+                <strong>{{selectedBar?.date ?? chartBars[chartBars.length - 1].date}}</strong>
+                <ng-container *ngIf="hasOhlc"><span>開 {{selectedBar?.open | number:'1.2-2'}}</span><span>高 {{selectedBar?.high | number:'1.2-2'}}</span><span>低 {{selectedBar?.low | number:'1.2-2'}}</span></ng-container><span>收 {{selectedBar?.close | number:'1.2-2'}}</span>
+                <span *ngIf="selectedBar?.volume !== null && selectedBar?.volume !== undefined">量 {{selectedBar.volume | number}}</span>
+              </div>
+              <label class="sr-only" for="chart-point-selector">選擇圖表日期</label><input id="chart-point-selector" class="chart-point-selector" type="range" min="0" [max]="chartBars.length - 1" [value]="activeIndex" (input)="selectBar(+$any($event.target).value)" [attr.aria-valuetext]="selectedBar?.date + ' 收盤 ' + selectedBar?.close + ' 元'"/>
+              <p class="sr-only">{{chartDescription(item.name, data)}}。圖表日期可使用下方滑桿逐日檢視。</p>
+            </div>
+            <ng-template #noPoints><div class="stock-no-points">此期間沒有足夠的有效行情資料。請更換期間或稍後重試。</div></ng-template>
+            <div class="stock-data-foot"><span>來源：{{data.source}}</span><span>擷取時間：{{data.fetchedAt}}</span><span>價格調整：{{data.adjustmentPolicy || '未提供'}}</span><span class="data-status">{{data.licensingStatus === 'CONFIRMED' ? '展示授權已確認' : '資料展示授權尚未確認'}}</span></div>
           </section>
           <section class="stock-next-step"><div><p class="eyebrow">CONTINUE YOUR RESEARCH</p><h2>把觀察變成可檢驗的問題</h2><p>選擇策略與期間，檢視歷史表現及計算假設。</p></div><a class="button-primary" [routerLink]="'/backtest'" [queryParams]="{symbol:item.code}">用 {{item.code}} 開始回測 <span aria-hidden="true">→</span></a></section>
-          <section class="stock-data-notice"><div class="notice-mark" aria-hidden="true">i</div><div><strong>資料範圍與限制</strong><p>目前圖表只呈現日收盤價，沒有 OHLC K 線、成交量、股利或公司行動資料。缺漏、停牌與上市生命週期狀態尚未驗證；歷史行情授權及衍生圖表展示權尚待確認，因此公開發布狀態仍為 BLOCKED。</p><a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">查看 TWSE OpenAPI ↗</a></div></section>
+          <section class="stock-data-notice"><div class="notice-mark" aria-hidden="true">i</div><div><strong>資料範圍與限制</strong><p>圖表呈現 {{hasOhlc ? '開、高、低、收' : '收盤'}}歷史行情{{hasVolume ? '與成交量' : ''}}，屬歷史資料，不代表即時報價或可交易價格。股利、公司行動及交易日曆完整性可能影響比較；來源限制：{{data.limitations.join('、') || '無其他說明'}}。資料授權狀態：{{data.licensingStatus || '未知'}}。</p><a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">查看 TWSE OpenAPI ↗</a></div></section>
         </ng-container>
       </ng-container>
       <ng-template #loadingInstrument><div *ngIf="!error" class="stock-loading" role="status">正在確認標的資訊…</div><div *ngIf="error" class="stock-error" role="alert"><strong>找不到可用的上市標的資訊</strong><span>{{error}}</span><a routerLink="/explore">返回標的探索</a></div></ng-template>
@@ -50,29 +84,45 @@ export class StockResearchPageComponent {
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
   readonly periods = ['1年', '3年', '5年'];
   symbol = '';
   instrument: Instrument | null = null;
   history: History | null = null;
   selectedPeriod = '1年';
+  chartMode: 'line' | 'candles' = 'line';
   busy = false;
   error = '';
-  points: { x: number; y: number }[] = [];
+  chartBars: ChartBar[] = [];
   priceTicks: number[] = [0, 0, 0, 0];
   linePath = '';
   areaPath = '';
   latestClose = 0;
   firstClose = 0;
-  highClose = 0;
-  lowClose = 0;
   periodChange = 0;
+  activeIndex = 0;
+  liveState: LiveState = localLiveEnabled ? 'connecting' : 'disabled';
+  liveQuote: LiveQuote | null = null;
+  private liveStream: EventSource | null = null;
+  private liveStreamSymbol = '';
+  private staleTimer: number | null = null;
+  private lastLiveReceiptMs = 0;
+  private hasServerStreamEvidence = false;
+  private streamErrorReceived = false;
   private historyRequestId = 0;
   private instrumentRequestId = 0;
+  private readonly plot = { left: 64, right: 920, top: 22, bottom: 224 };
+  priceScaleLow = 0;
+  priceScaleHigh = 1;
+  readonly Math = Math;
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.closeLiveStream());
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      this.closeLiveStream();
       this.symbol = params.get('symbol') ?? '';
-      this.instrument = null; this.history = null; this.busy = false; this.error = '';
+      this.instrument = null; this.history = null; this.chartBars = []; this.busy = false; this.error = '';
+      this.liveQuote = null; this.liveState = localLiveEnabled ? 'connecting' : 'disabled';
       this.historyRequestId += 1;
       const requestId = ++this.instrumentRequestId;
       if (!/^\d{4,6}$/.test(this.symbol)) { this.error = '標的代碼格式不正確。'; this.cdr.markForCheck(); return; }
@@ -80,7 +130,23 @@ export class StockResearchPageComponent {
     });
   }
 
+  get hasOhlc(): boolean { return !!this.history?.bars?.length && this.history.bars.every((bar) => this.number(bar.open) !== null && this.number(bar.high) !== null && this.number(bar.low) !== null); }
+  get hasVolume(): boolean { return !!this.history?.bars?.some((bar) => this.number(bar.volume) !== null); }
+  get candleWidth(): number { return Math.max(1.2, Math.min(8, (this.plot.right - this.plot.left) / Math.max(this.chartBars.length, 1) * .62)); }
+  get hitWidth(): number { return Math.max(2, Math.min(18, (this.plot.right - this.plot.left) / Math.max(this.chartBars.length - 1, 1))); }
+  get activeBar(): ChartBar | null { return this.chartBars[this.activeIndex] ?? null; }
+  get selectedBar(): ChartBar | null { return this.activeBar; }
+  get liveQuoteY(): number { return this.plot.bottom - (this.liveQuote!.price - this.priceScaleLow) * (this.plot.bottom - this.plot.top) / (this.priceScaleHigh - this.priceScaleLow); }
+  get liveStateLabel(): string {
+    return ({ disabled: '未啟用', connecting: '連線中', waiting: '等待報價', live: 'LIVE · 即時', stale: '資料逾時', network: '網路重連中', error: '串流錯誤', unavailable: '目前不可用', disconnected: '已中斷' } satisfies Record<LiveState, string>)[this.liveState];
+  }
+  get liveStateMessage(): string {
+    return ({ disabled: '本頁目前只顯示日線歷史資料。即時串流僅供本機開發設定啟用，公開頁面不會連線。', connecting: '正在建立本機即時行情連線…', waiting: '串流已連線，等待資料來源提供即時報價。', live: '等待下一筆即時報價。', stale: '超過 60 秒未收到新報價；目前數值已標示為過期。', network: '即時行情網路連線中斷，瀏覽器正在嘗試重新連線。', error: '即時行情服務回報錯誤；日線歷史資料仍可使用。', unavailable: '即時行情目前不可用；日線歷史資料仍可使用。', disconnected: '即時行情連線已中斷；日線歷史資料仍可使用。' } satisfies Record<LiveState, string>)[this.liveState];
+  }
+
   changePeriod(period: string): void { this.selectedPeriod = period; void this.loadHistory(); }
+  setMode(mode: 'line' | 'candles'): void { if (mode === 'line' || this.hasOhlc) this.chartMode = mode; }
+  selectBar(index: number): void { this.activeIndex = Math.max(0, Math.min(this.chartBars.length - 1, index)); }
 
   async loadInstrument(symbol: string, requestId: number): Promise<void> {
     if (!apiBaseUrl) { this.error = '研究 API 尚未設定。'; return; }
@@ -102,28 +168,141 @@ export class StockResearchPageComponent {
     const to = new Date(); const from = new Date(to); from.setFullYear(to.getFullYear() - Number.parseInt(this.selectedPeriod, 10));
     try {
       const data = await firstValueFrom(this.http.get<History>(`${apiBaseUrl}/api/v1/stocks/${this.symbol}/history`, { params: { from: this.dateParam(from), to: this.dateParam(to) } }));
-      if (requestId === this.historyRequestId) { this.history = data; this.prepareChart(data.bars); }
-    } catch (failure) { if (requestId === this.historyRequestId) { this.error = this.messageFor(failure); this.history = null; } }
+      if (requestId === this.historyRequestId) { this.history = data; this.prepareChart(data.bars ?? []); this.connectLiveStream(); }
+    } catch (failure) { if (requestId === this.historyRequestId) { this.error = this.messageFor(failure); this.history = null; this.chartBars = []; } }
     finally { if (requestId === this.historyRequestId) { this.busy = false; this.cdr.markForCheck(); } }
   }
 
-  private prepareChart(bars: PricePoint[]): void {
-    const values = bars.map((bar) => Number(bar.close)).filter(Number.isFinite);
-    if (!values.length) { this.points = []; return; }
-    const min = Math.min(...values), max = Math.max(...values), spread = max - min || Math.max(max * .02, 1), low = min - spread * .08, high = max + spread * .08;
-    this.priceTicks = [high, high - (high - low) / 3, high - (high - low) * 2 / 3, low];
-    this.points = values.map((value, index) => ({ x: 58 + index * 826 / Math.max(values.length - 1, 1), y: 262 - (value - low) * 228 / (high - low) }));
-    this.linePath = this.points.map((point, index) => `${index ? 'L' : 'M'}${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(' ');
-    this.areaPath = `${this.linePath} L884 262 L58 262 Z`;
-    this.firstClose = values[0]; this.latestClose = values[values.length - 1]; this.highClose = max; this.lowClose = min;
-    this.periodChange = values.length > 1 && values[0] ? (this.latestClose / values[0] - 1) * 100 : 0;
+  chartDescription(name: string, data: History): string {
+    return `${name}${this.chartMode === 'candles' ? '日 K 線與成交量' : '每日收盤走勢'}，${data.observedFrom} 至 ${data.observedTo}，歷史資料，非即時報價`;
   }
 
+  formatTime(value: string): string {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('zh-TW', { dateStyle: 'medium', timeStyle: 'medium', timeZone: 'Asia/Taipei' }).format(date);
+  }
+
+  private connectLiveStream(): void {
+    if (!localLiveEnabled) { this.liveState = 'disabled'; return; }
+    if (this.liveStream && this.liveStreamSymbol === this.symbol) return;
+    if (typeof EventSource === 'undefined') { this.liveState = 'unavailable'; return; }
+    this.closeLiveStream();
+    this.liveState = 'connecting';
+    this.liveStreamSymbol = this.symbol;
+    this.hasServerStreamEvidence = false;
+    this.streamErrorReceived = false;
+    const stream = new EventSource(`${apiBaseUrl}/api/v1/stocks/${encodeURIComponent(this.symbol)}/live`);
+    this.liveStream = stream;
+    stream.onopen = () => { if (this.liveStream === stream) { this.liveState = 'waiting'; this.cdr.markForCheck(); } };
+    stream.onerror = () => {
+      if (this.liveStream !== stream) return;
+      if (this.streamErrorReceived) return;
+      this.liveState = stream.readyState === EventSource.CLOSED
+        ? this.hasServerStreamEvidence ? 'disconnected' : 'unavailable'
+        : 'network';
+      this.cdr.markForCheck();
+    };
+    stream.addEventListener('status', (event) => this.onLiveStatus(stream, (event as MessageEvent<string>).data));
+    stream.addEventListener('quote', (event) => this.onLiveQuote(stream, (event as MessageEvent<string>).data));
+    stream.addEventListener('stream-error', (event) => this.onLiveError(stream, (event as MessageEvent<string>).data));
+    this.staleTimer = window.setInterval(() => {
+      if (this.liveQuote && this.liveState === 'live' && Date.now() - this.lastLiveReceiptMs > 60_000) {
+        this.liveState = 'stale'; this.cdr.markForCheck();
+      }
+    }, 5_000);
+    this.cdr.markForCheck();
+  }
+
+  private onLiveStatus(stream: EventSource, raw: string): void {
+    if (this.liveStream !== stream) return;
+    this.hasServerStreamEvidence = true;
+    try {
+      const payload = JSON.parse(raw) as { status?: string; source?: string; freshness?: string; message?: string };
+      const status = (payload.status ?? '').toUpperCase().replaceAll('-', '_');
+      if (status.includes('UNAVAILABLE') || status.includes('DISABLED')) this.liveState = 'unavailable';
+      else if (status.includes('CONNECTING') || status.includes('AUTHENTICATING')) this.liveState = 'connecting';
+      else if (status.includes('STALE')) this.liveState = 'stale';
+      else if (status.includes('DISCONNECT') || status.includes('CLOSED')) this.liveState = 'disconnected';
+      else if (status.includes('NETWORK') || status.includes('RECONNECT')) this.liveState = 'network';
+      else if (status.includes('ERROR') || status.includes('FAIL')) this.liveState = 'error';
+      else if (status.includes('LIVE')) this.liveState = this.liveQuote ? 'live' : 'waiting';
+      else this.liveState = 'waiting';
+    } catch { this.liveState = 'error'; }
+    this.cdr.markForCheck();
+  }
+
+  private onLiveQuote(stream: EventSource, raw: string): void {
+    if (this.liveStream !== stream) return;
+    this.hasServerStreamEvidence = true;
+    try {
+      const payload = JSON.parse(raw) as Partial<LiveQuote>;
+      const price = Number(payload.price);
+      if (payload.symbol !== this.symbol || !Number.isFinite(price) || !payload.eventTime || !payload.receivedAt || payload.freshness !== 'LIVE') return;
+      this.liveQuote = {
+        symbol: payload.symbol, price,
+        size: payload.size === undefined || payload.size === null ? null : Number(payload.size),
+        volume: payload.volume === undefined || payload.volume === null ? null : Number(payload.volume),
+        eventTime: payload.eventTime, receivedAt: payload.receivedAt, source: payload.source ?? '未提供', freshness: 'LIVE',
+      };
+      this.lastLiveReceiptMs = Date.now(); this.liveState = 'live';
+    } catch { this.liveState = 'error'; }
+    this.cdr.markForCheck();
+  }
+
+  private onLiveError(stream: EventSource, raw: string): void {
+    if (this.liveStream !== stream) return;
+    this.streamErrorReceived = true;
+    try {
+      const payload = JSON.parse(raw) as { code?: string; status?: string };
+      const code = (payload.code ?? payload.status ?? '').toUpperCase();
+      this.liveState = code === 'LIVE_PROVIDER_UNAVAILABLE' ? 'unavailable'
+        : code === 'LIVE_PROVIDER_DISCONNECTED' ? 'disconnected'
+          : code.startsWith('LIVE_PROVIDER_') ? 'error'
+            : code.includes('UNAVAILABLE') ? 'unavailable'
+              : code.includes('DISCONNECT') ? 'disconnected'
+                : code.includes('NETWORK') ? 'network' : 'error';
+    } catch { this.liveState = 'error'; }
+    this.cdr.markForCheck();
+  }
+
+  private closeLiveStream(): void {
+    this.liveStream?.close(); this.liveStream = null; this.liveStreamSymbol = '';
+    if (this.staleTimer !== null) { window.clearInterval(this.staleTimer); this.staleTimer = null; }
+    this.liveQuote = null; this.lastLiveReceiptMs = 0;
+  }
+  private prepareChart(bars: PriceBar[]): void {
+    const valid = bars.map((bar) => ({ date: bar.date, open: this.number(bar.open), high: this.number(bar.high), low: this.number(bar.low), close: this.number(bar.close), volume: this.number(bar.volume) }))
+      .filter((bar) => !!bar.date && bar.close !== null)
+      .map((bar) => ({ ...bar, open: bar.open ?? bar.close!, high: bar.high ?? Math.max(bar.open ?? bar.close!, bar.close!), low: bar.low ?? Math.min(bar.open ?? bar.close!, bar.close!), close: bar.close! }));
+    if (!valid.length) { this.chartBars = []; return; }
+    const min = Math.min(...valid.map((bar) => bar.low)), max = Math.max(...valid.map((bar) => bar.high));
+    const spread = max - min || Math.max(Math.abs(max) * .02, 1), low = min - spread * .08, high = max + spread * .08;
+    this.priceScaleLow = low; this.priceScaleHigh = high;
+    this.priceTicks = [high, high - (high - low) / 3, high - (high - low) * 2 / 3, low];
+    const xSpan = this.plot.right - this.plot.left, ySpan = this.plot.bottom - this.plot.top;
+    const maxVolume = Math.max(...valid.map((bar) => bar.volume ?? 0), 1);
+    this.chartBars = valid.map((bar, index) => {
+      const x = this.plot.left + index * xSpan / Math.max(valid.length - 1, 1);
+      const y = (value: number) => this.plot.bottom - (value - low) * ySpan / (high - low);
+      const openY = y(bar.open), closeY = y(bar.close);
+      const volumeHeight = bar.volume === null ? 0 : bar.volume / maxVolume * 58;
+      return { ...bar, x, openY, closeY, highY: y(bar.high), lowY: y(bar.low), volumeY: 318 - volumeHeight, volumeHeight, candleY: Math.min(openY, closeY), candleHeight: Math.max(Math.abs(openY - closeY), 1.2), up: bar.close >= bar.open };
+    });
+    const closeValues = valid.map((bar) => bar.close);
+    this.linePath = this.chartBars.map((bar, index) => `${index ? 'L' : 'M'}${bar.x.toFixed(1)} ${bar.closeY.toFixed(1)}`).join(' ');
+    this.areaPath = `${this.linePath} L${this.plot.right} ${this.plot.bottom} L${this.plot.left} ${this.plot.bottom} Z`;
+    this.firstClose = closeValues[0]; this.latestClose = closeValues[closeValues.length - 1];
+    this.periodChange = closeValues.length > 1 && this.firstClose ? (this.latestClose / this.firstClose - 1) * 100 : 0;
+    this.activeIndex = this.chartBars.length - 1;
+    if (!this.hasOhlc) this.chartMode = 'line';
+  }
+
+  private number(value: unknown): number | null { if (value === null || value === undefined || value === '') return null; const parsed = Number(value); return Number.isFinite(parsed) ? parsed : null; }
   private dateParam(date: Date): string { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
   private messageFor(error: unknown): string {
     if (error instanceof HttpErrorResponse && error.status === 0) return '目前無法連線至研究服務，請稍後重試。';
-    if (error instanceof HttpErrorResponse && error.status === 404) return '此期間沒有可用的收盤資料，請選擇其他期間。';
-    if (error instanceof HttpErrorResponse && error.status === 503) return '行情展示權尚待確認，這個環境目前未開放歷史走勢資料。';
+    if (error instanceof HttpErrorResponse && error.status === 404) return '此期間沒有可用的行情資料，請選擇其他期間。';
+    if (error instanceof HttpErrorResponse && error.status === 503) return '行情展示權尚待確認，這個環境目前未開放歷史資料。';
     return error instanceof HttpErrorResponse && typeof error.error?.error === 'string' ? error.error.error : '資料載入失敗，請稍後重試。';
   }
 }
