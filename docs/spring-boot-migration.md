@@ -1,6 +1,6 @@
 # Angular 與 Spring Boot API 契約
 
-Angular 前端使用 `POST /api/v1/backtests` 呼叫 Spring Boot。Pages 僅託管靜態前端；API 需要獨立的 Java 主機與 HTTPS 網址。
+Angular 前端使用 `POST /api/v1/backtests` 呼叫 Kotlin + Spring Boot。Pages 僅託管靜態前端；API 需要獨立的 Java 25 主機與 HTTPS 網址。
 
 ## 請求
 

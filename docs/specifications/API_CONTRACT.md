@@ -1,6 +1,6 @@
 # M0 回測 API 契約
 
-端點維持 `POST /api/v1/backtests`，JSON。保留既有請求欄位與主要結果欄位；M0 增加可追溯資料、帳務紀錄、限制與錯誤代碼。Java 17 / Spring Boot 4.1.1。
+端點維持 `POST /api/v1/backtests`，JSON。保留既有請求欄位與主要結果欄位；M0 增加可追溯資料、帳務紀錄、限制與錯誤代碼。Kotlin 2.3.21 / Java 25 / Spring Boot 4.1.1；此版本組合仍使用 Spring MVC 與 JPA。
 
 ## 請求
 

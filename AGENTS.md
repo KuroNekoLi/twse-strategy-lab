@@ -1,6 +1,6 @@
 # TWSE Strategy Lab — Project Guidance
 
-- Preserve Angular 22 in `frontend/` and Java 17 / Spring Boot 4.1 in `backend/`.
+- Preserve Angular 22 in `frontend/` and Kotlin / Java 25 / Spring Boot 4.1 in `backend/`.
 - Read `產品規劃.md` as the product roadmap; execute a bounded milestone with explicit acceptance. M0 foundation is the currently authorized scope.
 - Preserve user-authored and staged changes in `產品規劃.md`; add execution notes under `docs/` instead.
 - Use synthetic fixtures for deterministic accounting tests. Keep live market-data checks separate and label licensing, dividends, corporate actions and missing-calendar limitations accurately.

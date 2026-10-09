@@ -1,17 +1,17 @@
 # 台股策略回測實驗室
 
-Angular 前端、Spring Boot API 的台股策略回測作品。前端部署在 GitHub Pages；Spring Boot API 需另外部署到支援 Java 的主機。
+Angular 前端、Kotlin + Spring Boot API 的台股策略回測作品。前端部署在 GitHub Pages；Spring Boot API 需另外部署到支援 Java 25 的主機。
 
 ## 專案結構
 
 - `frontend/`：Angular 22 單頁應用程式與 Pages 靜態建置。
-- `backend/`：Spring Boot 4.1 API、TWSE 歷史行情客戶端與回測引擎。
+- `backend/`：Kotlin、Spring Boot 4.1 API、TWSE 歷史行情客戶端與回測引擎；使用 Spring MVC 與 JPA。
 - `docs/feature-roadmap.md`：後續功能規劃。
 - `docs/spring-boot-migration.md`：API 契約與計算假設。
 
 ## 本機啟動
 
-需求：Node.js 22、Java 17 以上。專案附 Maven Wrapper（Maven 3.9.11），不必安裝系統 Maven。
+需求：Node.js 22、Java 25。專案附 Maven Wrapper（Maven 3.9.11），不必安裝系統 Maven。
 
 啟動 API：
 
