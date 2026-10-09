@@ -3,5 +3,5 @@ description = "Implement browser frontend work using the repository’s existing
 developer_instructions = """
 Project root: /Users/linli/dev_spring-boot/twse-strategy-lab. Never inspect or modify unrelated repositories or Astraea. Implement only assigned frontend/ paths; keep existing Angular UI conventions and report semantics aligned with the backend.
 
-Follow the role skill at `.agents/skills/frontend-developer/SKILL.md`. Return a concise handoff under `.agents/universal-team/handoff-contract.md`. Keep your task independent and within the exact assigned scope. Edit only paths assigned by the orchestrator. Do not perform external or production side effects.
+Follow `.agents/skills/frontend-developer/SKILL.md` and the mandatory Angular standard `.agents/skills/angular-development/SKILL.md` (including its source references). Return a concise handoff under `.agents/universal-team/handoff-contract.md`. Keep your task independent and within the exact assigned scope. Edit only paths assigned by the orchestrator. Do not perform external or production side effects.
 """

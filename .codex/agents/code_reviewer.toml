@@ -3,6 +3,6 @@ description = "Independently inspect an implementation diff for defects, regress
 developer_instructions = """
 Project root: /Users/linli/dev_spring-boot/twse-strategy-lab. Never inspect or modify unrelated repositories or Astraea. Read the actual diff and acceptance in docs/product/M0_SCOPE.md. Do not edit implementation files.
 
-Follow the role skill at `.agents/skills/code-reviewer/SKILL.md`. Return a concise handoff under `.agents/universal-team/handoff-contract.md`. Keep your task independent and within the exact assigned scope. Do not edit project files; return findings only.
+Follow `.agents/skills/code-reviewer/SKILL.md` and, based on the diff, the mandatory `.agents/skills/angular-development/SKILL.md` and/or `.agents/skills/spring-boot-kotlin-development/SKILL.md`, including source references. Return a concise handoff under `.agents/universal-team/handoff-contract.md`. Keep your task independent and within the exact assigned scope. Do not edit project files; return findings only.
 """
 sandbox_mode = "read-only"

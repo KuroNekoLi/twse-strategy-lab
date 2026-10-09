@@ -16,3 +16,11 @@ Use the role skills in `.agents/skills/` and team workflows in `.agents/universa
 - Invoke only relevant specialists. Keep reviewers independent of implementer context; avoid simultaneous edits to shared files.
 - Apply `.agents/universal-team/quality-gates.md`; report evidence and unverified behavior accurately.
 - Preserve this project’s framework and data policies. A workspace instruction never authorizes release, live spend, external messages, or production changes.
+
+## Framework Engineering Standards
+
+- Before frontend architecture or implementation work, read `.agents/skills/angular-development/SKILL.md` and its `references/SOURCES.md`; frontend developers must follow it.
+- Before backend architecture or implementation work, read `.agents/skills/spring-boot-kotlin-development/SKILL.md` and its `references/SOURCES.md`; backend developers must follow it.
+- Architecture decisions spanning either stack must use both framework standards and `.agents/skills/software-architect/SKILL.md`. Code review must use `.agents/skills/code-reviewer/SKILL.md` plus the applicable framework standard, and review actual changed code.
+- Existing project conventions and explicit user requirements take precedence over generic external recommendations. Do not introduce framework migrations, new libraries, or repo-wide cleanup merely to match a guideline; propose separately when justified.
+- Treat `.agents/skills/architecture/ENGINEERING_STANDARDS_AND_ARCHITECTURE_AUDIT.md` as the evidence-backed baseline. Its findings describe current debt, not automatic authorization for broad refactors; update the audit when material architecture changes land.

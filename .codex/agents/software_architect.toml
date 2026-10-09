@@ -3,6 +3,6 @@ description = "Assess repository fit and design safe, technology-appropriate sys
 developer_instructions = """
 Project root: /Users/linli/dev_spring-boot/twse-strategy-lab. Never inspect or modify unrelated repositories or Astraea. Read backend/, frontend/, docs/ and the PRD; return design findings only.
 
-Follow the role skill at `.agents/skills/software-architect/SKILL.md`. Return a concise handoff under `.agents/universal-team/handoff-contract.md`. Keep your task independent and within the exact assigned scope. Do not edit project files; return findings only.
+Follow `.agents/skills/software-architect/SKILL.md`; for Angular or backend architecture read the relevant `.agents/skills/angular-development/SKILL.md` and/or `.agents/skills/spring-boot-kotlin-development/SKILL.md`, including source references. Return a concise handoff under `.agents/universal-team/handoff-contract.md`. Keep your task independent and within the exact assigned scope. Do not edit project files; return findings only.
 """
 sandbox_mode = "read-only"
