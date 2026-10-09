@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Backend Local" type="MavenRunConfiguration" factoryName="Maven">
+    <MavenSettings>
+      <option name="myGeneralSettings">
+        <MavenGeneralSettings>
+          <option name="mavenHome" value="Use Maven wrapper" />
+        </MavenGeneralSettings>
+      </option>
+      <option name="myRunnerSettings">
+        <MavenRunnerSettings>
+          <option name="jreName" value="25" />
+          <option name="runnerParameters" value="spring-boot:run -Dspring-boot.run.profiles=local -Dspring-boot.run.arguments=--server.port=8081" />
+        </MavenRunnerSettings>
+      </option>
+      <option name="my pomFile" value="$PROJECT_DIR$/backend/pom.xml" />
+    </MavenSettings>
+    <method v="2" />
+  </configuration>
+</component>
