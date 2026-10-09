@@ -239,6 +239,52 @@ html,body{background:#f4f2eb;color:#202722}
 .stock-selected-quote strong{color:#292e27;font-weight:650}
 .stock-selected-quote .positive,.stock-selected-quote .negative{font-weight:650}
 @media(max-width:760px){.stock-selected-quote{gap:7px 12px;font-size:11px}}
+.stock-indicators button{min-width:51px;font-variant-numeric:tabular-nums}
+.stock-indicators button.selected{color:#363a34;box-shadow:inset 0 -2px #77745f}
+.indicator-note{max-width:210px;color:#74786e;font-size:10px;line-height:1.45}
+.moving-average-line{fill:none;stroke-width:1.7;stroke-dasharray:5 3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;pointer-events:none}
+.moving-average-20{stroke:#af7430}
+.moving-average-60{stroke:#6e6b91}
+.sma-value{font-variant-numeric:tabular-nums;font-weight:650}
+.sma20-value{color:#946122}
+.sma60-value{color:#656282}
+.sma-unavailable{color:#74786e;font-size:11px}
+@media(max-width:680px){.indicator-note{max-width:none}}
+
+/* Keep the paper-and-oxide visual identity consistent; green remains reserved for Taiwan-market down moves. */
+:root{--mint:#a94235;--accent:#922f27;--accent-hover:#76261f;--focus-ring:#a94235}
+.button-outline,.button-quiet,.text-link,.site-footer a,.template-meta b,.section-heading .text-link{color:#8f3028}
+.button-outline{border-color:#b98c82;background:#fbfaf6}
+.button-outline:hover{background:#f0e7e1}
+.template-card:hover{border-color:#bd8a7e;box-shadow:0 3px 10px #5a30220c}
+.home-bottom .button-outline{color:#8f3028;border-color:#b98c82}
+.explore-empty a,.small-action,.source-note a,.library-footnote a,.methods-content a,.method-no,.strategy-group,.strategy-symbol{color:#8f3028}
+.methods-index a:hover,.methods-index a:focus-visible{color:#8f3028;border-color:#a94235}
+.stock-back-link,.stock-error button,.stock-error a,.stock-data-notice a,.journal-linked,.journal-footnote a,.version-row>a,.matrix-report-heading a{color:#8f3028}
+.asset-availability,.catalog-message,.research-storage-note strong,.research-empty>span,.research-count,.version-pill,.challenge-start>span,.history-index{color:#8f3028}
+.strategy-icon,.custom-tag,.intent-icon,.selected-symbol{color:#8f3028}
+.strategy-icon,.custom-tag,.intent-icon{background:#eee4de;border-color:#d8c7bb}
+.run-button{background:#922f27;box-shadow:0 2px 4px #5a261615}
+.run-button:hover:not(:disabled){background:#76261f}
+.spinner.dark{border-color:#d8c7bb;border-top-color:#922f27}
+.metric-card.featured strong{color:#8f3028}
+.empty-spark{background:#eee4de;color:#8f3028}
+.legend-dot{background:#a94235}
+.field select:focus,.window-inputs input:focus,.money-field:focus-within,.cost-fields input:focus,.symbol-add input:focus,.catalog-search-row input:focus{border-color:#a94235;box-shadow:0 0 0 2px #a942351c}
+.search-control:focus-within,.home-search-control:focus-within{border-color:#a94235;box-shadow:0 0 0 2px #a942351c}
+.search-control>span:first-child,.home-search-control>span:first-child{color:#8f3028}
+.symbol-add button,.catalog-results li>button,.draft-save-row button,.draft-item button{color:#8f3028;border-color:#cbb5ad}
+.primary-navigation a.active,.nav-group.active-group>summary,.nav-group[open]>summary{border-color:#a94235;color:#8f3028}
+.nav-submenu a.active{border-left-color:#a94235!important;color:#8f3028!important}
+.primary-navigation a:focus-visible,.primary-navigation .nav-group>summary:focus-visible,.nav-submenu a:focus-visible,.button-primary:focus-visible,.button-outline:focus-visible,.button-quiet:focus-visible,.text-link:focus-visible{outline-color:#a94235}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible,.table-scroll:focus-visible{outline-color:#a94235}
+.chart-point-selector{accent-color:#a94235}
+.chart-point-selector:focus-visible{outline-color:#a94235}
+.positive{color:#b13f32!important}.negative{color:#16724f!important}
+.chart-line.chart-line-down,.candle-wick.down,.candle-body.down,.volume-bar.down,.chart-legend .legend-down{stroke:#24714f}
+.chart-area.chart-area-down{fill:#28745214}
+.moving-average-20{stroke:#946122}.moving-average-60{stroke:#656282}
+.sma20-value{color:#946122}.sma60-value{color:#656282}
 .draft-details{margin:3px 0 15px;border-top:1px solid #d8d5cc;border-bottom:1px solid #d8d5cc}
 .draft-details>summary{padding:11px 0;cursor:pointer;list-style:none;color:#555a52;font-size:12px;font-weight:600}
 .draft-details>summary::-webkit-details-marker{display:none}
@@ -311,3 +357,27 @@ html,body{background:#f4f2eb;color:#202722}
 .home-bottom{margin-bottom:38px}
 @media(max-width:900px){.home-hero{grid-template-columns:1fr;gap:20px;padding-top:28px;padding-bottom:20px}.quick-start{max-width:none}.quick-start nav{grid-template-columns:repeat(3,minmax(0,1fr));gap:0 16px}.quick-start nav>a{grid-template-columns:minmax(0,1fr) 18px}.hero-copy h1{font-size:42px}}
 @media(max-width:680px){.home-hero{padding-top:22px;padding-bottom:15px;gap:17px}.hero-copy h1{font-size:35px;line-height:1.2}.hero-lede{font-size:14px;margin:10px 0 14px}.home-search-control{height:47px}.quick-start{padding:15px!important}.quick-start nav{grid-template-columns:1fr}.quick-start nav>a{padding:10px 0}.section-block{padding-top:13px}.section-heading h2{font-size:21px}.section-lede{font-size:12px}.template-card.intent-card{min-height:0}.home-bottom{margin-bottom:26px}}
+
+/* Final brand pass: red is the interaction accent; green is reserved for Taiwan-market downside. */
+.eyebrow,.journey-step>span,.mini-icon,.explore-empty>span,.method-no,.seo-kicker,.research-empty>span,.research-count,.version-pill,.challenge-start>span,.history-index,.intent-icon,.journal-empty>span{color:#8f3028}
+.journal-privacy strong,.journal-saved{color:#8f3028;background:#f3e9e3}
+.notice{background:#f0eee7;color:#5a554a}
+.stock-status,.live-state-pill.live-state-on{color:#5f625a;background:#eeece4;border-color:#d8d5cc}
+.live-quote-value strong,.live-quote-value>span{color:#353a33}
+.live-quote-active{border-color:#d8d5cc;background:transparent}
+.live-price-line{stroke:#a94235}.live-price-tag{fill:#8f3028}
+.stock-chart-summary>span:first-child{color:#b13f32}
+.chart-line{stroke:#a94235}.chart-current{stroke:#a94235}.line-focus-point{fill:#a94235}.line-focus-point.active{stroke:#8f3028}
+.chart-mark:hover .chart-hit-area{fill:#a9423508}
+.stock-periods button.selected{color:#8f3028}
+.stock-modes button.selected{color:#454941}
+.stock-indicators button.selected{color:#454941}
+.stock-data-foot .data-status{color:#775e2e}
+.moving-average-line{stroke-width:1.8}
+.symbol-option.selected{border-color:#b98c82;background:#f3e9e3}
+.symbol-option input{accent-color:#a94235}
+.seo-workspace-link,.catalog-source a{color:#8f3028}
+.journal-compose textarea:focus,.journal-compose select:focus,.reflection-label textarea:focus{outline-color:#a94235;border-color:#a94235}
+.history-item strong.buy-action{color:#8f3028}
+.comparison-preview .preview-item:nth-of-type(3n+1) .legend-dot{background:#77758c}
+.legend-5{background:#9b7651}

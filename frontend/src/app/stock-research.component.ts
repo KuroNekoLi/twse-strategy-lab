@@ -8,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
 type Instrument = { code: string; name: string; kind: string; asOf: string; market: string; backtestSupported: boolean };
 type PriceBar = { date: string; open?: number | string | null; high?: number | string | null; low?: number | string | null; close: number | string; volume?: number | string | null };
 type History = { symbol: string; from: string; to: string; observedFrom: string; observedTo: string; fetchedAt: string; source: string; interval: string; licensingStatus: string; adjustmentPolicy: string; bars: PriceBar[]; limitations: string[] };
-type ChartBar = { date: string; open: number; high: number; low: number; close: number; volume: number | null; x: number; openY: number; highY: number; lowY: number; closeY: number; volumeY: number; volumeHeight: number; candleY: number; candleHeight: number; up: boolean };
+type ChartBar = { date: string; open: number; high: number; low: number; close: number; volume: number | null; sma20: number | null; sma60: number | null; sma20Y: number | null; sma60Y: number | null; x: number; openY: number; highY: number; lowY: number; closeY: number; volumeY: number; volumeHeight: number; candleY: number; candleHeight: number; up: boolean };
 type LiveQuote = { symbol: string; price: number; size: number | null; volume: number | null; eventTime: string; receivedAt: string; source: string; freshness: 'LIVE' };
 type LiveState = 'disabled' | 'connecting' | 'waiting' | 'live' | 'stale' | 'network' | 'error' | 'unavailable' | 'disconnected';
 const apiBaseUrl = (window.APP_CONFIG?.apiBaseUrl ?? '').replace(/\/$/, '');
@@ -34,6 +34,8 @@ const localLiveEnabled = liveDataOptIn && localBrowser;
               <div class="stock-chart-controls">
                 <div class="stock-periods" role="group" aria-label="走勢顯示期間"><button *ngFor="let period of periods" type="button" [disabled]="busy" [class.selected]="selectedPeriod === period" [attr.aria-pressed]="selectedPeriod === period" (click)="changePeriod(period)">{{period}}</button></div>
                 <div class="stock-periods stock-modes" role="group" aria-label="圖表類型"><button type="button" [class.selected]="chartMode === 'line'" [attr.aria-pressed]="chartMode === 'line'" (click)="setMode('line')">走勢</button><button type="button" [disabled]="!hasOhlc" [class.selected]="chartMode === 'candles'" [attr.aria-pressed]="chartMode === 'candles'" [attr.title]="hasOhlc ? '顯示 OHLC K 線' : '此資料來源尚未提供開高低收資料'" (click)="setMode('candles')">K 線</button></div>
+                <div class="stock-periods stock-indicators" role="group" aria-label="簡單移動平均線"><button type="button" [class.selected]="showSma20" [attr.aria-pressed]="showSma20" aria-label="切換 20 日簡單移動平均線" (click)="showSma20 = !showSma20">MA 20</button><button type="button" [class.selected]="showSma60" [attr.aria-pressed]="showSma60" aria-label="切換 60 日簡單移動平均線" (click)="showSma60 = !showSma60">MA 60</button></div>
+                <span class="indicator-note" *ngIf="showSma20 || showSma60">以收盤價計算簡單移動平均；交易日數不足時不繪製。</span>
               </div>
             </div>
             <div class="stock-chart-summary"><span [class.negative]="periodChange < 0" [class.positive]="periodChange > 0">{{periodChange >= 0 ? '+' : ''}}{{periodChange | number:'1.2-2'}}%</span><span>區間變化</span><span class="chart-summary-divider"></span><span>{{chartBars.length}} 個交易日</span><span *ngIf="chartMode === 'candles' && hasVolume" class="chart-legend"><i class="legend-up"></i>上漲 <i class="legend-down"></i>下跌</span></div>
@@ -46,6 +48,10 @@ const localLiveEnabled = liveDataOptIn && localBrowser;
               <ng-container *ngIf="hasOhlc"><span>開 {{quote.open | number:'1.2-2'}}</span><span>高 {{quote.high | number:'1.2-2'}}</span><span>低 {{quote.low | number:'1.2-2'}}</span></ng-container>
               <span>收 {{quote.close | number:'1.2-2'}}</span>
               <span *ngIf="quote.volume !== null">量 {{quote.volume | number}}</span>
+              <span *ngIf="showSma20 && quote.sma20 !== null" class="sma-value sma20-value">MA20 {{quote.sma20 | number:'1.2-2'}}</span>
+              <span *ngIf="showSma60 && quote.sma60 !== null" class="sma-value sma60-value">MA60 {{quote.sma60 | number:'1.2-2'}}</span>
+              <span *ngIf="showSma20 && quote.sma20 === null" class="sma-unavailable">MA20 尚無足夠資料</span>
+              <span *ngIf="showSma60 && quote.sma60 === null" class="sma-unavailable">MA60 尚無足夠資料</span>
             </div>
             <div class="stock-chart-frame" *ngIf="chartBars.length > 1; else noPoints">
               <svg class="stock-price-svg" viewBox="0 0 940 350" role="img" [attr.aria-label]="chartDescription(item.name, data)">
@@ -59,6 +65,7 @@ const localLiveEnabled = liveDataOptIn && localBrowser;
                   <circle *ngIf="chartMode === 'line'" class="line-focus-point" [class.active]="activeIndex === i" [attr.cx]="bar.x" [attr.cy]="bar.closeY" [attr.r]="activeIndex === i ? 4 : 1.7"/>
                   <rect *ngIf="chartMode === 'candles' && hasVolume && bar.volume !== null" class="volume-bar" [class.up]="bar.up" [class.down]="!bar.up" [attr.x]="bar.x - candleWidth / 2" [attr.y]="bar.volumeY" [attr.width]="candleWidth" [attr.height]="bar.volumeHeight"/>
                 </g>
+                <path *ngIf="showSma20" class="moving-average-line moving-average-20" [attr.d]="sma20Path"/><path *ngIf="showSma60" class="moving-average-line moving-average-60" [attr.d]="sma60Path"/>
                 <line *ngIf="activeBar" class="chart-crosshair" [attr.x1]="activeBar.x" [attr.x2]="activeBar.x" y1="18" y2="224"/>
                 <ng-container *ngIf="liveState === 'live' && liveQuote && liveQuote.price >= priceScaleLow && liveQuote.price <= priceScaleHigh"><line class="live-price-line" x1="64" x2="920" [attr.y1]="liveQuoteY" [attr.y2]="liveQuoteY"/><text class="live-price-tag" x="914" [attr.y]="liveQuoteY - 4" text-anchor="end">LIVE {{liveQuote.price | number:'1.2-2'}}</text></ng-container>
               </svg>
@@ -93,6 +100,8 @@ export class StockResearchPageComponent {
   history: History | null = null;
   selectedPeriod = '1年';
   chartMode: 'line' | 'candles' = 'line';
+  showSma20 = false;
+  showSma60 = false;
   busy = false;
   error = '';
   chartBars: ChartBar[] = [];
@@ -140,6 +149,8 @@ export class StockResearchPageComponent {
   get selectedBar(): ChartBar | null { return this.activeBar; }
   get selectedDailyPoints(): number | null { const current = this.selectedBar; const previous = this.chartBars[this.activeIndex - 1]; return current && previous ? current.close - previous.close : null; }
   get selectedDailyChange(): number | null { const previous = this.chartBars[this.activeIndex - 1]; return previous?.close ? (this.selectedBar!.close / previous.close - 1) * 100 : null; }
+  get sma20Path(): string { return this.movingAveragePath('sma20Y'); }
+  get sma60Path(): string { return this.movingAveragePath('sma60Y'); }
   get liveQuoteY(): number { return this.plot.bottom - (this.liveQuote!.price - this.priceScaleLow) * (this.plot.bottom - this.plot.top) / (this.priceScaleHigh - this.priceScaleLow); }
   get liveStateLabel(): string {
     return ({ disabled: '未啟用', connecting: '連線中', waiting: '等待報價', live: 'LIVE · 即時', stale: '資料逾時', network: '網路重連中', error: '串流錯誤', unavailable: '目前不可用', disconnected: '已中斷' } satisfies Record<LiveState, string>)[this.liveState];
@@ -290,7 +301,9 @@ export class StockResearchPageComponent {
       const y = (value: number) => this.plot.bottom - (value - low) * ySpan / (high - low);
       const openY = y(bar.open), closeY = y(bar.close);
       const volumeHeight = bar.volume === null ? 0 : bar.volume / maxVolume * 58;
-      return { ...bar, x, openY, closeY, highY: y(bar.high), lowY: y(bar.low), volumeY: 318 - volumeHeight, volumeHeight, candleY: Math.min(openY, closeY), candleHeight: Math.max(Math.abs(openY - closeY), 1.2), up: bar.close >= bar.open };
+      const average = (window: number): number | null => index < window - 1 ? null : valid.slice(index - window + 1, index + 1).reduce((sum, point) => sum + point.close!, 0) / window;
+      const sma20 = average(20), sma60 = average(60);
+      return { ...bar, sma20, sma60, sma20Y: sma20 === null ? null : y(sma20), sma60Y: sma60 === null ? null : y(sma60), x, openY, closeY, highY: y(bar.high), lowY: y(bar.low), volumeY: 318 - volumeHeight, volumeHeight, candleY: Math.min(openY, closeY), candleHeight: Math.max(Math.abs(openY - closeY), 1.2), up: bar.close >= bar.open };
     });
     const closeValues = valid.map((bar) => bar.close);
     this.linePath = this.chartBars.map((bar, index) => `${index ? 'L' : 'M'}${bar.x.toFixed(1)} ${bar.closeY.toFixed(1)}`).join(' ');
@@ -299,6 +312,10 @@ export class StockResearchPageComponent {
     this.periodChange = closeValues.length > 1 && this.firstClose ? (this.latestClose / this.firstClose - 1) * 100 : 0;
     this.activeIndex = this.chartBars.length - 1;
     if (!this.hasOhlc) this.chartMode = 'line';
+  }
+
+  private movingAveragePath(field: 'sma20Y' | 'sma60Y'): string {
+    return this.chartBars.flatMap((bar, index) => bar[field] === null ? [] : [`${index && this.chartBars[index - 1][field] !== null ? 'L' : 'M'}${bar.x.toFixed(1)} ${bar[field]!.toFixed(1)}`]).join(' ');
   }
 
   private number(value: unknown): number | null { if (value === null || value === undefined || value === '') return null; const parsed = Number(value); return Number.isFinite(parsed) ? parsed : null; }
