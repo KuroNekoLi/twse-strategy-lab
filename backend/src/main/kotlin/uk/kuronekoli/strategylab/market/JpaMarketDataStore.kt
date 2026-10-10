@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.TransactionDefinition
 
 @Repository
 class JpaMarketDataStore(
@@ -17,7 +18,9 @@ class JpaMarketDataStore(
     private val coverage: HistoricalMarketDataCoverageRepository,
     transactionManager: PlatformTransactionManager,
 ) : MarketDataStore {
-    private val writeTransaction = TransactionTemplate(transactionManager)
+    private val writeTransaction = TransactionTemplate(transactionManager).apply {
+        propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW
+    }
     @Transactional(readOnly = true)
     override fun findBars(symbol: String, from: LocalDate, to: LocalDate): StoredMarketBars? {
         val rows = bars.findAllBySymbolAndAdjustmentPolicyAndTradingDateBetweenOrderByTradingDateAsc(symbol, "RAW", from, to)
