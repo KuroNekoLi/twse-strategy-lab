@@ -45,7 +45,8 @@ class HistoricalMarketDataBackfillRunner(
             log.info("Historical market data imported: symbol={}, from={}, to={}, inserted={}, updated={}, rejected={}", symbol, from, to, result.inserted, result.updated, result.rejected)
         } catch (error: Exception) {
             val code = (error as? BacktestException)?.code ?: "UPSTREAM_DATA_UNAVAILABLE"
-            log.error("Historical market data backfill failed; application startup will continue: symbol={}, from={}, to={}, code={}", symbol, from, to, code)
+            val safeReason = (error as? BacktestException)?.message?.take(160) ?: error.javaClass.simpleName
+            log.error("Historical market data backfill failed; application startup will continue: symbol={}, from={}, to={}, code={}, reason={}", symbol, from, to, code, safeReason)
         }
     }
 
