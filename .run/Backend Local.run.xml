@@ -8,11 +8,34 @@
       </option>
       <option name="myRunnerSettings">
         <MavenRunnerSettings>
-          <option name="jreName" value="25" />
-          <option name="runnerParameters" value="spring-boot:run -Dspring-boot.run.profiles=local -Dspring-boot.run.arguments=--server.port=8081" />
+          <option name="jreName" value="JAVA_HOME" />
         </MavenRunnerSettings>
       </option>
-      <option name="my pomFile" value="$PROJECT_DIR$/backend/pom.xml" />
+      <option name="myRunnerParameters">
+        <MavenRunnerParameters>
+          <option name="cmdOptions" />
+          <option name="profiles">
+            <set />
+          </option>
+          <option name="goals">
+            <list>
+              <option value="spring-boot:run" />
+              <option value="-Dspring-boot.run.profiles=local" />
+              <option value="-Dspring-boot.run.arguments=--server.port=8081" />
+            </list>
+          </option>
+          <option name="multimoduleDir" />
+          <option name="pomFileName" />
+          <option name="profilesMap">
+            <map />
+          </option>
+          <option name="projectsCmdOptionValues">
+            <list />
+          </option>
+          <option name="resolveToWorkspace" value="false" />
+          <option name="workingDirPath" value="$PROJECT_DIR$/backend" />
+        </MavenRunnerParameters>
+      </option>
     </MavenSettings>
     <method v="2" />
   </configuration>
