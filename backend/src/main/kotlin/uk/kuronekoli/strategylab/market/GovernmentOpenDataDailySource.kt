@@ -177,6 +177,7 @@ class GovernmentOpenDataDailySource(
             license = "政府資料開放授權條款第1版（OGDL v1.0）",
             licenseUrl = "https://data.gov.tw/license",
             attribution = attributionFor(LocalDate.now().year),
+            licensingStatus = "CONFIRMED",
         )
 
         fun attributionFor(year: Int) = "資料提供機關：金融監督管理委員會證券期貨局；原始資料來源：臺灣證券交易所，$year，上市個股日成交資訊；政府資料開放授權條款第1版。"

@@ -13,6 +13,7 @@ data class MarketDataSourceMetadata(
     val license: String,
     val licenseUrl: String,
     val attribution: String,
+    val licensingStatus: String = "UNKNOWN",
 )
 
 data class SourceMarketBar(
@@ -38,6 +39,20 @@ data class MarketDataSnapshot(
 
 interface DailyMarketDataSource {
     fun fetchLatestSnapshot(): MarketDataSnapshot
+}
+
+data class HistoricalMarketDataImport(
+    val metadata: MarketDataSourceMetadata,
+    val symbol: String,
+    val from: LocalDate,
+    val to: LocalDate,
+    val fetchedAt: Instant,
+    val bars: List<SourceMarketBar>,
+    val rowsRejected: Int = 0,
+)
+
+interface HistoricalMarketDataSource {
+    fun fetchHistory(symbol: String, from: LocalDate, to: LocalDate): HistoricalMarketDataImport
 }
 
 data class StoredMarketBars(

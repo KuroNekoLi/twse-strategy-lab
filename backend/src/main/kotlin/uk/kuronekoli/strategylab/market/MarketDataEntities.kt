@@ -23,15 +23,19 @@ open class MarketDataSourceEntity(
     @field:Column(nullable = false, length = 120) var license: String = "",
     @field:Column(name = "license_url", nullable = false, length = 400) var licenseUrl: String = "",
     @field:Column(nullable = false, length = 300) var attribution: String = "",
+    @field:Column(name = "licensing_status", length = 24) var licensingStatus: String? = null,
     @field:Column(name = "last_record_date") var lastRecordDate: LocalDate? = null,
     @field:Column(name = "last_fetched_at") var lastFetchedAt: Instant? = null,
 ) {
     constructor(metadata: MarketDataSourceMetadata, sourceAsOf: LocalDate, fetchedAt: Instant) : this(
         metadata.sourceId, metadata.provider, metadata.datasetTitle, metadata.datasetUrl, metadata.resourceUrl,
-        metadata.license, metadata.licenseUrl, metadata.attribution, sourceAsOf, fetchedAt,
+        metadata.license, metadata.licenseUrl, metadata.attribution, metadata.licensingStatus, sourceAsOf, fetchedAt,
     )
 
-    fun toMetadata() = MarketDataSourceMetadata(sourceId, provider, datasetTitle, datasetUrl, resourceUrl, license, licenseUrl, attribution)
+    fun toMetadata() = MarketDataSourceMetadata(
+        sourceId, provider, datasetTitle, datasetUrl, resourceUrl, license, licenseUrl, attribution,
+        licensingStatus ?: if (sourceId == GovernmentOpenDataDailySource.METADATA.sourceId) "CONFIRMED" else "UNKNOWN",
+    )
 }
 
 @Entity

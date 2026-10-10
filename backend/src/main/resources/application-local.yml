@@ -18,5 +18,12 @@ app:
     ingestion-enabled: ${APP_MARKET_DATA_INGESTION_ENABLED:true}
     government-open-data-url: ${APP_GOVERNMENT_MARKET_DATA_URL:https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=open_data}
     refresh-cron: ${APP_MARKET_DATA_REFRESH_CRON:0 20 18 * * MON-FRI}
+    finmind-url: ${APP_FINMIND_URL:https://api.finmindtrade.com/api/v4/data}
+    finmind-token: ${FINMIND_API_TOKEN:}
+    finmind-backfill-enabled: ${APP_FINMIND_BACKFILL_ENABLED:false}
+    finmind-backfill-symbol: ${APP_FINMIND_BACKFILL_SYMBOL:0050}
+    finmind-backfill-from: ${APP_FINMIND_BACKFILL_FROM:2010-01-01}
+    finmind-backfill-to: ${APP_FINMIND_BACKFILL_TO:today}
+    allow-unverified-display: ${APP_MARKET_DATA_ALLOW_UNVERIFIED_DISPLAY:false}
   live-market-data:
     enabled: ${APP_LIVE_MARKET_DATA_ENABLED:true}

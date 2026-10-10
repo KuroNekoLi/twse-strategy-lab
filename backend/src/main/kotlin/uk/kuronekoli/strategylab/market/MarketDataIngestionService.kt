@@ -30,7 +30,7 @@ class MarketDataIngestionService(
                 BacktestValidation.bars(rows.map(SourceMarketBar::toDailyBar))
             }
             val result = store.saveSnapshot(snapshot)
-            log.info("Open market data snapshot stored: source={}, date={}, received={}, inserted={}, updated={}, rejectedNoOhlc={}", snapshot.metadata.sourceId, snapshot.sourceAsOf, snapshot.bars.size + snapshot.rowsRejected, result.inserted, result.updated, result.rejected)
+            log.info("Open market data snapshot stored: source={}, date={}, received={}, inserted={}, updated={}, rejectedNoOhlc={}, skippedSourceConflict={}", snapshot.metadata.sourceId, snapshot.sourceAsOf, snapshot.bars.size + snapshot.rowsRejected, result.inserted, result.updated, result.rejected, result.skippedSourceConflict)
             return result
         } catch (error: Exception) {
             val code = (error as? BacktestException)?.code ?: "UPSTREAM_DATA_UNAVAILABLE"
