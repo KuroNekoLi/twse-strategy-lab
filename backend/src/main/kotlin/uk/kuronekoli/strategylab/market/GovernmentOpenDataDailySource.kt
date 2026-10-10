@@ -51,6 +51,7 @@ class GovernmentOpenDataDailySource(
         val bars = ArrayList<SourceMarketBar>(rows.size - 1)
         val seen = HashSet<Pair<String, LocalDate>>()
         var rejected = 0
+        var snapshotDate: LocalDate? = null
         rows.drop(1).forEach { row ->
             if (row.size != HEADERS.size) throw upstream("政府開放資料 CSV 含有欄位數不符的資料列。")
             val symbol = row[1].trim()
@@ -58,6 +59,9 @@ class GovernmentOpenDataDailySource(
             // TWSE includes special security suffixes such as 2887Z1 in addition to ETF suffixes like 00679B.
             if (!symbol.matches(Regex("[0-9]{4,6}[A-Z0-9]{0,2}")) || name.isBlank() || name.length > 200) throw upstream("政府開放資料 CSV 含有無效標的識別。")
             val date = parseRocDate(row[0].trim())
+            if (snapshotDate != null && snapshotDate != date) throw upstream("政府開放資料 CSV 含有多個快照日期。")
+            snapshotDate = date
+            if (!seen.add(symbol to date)) throw upstream("政府開放資料 CSV 含有重複標的與日期。")
             // Some listed securities have no published OHLC on a snapshot (usually no transactions).
             // Keep schema/identity checks strict, but do not invent a zero-price candle for them.
             if ((5..8).any { row[it].isBlank() }) {
@@ -75,7 +79,6 @@ class GovernmentOpenDataDailySource(
             if (volume < 0 || amount < 0 || trades < 0 || open.signum() <= 0 || high < low || high < open || high < close || low > open || low > close) {
                 throw upstream("政府開放資料 CSV 含有不合理 OHLCV。")
             }
-            if (!seen.add(symbol to date)) throw upstream("政府開放資料 CSV 含有重複標的與日期。")
             bars += SourceMarketBar(symbol, name, date, open, high, low, close, volume)
         }
         return ParsedCsvSnapshot(bars, rejected)

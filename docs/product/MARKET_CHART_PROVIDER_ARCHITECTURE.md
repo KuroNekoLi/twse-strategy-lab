@@ -1,7 +1,7 @@
 # 行情圖表資料來源與可替換架構方案
 
 日期：2026-10-10
-狀態：Stage 0–2 已實作；Stage 3 程式與預設設定已就緒，Zeabur 實際部署驗收進行中
+狀態：Stage 0–3 已實作並完成 Zeabur API 與 Chrome 瀏覽器驗收（2026-10-10）
 決策目標：在保留現有個股圖表與 API 使用體驗的前提下，改用可授權、可追溯且可替換的資料來源；不把切換一個 feature flag 誤當作資料來源切換。
 
 ## 結論
@@ -167,7 +167,7 @@ app:
 - **Stage 0 完成（來源範圍）**：核對資料集 11549 的官方資源為 `https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=open_data`；當日實際取回 UTF-8 CSV，1,380 列、單一日期 2026-10-08，0050 有完整 OHLCV。來源 CSV 需要合理 User-Agent。OGL v1 與歸屬文字已加入 API/圖表說明。這是資料集授權範圍內的快照，不代表 TWSE 月歷史端點也可公開使用。
 - **Stage 1 完成（adapter / SSOT）**：加入嚴格 CSV parser、來源/日線/匯入 run JPA entities、`MarketDataStore` port、交易式冪等 upsert、來源切換衝突防護、排程與啟動匯入。schema 不變但 OHLC 空白的列（不能形成有效 K 線）會明確略過並計入 rejected rows；欄位結構或 OHLC 關係錯誤仍整批拒收並保留 last-good；不在資料庫交易中呼叫上游。
 - **Stage 2 完成（讀取 / UI 契約）**：預設 historical provider 改讀 DB；查圖不再呼叫月端點。既有 API bars 欄位與日/週/月計算保留，新增可選來源、授權 URL、最早資料日及最後驗證時間。Angular 可顯示單筆日 K，明確提示資料自開始收集日起累積；回測/穩健性會拒絕早於本站最早可用行情的請求。
-- **Stage 3 部署 gate**：正式設定目前預設啟用政府日快照匯入與歷史圖 API；上線前需實際確認部署 log 的 `Open market data snapshot stored`、資料庫健康、0050 history API 含至少一筆完整 OHLCV 和頁面可見單日圖。若 Zeabur 將相同 environment variables 明確覆寫成 `false`，應檢查/更新該服務設定後重新部署。歷史 bars 初期只有一日，不能宣稱有多年圖表或完整回測資料。
+- **Stage 3 完成（Zeabur / UI 驗收）**：Zeabur 啟動 log 確認 MySQL pool 成功，並記錄 2026-10-08 快照 `received=1380, inserted=1364, rejectedNoOhlc=16`。正式 0050 日/週/月 history API 均回 HTTP 200；日資料包含 OHLCV（115.35/115.55/114.90/114.95，成交股數 99,877,876），回應標示來源、授權、非即時限制與可用期間。實際 Chrome 開啟部署頁 `https://www.kuronekoli.uk/twse-strategy-lab/#/stocks/0050`，確認收盤走勢、K 線及日/週/月週期可見，來源歸屬與截至日期可讀。此時只有一個交易日，因此週/月 K 目前各由同一日資料聚合；這是部署圖表功能驗收，不代表多年歷史覆蓋。
 
 ### 實際限制
 

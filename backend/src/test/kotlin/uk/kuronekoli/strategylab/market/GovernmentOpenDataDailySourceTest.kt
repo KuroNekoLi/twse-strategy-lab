@@ -52,6 +52,26 @@ class GovernmentOpenDataDailySourceTest {
     }
 
     @Test
+    fun `rejects a sparse row from a different snapshot date`() {
+        val valid = "\"1151008\",\"0050\",\"元大台灣50\",\"100\",\"11500\",\"115\",\"116\",\"114\",\"115\",\"0\",\"10\""
+        val sparseOtherDate = "\"1151009\",\"00682U\",\"期元大美元指數\",\"81\",\"1718\",\"\",\"\",\"\",\"\",\"0\",\"2\""
+
+        assertThrows(BacktestException::class.java) {
+            source.parseCsvWithQuality(csv("$valid\n$sparseOtherDate"))
+        }
+    }
+
+    @Test
+    fun `rejects duplicate identity even when one row has no OHLC`() {
+        val valid = "\"1151008\",\"0050\",\"元大台灣50\",\"100\",\"11500\",\"115\",\"116\",\"114\",\"115\",\"0\",\"10\""
+        val sparseDuplicate = "\"1151008\",\"0050\",\"元大台灣50\",\"0\",\"0\",\"\",\"\",\"\",\"\",\"0\",\"0\""
+
+        assertThrows(BacktestException::class.java) {
+            source.parseCsvWithQuality(csv("$valid\n$sparseDuplicate"))
+        }
+    }
+
+    @Test
     fun `accepts TWSE special security suffixes`() {
         val row = "\"1151008\",\"2887Z1\",\"台新新光己特\",\"100\",\"1000\",\"10\",\"11\",\"9\",\"10\",\"0\",\"10\""
         assertEquals("2887Z1", source.parseCsv(csv(row)).single().symbol)
