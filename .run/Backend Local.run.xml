@@ -1,14 +1,20 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Backend Local" type="MavenRunConfiguration" factoryName="Maven">
     <MavenSettings>
-      <option name="myGeneralSettings">
-        <MavenGeneralSettings>
-          <option name="mavenHome" value="Use Maven wrapper" />
-        </MavenGeneralSettings>
-      </option>
+      <option name="myGeneralSettings" />
       <option name="myRunnerSettings">
         <MavenRunnerSettings>
-          <option name="jreName" value="JAVA_HOME" />
+          <option name="delegateBuildToMaven" value="false" />
+          <option name="environmentProperties">
+            <map />
+          </option>
+          <option name="jreName" value="jbr-25" />
+          <option name="mavenProperties">
+            <map />
+          </option>
+          <option name="passParentEnv" value="true" />
+          <option name="skipTests" value="false" />
+          <option name="vmOptions" value="" />
         </MavenRunnerSettings>
       </option>
       <option name="myRunnerParameters">
