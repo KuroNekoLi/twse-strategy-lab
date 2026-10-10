@@ -11,12 +11,14 @@ import java.time.Clock
 import java.time.Duration
 import java.time.LocalDate
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
 import uk.kuronekoli.strategylab.api.BacktestException
 
 @Component
+@ConditionalOnProperty(name = ["app.market-data.history-source"], havingValue = "finmind", matchIfMissing = true)
 class FinMindHistoricalMarketDataSource(
     private val objectMapper: JsonMapper,
     @Value("\${app.market-data.finmind-url:https://api.finmindtrade.com/api/v4/data}") private val endpoint: String,

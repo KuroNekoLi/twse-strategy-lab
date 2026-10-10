@@ -20,10 +20,14 @@ app:
     refresh-cron: ${APP_MARKET_DATA_REFRESH_CRON:0 20 18 * * MON-FRI}
     finmind-url: ${APP_FINMIND_URL:https://api.finmindtrade.com/api/v4/data}
     finmind-token: ${FINMIND_API_TOKEN:}
-    finmind-backfill-enabled: ${APP_FINMIND_BACKFILL_ENABLED:false}
-    finmind-backfill-symbol: ${APP_FINMIND_BACKFILL_SYMBOL:0050}
-    finmind-backfill-from: ${APP_FINMIND_BACKFILL_FROM:2010-01-01}
-    finmind-backfill-to: ${APP_FINMIND_BACKFILL_TO:today}
+    history-source: ${APP_MARKET_DATA_HISTORY_SOURCE:finmind}
+    fugle-historical-url: ${APP_FUGLE_HISTORICAL_URL:https://api.fugle.tw/marketdata/v1.0/stock/historical/candles}
+    fugle-api-key: ${FUGLE_API_KEY:}
+    historical-backfill-enabled: ${APP_HISTORICAL_BACKFILL_ENABLED:${APP_FINMIND_BACKFILL_ENABLED:false}}
+    historical-backfill-symbol: ${APP_HISTORICAL_BACKFILL_SYMBOL:${APP_FINMIND_BACKFILL_SYMBOL:0050}}
+    historical-backfill-from: ${APP_HISTORICAL_BACKFILL_FROM:${APP_FINMIND_BACKFILL_FROM:2010-01-01}}
+    historical-backfill-to: ${APP_HISTORICAL_BACKFILL_TO:${APP_FINMIND_BACKFILL_TO:today}}
+    historical-backfill-minimum-rows: ${APP_HISTORICAL_BACKFILL_MINIMUM_ROWS:3500}
     allow-unverified-display: ${APP_MARKET_DATA_ALLOW_UNVERIFIED_DISPLAY:false}
   live-market-data:
     enabled: ${APP_LIVE_MARKET_DATA_ENABLED:true}
