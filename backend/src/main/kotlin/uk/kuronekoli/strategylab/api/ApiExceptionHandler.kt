@@ -6,6 +6,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import org.slf4j.LoggerFactory
 import jakarta.servlet.http.HttpServletRequest
 import java.util.UUID
@@ -30,6 +31,12 @@ class ApiExceptionHandler {
   @ExceptionHandler(NoMarketDataException::class)
   fun notFound(exception: NoMarketDataException): ResponseEntity<Map<String, String>> = ResponseEntity.status(HttpStatus.NOT_FOUND)
     .body(mapOf("code" to "NO_MARKET_DATA", "error" to exception.message.orEmpty()))
+
+  @ExceptionHandler(NoResourceFoundException::class)
+  fun resourceNotFound(exception: NoResourceFoundException): ResponseEntity<Map<String, String>> =
+    ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+      mapOf("code" to "NOT_FOUND", "error" to "找不到要求的資源。")
+    )
 
   @ExceptionHandler(Exception::class)
   fun upstream(exception: Exception, request: HttpServletRequest): ResponseEntity<Map<String, String>> {

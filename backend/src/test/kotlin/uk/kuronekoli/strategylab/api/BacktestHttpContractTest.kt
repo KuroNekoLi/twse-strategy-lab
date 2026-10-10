@@ -101,6 +101,18 @@ class BacktestHttpContractTest {
   }
 
   @Test
+  fun missingFaviconIsNotReportedAsAnUpstreamFailure() {
+    val response = http.send(
+      HttpRequest.newBuilder(URI.create("http://localhost:$port/favicon.ico")).GET().build(),
+      HttpResponse.BodyHandlers.ofString()
+    )
+    assertEquals(404, response.statusCode(), response.body())
+    val json = mapper.readTree(response.body())
+    assertEquals("NOT_FOUND", json.path("code").asText())
+    assertFalse(json.has("incidentId"))
+  }
+
+  @Test
   fun stockHistoryReturnsValidatedOhlcvBarsAndExplicitResearchLimitations() {
     val response = http.send(
       HttpRequest.newBuilder(URI.create("http://localhost:$port/api/v1/stocks/2330/history?from=2024-01-01&to=2024-01-05")).GET().build(),
