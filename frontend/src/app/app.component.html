@@ -278,7 +278,8 @@
             <details *ngFor="let item of result.results">
               <summary>{{ item.name }}</summary>
               <h4>成交明細 · {{ item.trades ? item.trades.length + ' 筆' : '未提供' }}</h4>
-              <pre>{{ item.trades ? (traceSample(item.trades) | json) : '未提供' }}</pre>
+              <app-trade-chart-links *ngIf="item.trades?.length" [trades]="item.trades" [symbols]="response.symbols" />
+              <pre *ngIf="!item.trades?.length">未提供</pre>
               <h4>每日資產 · {{ item.dailyEquity ? item.dailyEquity.length + ' 筆' : '未提供' }}</h4>
               <pre>{{ item.dailyEquity ? (traceSample(item.dailyEquity) | json) : '未提供' }}</pre>
             </details>

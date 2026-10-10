@@ -4,6 +4,7 @@ import { ChangeDetectorRef, Component, DestroyRef, inject } from '@angular/core'
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
+import { isCalendarDate } from './date-utils';
 
 type Instrument = { code: string; name: string; kind: string; asOf: string; market: string; backtestSupported: boolean };
 type ChartInterval = '1d' | '1w' | '1mo';
@@ -28,6 +29,7 @@ const localLiveEnabled = liveDataOptIn && localBrowser;
         <div class="stock-heading"><div><p class="stock-identity">{{item.code}}　{{item.market === 'TWSE' ? '臺灣證券交易所上市' : '市場未確認'}}</p><h1 tabindex="-1">{{item.name}}</h1></div><a class="stock-back-link stock-back-inline" routerLink="/explore">← 標的探索</a></div>
 
         <div *ngIf="error" class="stock-error" role="alert"><strong>目前無法載入行情</strong><span>{{error}}</span><button type="button" (click)="loadHistory()">重新載入</button></div>
+        <p *ngIf="dateFocusMessage" class="chart-date-focus" role="status" aria-live="polite">{{dateFocusMessage}}</p>
         <div *ngIf="busy" class="stock-loading" role="status">正在取得歷史行情…</div>
         <ng-container *ngIf="history as data">
           <section class="stock-chart-card" aria-labelledby="stock-chart-title">
@@ -124,6 +126,8 @@ export class StockResearchPageComponent {
   firstClose = 0;
   periodChange = 0;
   activeIndex = 0;
+  requestedFocusDate = '';
+  dateFocusMessage = '';
   liveState: LiveState = localLiveEnabled ? 'connecting' : 'disabled';
   liveQuote: LiveQuote | null = null;
   private liveStream: EventSource | null = null;
@@ -155,6 +159,13 @@ export class StockResearchPageComponent {
       const requestId = ++this.instrumentRequestId;
       if (!/^\d{4,6}$/.test(this.symbol)) { this.error = '標的代碼格式不正確。'; this.cdr.markForCheck(); return; }
       void this.loadInstrument(this.symbol, requestId);
+    });
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      const requested = params.get('date') ?? '';
+      this.requestedFocusDate = isCalendarDate(requested) ? requested : '';
+      this.dateFocusMessage = requested && !this.requestedFocusDate ? '連結中的成交日期格式不正確，請從回測成交明細重新開啟。' : '';
+      if (this.history && this.requestedFocusDate) this.focusRequestedDate();
+      this.cdr.markForCheck();
     });
   }
 
@@ -209,8 +220,8 @@ export class StockResearchPageComponent {
     const to = new Date(); const from = new Date(to); from.setFullYear(to.getFullYear() - Number.parseInt(this.selectedPeriod, 10));
     try {
       const data = await firstValueFrom(this.http.get<History>(`${apiBaseUrl}/api/v1/stocks/${this.symbol}/history`, { params: { from: this.dateParam(from), to: this.dateParam(to), interval: this.selectedInterval } }));
-      if (requestId === this.historyRequestId) { this.history = data; this.prepareChart(data.bars ?? []); this.connectLiveStream(); }
-    } catch (failure) { if (requestId === this.historyRequestId) { this.error = this.messageFor(failure); this.history = null; this.chartBars = []; } }
+      if (requestId === this.historyRequestId) { this.history = data; this.prepareChart(data.bars ?? []); this.connectLiveStream(); this.focusRequestedDate(); }
+    } catch (failure) { if (requestId === this.historyRequestId) { this.error = this.messageFor(failure); this.history = null; this.chartBars = []; if (this.requestedFocusDate) this.dateFocusMessage = `目前無法取得足以定位 ${this.requestedFocusDate} 的歷史 K 線。請確認資料來源或稍後重試。`; } }
     finally { if (requestId === this.historyRequestId) { this.busy = false; this.cdr.markForCheck(); } }
   }
 
@@ -352,6 +363,27 @@ export class StockResearchPageComponent {
 
   private movingAveragePath(field: 'sma20Y' | 'sma60Y'): string {
     return this.chartBars.flatMap((bar, index) => bar[field] === null ? [] : [`${index && this.chartBars[index - 1][field] !== null ? 'L' : 'M'}${bar.x.toFixed(1)} ${bar[field]!.toFixed(1)}`]).join(' ');
+  }
+
+  private focusRequestedDate(): void {
+    if (!this.requestedFocusDate) return;
+    if (!this.chartBars.length) {
+      this.dateFocusMessage = `目前沒有可供比對的歷史 K 線，無法定位 ${this.requestedFocusDate}。`;
+      return;
+    }
+    const match = this.chartBars.findIndex((bar) => bar.date === this.requestedFocusDate);
+    if (match >= 0) {
+      this.selectBar(match);
+      this.dateFocusMessage = `已選取成交日 ${this.requestedFocusDate}；圖表只呈現該日期的可用歷史 K 線。`;
+      return;
+    }
+    const earliest = this.chartBars[0].date;
+    if (this.requestedFocusDate < earliest && this.selectedPeriod !== '5年') {
+      this.selectedPeriod = '5年';
+      void this.loadHistory();
+      return;
+    }
+    this.dateFocusMessage = `目前圖表資料沒有 ${this.requestedFocusDate} 的 K 線，未自動改選其他日期。可查看資料期間或返回回測成交明細。`;
   }
 
   private number(value: unknown): number | null { if (value === null || value === undefined || value === '') return null; const parsed = Number(value); return Number.isFinite(parsed) ? parsed : null; }

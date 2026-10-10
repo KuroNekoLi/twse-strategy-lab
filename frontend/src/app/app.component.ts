@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
+import { TradeChartLinksComponent } from './trade-chart-links.component';
 
 type StrategyId = 'ma-crossover' | 'rsi-reversion' | 'bollinger-reversion' | 'breakout' | 'drawdown-entry';
 type Point = { date: string; value: number };
@@ -135,7 +136,7 @@ const colors = ['#21c7a8', '#b3c2d4', '#f0a84b', '#6f8fe8', '#d780a8', '#73a86c'
 @Component({
   selector: 'app-backtest-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TradeChartLinksComponent],
   templateUrl: './app.component.html',
 })
 export class BacktestWorkspaceComponent {

@@ -161,6 +161,7 @@ html,body{background:#f4f2eb;color:#202722}
 .disclaimer a{color:#8f3028}
 .positive{color:#b13f32!important}.negative{color:#16724f!important}
 .metric-card,.chart-card,.comparison-table,.research-note,.assumption-note,.provenance-details{border-radius:2px;box-shadow:none}
+.trade-chart-list{display:grid;gap:8px;margin-top:8px}.trade-chart-row{display:grid;grid-template-columns:minmax(120px,.5fr) minmax(180px,1.5fr) auto;align-items:center;gap:10px;padding:9px 11px;border:1px solid #e7e9e5;background:#fbfaf7}.trade-chart-row>div{display:flex;gap:10px;align-items:baseline}.trade-chart-row strong{color:#26332f}.trade-chart-row span,.trade-chart-row p,.trade-chart-limit{margin:0;color:#69736e}.trade-chart-row a{color:#963b32;font-weight:650;text-decoration:underline;text-underline-offset:3px}.trade-chart-limit{margin-top:8px;font-size:11px;line-height:1.6}.chart-date-focus{padding:9px 12px;border-left:3px solid #963b32;background:#f4f0e9;color:#54483f;font-size:12px;line-height:1.6}
 .metric-card.featured{border-top:2px solid #a94235}
 .chart-line{stroke:#a94235}.chart-line.chart-line-down{stroke:#267251}
 .stock-research-page{max-width:1180px;padding-top:25px;padding-bottom:64px}
@@ -414,3 +415,4 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .home-search-all{display:flex;justify-content:space-between;align-items:center;min-height:44px;padding:0 14px;border-top:1px solid #d8d5cc;background:#f5f3ed;color:#7f332b;font-size:12px;text-decoration:none}
 .home-search-all:hover{background:#eeece4}
 @media(max-width:600px){.home-search-popover li button{grid-template-columns:64px minmax(0,1fr);gap:8px}.home-search-kind{grid-column:2;margin-top:-4px}.home-search-popover ul{max-height:260px}}
+@media(max-width:760px){.trade-chart-row{grid-template-columns:1fr;gap:4px}.trade-chart-row a{justify-self:start;margin-top:3px}}
