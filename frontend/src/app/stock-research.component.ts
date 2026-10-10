@@ -119,7 +119,7 @@ export class StockResearchPageComponent {
   selectedPeriod = '1年';
   selectedInterval: ChartInterval = '1d';
   chartMode: 'line' | 'candles' = 'line';
-  private chartModeManuallySelected = false;
+  private chartModePreference: 'line' | 'candles' | null = null;
   showSma20 = false;
   showSma60 = false;
   showVolume = true;
@@ -202,7 +202,7 @@ export class StockResearchPageComponent {
   setMode(mode: 'line' | 'candles'): void {
     if (mode === 'line' || this.hasOhlc) {
       this.chartMode = mode;
-      this.chartModeManuallySelected = true;
+      this.chartModePreference = mode;
     }
   }
   selectBar(index: number): void { this.activeIndex = Math.max(0, Math.min(this.chartBars.length - 1, index)); }
@@ -358,7 +358,9 @@ export class StockResearchPageComponent {
     }).filter((bar) => !!bar.date && bar.close !== null);
     if (!valid.length) { this.chartBars = []; return; }
     const completeOhlc = valid.every((bar) => bar.open !== null && bar.high !== null && bar.low !== null);
-    if (!this.chartModeManuallySelected) this.chartMode = valid.length === 1 && completeOhlc ? 'candles' : 'line';
+    this.chartMode = this.chartModePreference === 'candles' && !completeOhlc
+      ? 'line'
+      : this.chartModePreference ?? (valid.length === 1 && completeOhlc ? 'candles' : 'line');
     const min = Math.min(...valid.map((bar) => completeOhlc ? bar.low! : bar.close!)), max = Math.max(...valid.map((bar) => completeOhlc ? bar.high! : bar.close!));
     const spread = max - min || Math.max(Math.abs(max) * .02, 1), low = min - spread * .08, high = max + spread * .08;
     this.priceScaleLow = low; this.priceScaleHigh = high;
