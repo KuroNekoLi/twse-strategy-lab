@@ -49,7 +49,7 @@ class MarketDataStoreIntegrationTest {
     }
 
     @Test
-    fun `historical import migrates selected source bars and retains unverified rights status`() {
+    fun `historical import migrates selected source bars and retains source rights status`() {
         val date = LocalDate.of(2033, 5, 9)
         val government = MarketDataSnapshot(
             GovernmentOpenDataDailySource.METADATA, date, Instant.parse("2033-05-09T12:00:00Z"),
@@ -57,7 +57,7 @@ class MarketDataStoreIntegrationTest {
         )
         store.saveSnapshot(government)
         val imported = HistoricalMarketDataImport(
-            metadata = FinMindHistoricalMarketDataSource.METADATA,
+            metadata = FugleHistoricalMarketDataSource.METADATA,
             symbol = "99150", from = date.minusDays(1), to = date.plusDays(1),
             fetchedAt = Instant.parse("2033-05-10T12:00:00Z"),
             bars = listOf(SourceMarketBar("99150", "fixture", date, d("20"), d("22"), d("19"), d("21"), 200)),
@@ -65,8 +65,8 @@ class MarketDataStoreIntegrationTest {
 
         assertEquals(IngestionResult(0, 1), store.saveHistory(imported))
         val stored = store.findBars("99150", date, date)!!
-        assertEquals("finmind-taiwan-stock-price", stored.metadata.sourceId)
-        assertEquals("UNVERIFIED", stored.metadata.licensingStatus)
+        assertEquals("fugle-taiwan-stock-historical-candles", stored.metadata.sourceId)
+        assertEquals("CONFIRMED", stored.metadata.licensingStatus)
         assertEquals(0, BigDecimal("21").compareTo(stored.bars.single().close))
         assertEquals(1, bars.findAllByTradingDateAndAdjustmentPolicy(date, "RAW").count { it.symbol == "99150" })
     }

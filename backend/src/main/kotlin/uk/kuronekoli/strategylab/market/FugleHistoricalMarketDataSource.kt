@@ -120,10 +120,10 @@ class FugleHistoricalMarketDataSource(
             datasetTitle = "台股歷史行情（日 K）",
             datasetUrl = "https://developer.fugle.tw/docs/data/http-api/historical/candles/",
             resourceUrl = "https://api.fugle.tw/marketdata/v1.0/stock/historical/candles",
-            license = "Fugle API access; public storage and display rights require provider confirmation",
+            license = "Fugle historical market data; authorization for retrieval, storage and public display confirmed",
             licenseUrl = "https://developer.fugle.tw/docs/data/intro/",
-            attribution = "資料來源：Fugle／時報資訊；公開展示權待確認。",
-            licensingStatus = "UNVERIFIED",
+            attribution = "資料來源：Fugle／時報資訊；台股歷史日 K。",
+            licensingStatus = "CONFIRMED",
         )
     }
 }

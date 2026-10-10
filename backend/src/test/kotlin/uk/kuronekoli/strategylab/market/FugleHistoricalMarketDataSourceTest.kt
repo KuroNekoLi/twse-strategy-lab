@@ -13,7 +13,7 @@ import uk.kuronekoli.strategylab.api.BacktestException
 
 class FugleHistoricalMarketDataSourceTest {
     @Test
-    fun `imports less-than-year Fugle chunks and records unverified display rights`() {
+    fun `imports less-than-year Fugle chunks and records confirmed historical display rights`() {
         val requests = CopyOnWriteArrayList<Pair<String, String?>>()
         withSource({ exchange ->
             requests += exchange.requestURI.rawQuery to exchange.requestHeaders.getFirst("X-API-KEY")
@@ -27,7 +27,7 @@ class FugleHistoricalMarketDataSourceTest {
             assertEquals(listOf("2025-01-01", "2026-01-01"), imported.bars.map { it.date.toString() })
             assertEquals(2, requests.size)
             assertEquals(listOf("test-key", "test-key"), requests.map { it.second })
-            assertEquals("UNVERIFIED", imported.metadata.licensingStatus)
+            assertEquals("CONFIRMED", imported.metadata.licensingStatus)
             assertEquals("fugle-taiwan-stock-historical-candles", imported.metadata.sourceId)
         }
     }
