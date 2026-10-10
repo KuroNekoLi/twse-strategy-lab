@@ -119,6 +119,7 @@ export class StockResearchPageComponent {
   selectedPeriod = '1年';
   selectedInterval: ChartInterval = '1d';
   chartMode: 'line' | 'candles' = 'line';
+  private chartModeManuallySelected = false;
   showSma20 = false;
   showSma60 = false;
   showVolume = true;
@@ -198,7 +199,12 @@ export class StockResearchPageComponent {
 
   changePeriod(period: string): void { this.selectedPeriod = period; void this.loadHistory(); }
   changeInterval(interval: ChartInterval): void { if (this.selectedInterval !== interval) { this.selectedInterval = interval; void this.loadHistory(); } }
-  setMode(mode: 'line' | 'candles'): void { if (mode === 'line' || this.hasOhlc) this.chartMode = mode; }
+  setMode(mode: 'line' | 'candles'): void {
+    if (mode === 'line' || this.hasOhlc) {
+      this.chartMode = mode;
+      this.chartModeManuallySelected = true;
+    }
+  }
   selectBar(index: number): void { this.activeIndex = Math.max(0, Math.min(this.chartBars.length - 1, index)); }
   periodWindowLabel(status: PeriodWindowStatus): string {
     return ({ ELAPSED: '已結束區間', CLIPPED_BY_REQUEST: '區間受查詢日期截短', IN_PROGRESS: '進行中區間', UNKNOWN: '區間狀態未知' } satisfies Record<PeriodWindowStatus, string>)[status];
@@ -352,6 +358,7 @@ export class StockResearchPageComponent {
     }).filter((bar) => !!bar.date && bar.close !== null);
     if (!valid.length) { this.chartBars = []; return; }
     const completeOhlc = valid.every((bar) => bar.open !== null && bar.high !== null && bar.low !== null);
+    if (!this.chartModeManuallySelected) this.chartMode = valid.length === 1 && completeOhlc ? 'candles' : 'line';
     const min = Math.min(...valid.map((bar) => completeOhlc ? bar.low! : bar.close!)), max = Math.max(...valid.map((bar) => completeOhlc ? bar.high! : bar.close!));
     const spread = max - min || Math.max(Math.abs(max) * .02, 1), low = min - spread * .08, high = max + spread * .08;
     this.priceScaleLow = low; this.priceScaleHigh = high;
