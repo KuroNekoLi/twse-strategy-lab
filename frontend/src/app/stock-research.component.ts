@@ -26,7 +26,7 @@ function apiErrorCode(value: unknown): string | undefined {
 
 @Component({
   selector: 'app-stock-research-page', standalone: true, imports: [CommonModule, RouterLink],
-  styles: [`.stock-control-group{display:grid;gap:4px}.stock-control-label{font-size:11px;color:#686d65}.indicator-note{font-size:11px;color:#686d65}.period-window-status{font-weight:650}`],
+  styles: [`.stock-control-group{display:grid;gap:4px}.stock-control-label{font-size:11px;color:#686d65}.indicator-note{font-size:11px;color:#686d65}.period-window-status{font-weight:650}.stock-single-bar-note{margin:12px 0;padding:14px 16px;border:1px solid #c98272;border-left:4px solid #a74335;background:#fff8f5;color:#54271f;font-size:14px;line-height:1.6}.stock-single-bar-note strong{display:block;margin-bottom:3px;color:#782e24}`],
   template: `
     <section class="page-wrap subpage stock-research-page">
       <a *ngIf="!instrument && !error" class="stock-back-link" routerLink="/explore">← 回到標的探索</a>
@@ -69,7 +69,7 @@ function apiErrorCode(value: unknown): string | undefined {
               <span>觀察 {{dateRange(quote.observedFrom, quote.observedTo)}}</span>
               <span class="period-window-status">{{periodWindowLabel(quote.periodWindowStatus)}} · 資料覆蓋未知</span>
             </div>
-            <p *ngIf="chartBars.length === 1" class="stock-single-bar-note">本站目前只有 1 個交易日資料；{{chartMode === 'line' ? '單一價格點無法呈現走勢，切換「K 線」可查看當日開高低收。' : '這是單根 K 棒，尚不足以判斷價格趨勢。'}}每日資料累積後，才會形成連續走勢。</p>
+            <div *ngIf="chartBars.length === 1 && !busy" class="stock-single-bar-note" role="status"><strong>所選 {{selectedPeriod}} 尚無足夠歷史資料</strong>請求期間 {{data.from}} – {{data.to}}，本站目前只有 1 根{{intervalName}} K（觀察日期 {{dateRange(chartBars[0].observedFrom, chartBars[0].observedTo)}}）。這不是 {{selectedPeriod}} 走勢圖；期間報酬與趨勢無法計算。來源尚未提供歷史回補。</div>
             <div class="stock-chart-frame" *ngIf="chartBars.length > 0; else noPoints">
               <svg class="stock-price-svg" [class.chart-single-observation]="chartBars.length === 1" viewBox="0 0 940 350" role="img" [attr.aria-label]="chartDescription(item.name, data)">
                 <g class="chart-grid"><line x1="64" y1="22" x2="920" y2="22"/><line x1="64" y1="89" x2="920" y2="89"/><line x1="64" y1="156" x2="920" y2="156"/><line x1="64" y1="224" x2="920" y2="224"/></g>
