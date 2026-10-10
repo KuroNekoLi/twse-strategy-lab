@@ -165,7 +165,7 @@ app:
 ## 實作紀錄（2026-10-10）
 
 - **Stage 0 完成（來源範圍）**：核對資料集 11549 的官方資源為 `https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=open_data`；當日實際取回 UTF-8 CSV，1,380 列、單一日期 2026-10-08，0050 有完整 OHLCV。來源 CSV 需要合理 User-Agent。OGL v1 與歸屬文字已加入 API/圖表說明。這是資料集授權範圍內的快照，不代表 TWSE 月歷史端點也可公開使用。
-- **Stage 1 完成（adapter / SSOT）**：加入嚴格 CSV parser、來源/日線/匯入 run JPA entities、`MarketDataStore` port、交易式冪等 upsert、來源切換衝突防護、排程與啟動匯入。錯誤資料拒收並保留 last-good；不在資料庫交易中呼叫上游。
+- **Stage 1 完成（adapter / SSOT）**：加入嚴格 CSV parser、來源/日線/匯入 run JPA entities、`MarketDataStore` port、交易式冪等 upsert、來源切換衝突防護、排程與啟動匯入。schema 不變但 OHLC 空白的列（不能形成有效 K 線）會明確略過並計入 rejected rows；欄位結構或 OHLC 關係錯誤仍整批拒收並保留 last-good；不在資料庫交易中呼叫上游。
 - **Stage 2 完成（讀取 / UI 契約）**：預設 historical provider 改讀 DB；查圖不再呼叫月端點。既有 API bars 欄位與日/週/月計算保留，新增可選來源、授權 URL、最早資料日及最後驗證時間。Angular 可顯示單筆日 K，明確提示資料自開始收集日起累積；回測/穩健性會拒絕早於本站最早可用行情的請求。
 - **Stage 3 部署 gate**：正式設定目前預設啟用政府日快照匯入與歷史圖 API；上線前需實際確認部署 log 的 `Open market data snapshot stored`、資料庫健康、0050 history API 含至少一筆完整 OHLCV 和頁面可見單日圖。若 Zeabur 將相同 environment variables 明確覆寫成 `false`，應檢查/更新該服務設定後重新部署。歷史 bars 初期只有一日，不能宣稱有多年圖表或完整回測資料。
 

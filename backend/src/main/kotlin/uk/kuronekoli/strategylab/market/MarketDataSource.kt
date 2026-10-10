@@ -33,6 +33,7 @@ data class MarketDataSnapshot(
     val sourceAsOf: LocalDate,
     val fetchedAt: Instant,
     val bars: List<SourceMarketBar>,
+    val rowsRejected: Int = 0,
 )
 
 interface DailyMarketDataSource {

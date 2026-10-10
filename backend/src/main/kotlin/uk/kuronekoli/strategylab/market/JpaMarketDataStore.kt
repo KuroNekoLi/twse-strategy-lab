@@ -54,9 +54,9 @@ class JpaMarketDataStore(
         runs.save(MarketDataIngestionRunEntity(
             runId = UUID.randomUUID().toString(), sourceId = snapshot.metadata.sourceId,
             startedAt = startedAt, finishedAt = snapshot.fetchedAt, sourceAsOf = snapshot.sourceAsOf,
-            status = "SUCCEEDED", rowsReceived = snapshot.bars.size, rowsInserted = inserted, rowsUpdated = updated,
+            status = "SUCCEEDED", rowsReceived = snapshot.bars.size + snapshot.rowsRejected, rowsInserted = inserted, rowsUpdated = updated, rowsRejected = snapshot.rowsRejected,
         ))
-        return IngestionResult(inserted, updated)
+        return IngestionResult(inserted, updated, snapshot.rowsRejected)
     }
 
     @Transactional

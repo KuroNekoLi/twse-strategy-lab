@@ -42,6 +42,15 @@ class GovernmentOpenDataDailySourceTest {
         assertEquals(1000L, rows.single().volume)
     }
 
+    @Test
+    fun `skips rows without OHLC and reports rejected row count`() {
+        val valid = "\"1151008\",\"0050\",\"元大台灣50\",\"100\",\"11500\",\"115\",\"116\",\"114\",\"115\",\"0\",\"10\""
+        val noOhlc = "\"1151008\",\"00682U\",\"期元大美元指數\",\"81\",\"1718\",\"\",\"\",\"\",\"\",\"0\",\"2\""
+        val parsed = source.parseCsvWithQuality(csv("$valid\n$noOhlc"))
+        assertEquals(listOf("0050"), parsed.bars.map(SourceMarketBar::symbol))
+        assertEquals(1, parsed.rowsRejected)
+    }
+
     private fun csv(row: String) = """日期,證券代號,證券名稱,成交股數,成交金額,開盤價,最高價,最低價,收盤價,漲跌價差,成交筆數
 $row
 """

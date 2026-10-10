@@ -3,7 +3,7 @@ package uk.kuronekoli.strategylab.market
 import java.time.Instant
 import java.time.LocalDate
 
-data class IngestionResult(val inserted: Int, val updated: Int)
+data class IngestionResult(val inserted: Int, val updated: Int, val rejected: Int = 0)
 
 interface MarketDataStore {
     fun findBars(symbol: String, from: LocalDate, to: LocalDate): StoredMarketBars?

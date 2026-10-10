@@ -35,24 +35,34 @@ class GovernmentOpenDataDailySource(
             .build()
         val response = fetchCsvWithRetry(request)
         val fetchedAt = clock.instant()
-        val bars = parseCsv(response)
+        val parsed = parseCsvWithQuality(response)
+        val bars = parsed.bars
         val dates = bars.map { it.date }.distinct()
         if (bars.isEmpty() || dates.size != 1) throw upstream("政府開放資料快照日期不一致或沒有有效日線。")
-        return MarketDataSnapshot(METADATA.copy(attribution = attributionFor(dates.single().year)), dates.single(), fetchedAt, bars)
+        return MarketDataSnapshot(METADATA.copy(attribution = attributionFor(dates.single().year)), dates.single(), fetchedAt, bars, parsed.rowsRejected)
     }
 
-    internal fun parseCsv(csv: String): List<SourceMarketBar> {
+    internal fun parseCsv(csv: String): List<SourceMarketBar> = parseCsvWithQuality(csv).bars
+
+    internal fun parseCsvWithQuality(csv: String): ParsedCsvSnapshot {
         if (csv.isBlank() || csv.toByteArray(StandardCharsets.UTF_8).size > MAX_BODY_BYTES) throw upstream("政府開放資料 CSV 為空或超過允許大小。")
         val rows = parseRecords(csv.removePrefix("\uFEFF"))
         if (rows.size < 2 || rows.size > MAX_ROWS + 1 || rows.first() != HEADERS) throw upstream("政府開放資料 CSV 欄位格式不符。")
         val bars = ArrayList<SourceMarketBar>(rows.size - 1)
         val seen = HashSet<Pair<String, LocalDate>>()
+        var rejected = 0
         rows.drop(1).forEach { row ->
             if (row.size != HEADERS.size) throw upstream("政府開放資料 CSV 含有欄位數不符的資料列。")
             val symbol = row[1].trim()
             val name = row[2].trim()
             if (!symbol.matches(Regex("[0-9]{4,6}[A-Z]?")) || name.isBlank() || name.length > 200) throw upstream("政府開放資料 CSV 含有無效標的識別。")
             val date = parseRocDate(row[0].trim())
+            // Some listed securities have no published OHLC on a snapshot (usually no transactions).
+            // Keep schema/identity checks strict, but do not invent a zero-price candle for them.
+            if ((5..8).any { row[it].isBlank() }) {
+                rejected++
+                return@forEach
+            }
             val volume = try { parseNumber(row[3]).longValueExact() } catch (_: ArithmeticException) { throw upstream("政府開放資料 CSV 含有無效成交股數。") }
             val amount = try { parseNumber(row[4]).longValueExact() } catch (_: ArithmeticException) { throw upstream("政府開放資料 CSV 含有無效成交金額。") }
             val open = parseNumber(row[5])
@@ -67,7 +77,7 @@ class GovernmentOpenDataDailySource(
             if (!seen.add(symbol to date)) throw upstream("政府開放資料 CSV 含有重複標的與日期。")
             bars += SourceMarketBar(symbol, name, date, open, high, low, close, volume)
         }
-        return bars
+        return ParsedCsvSnapshot(bars, rejected)
     }
 
     private fun parseRecords(text: String): List<List<String>> {
@@ -167,4 +177,6 @@ class GovernmentOpenDataDailySource(
 
         fun attributionFor(year: Int) = "資料提供機關：金融監督管理委員會證券期貨局；原始資料來源：臺灣證券交易所，$year，上市個股日成交資訊；政府資料開放授權條款第1版。"
     }
+
+    internal data class ParsedCsvSnapshot(val bars: List<SourceMarketBar>, val rowsRejected: Int)
 }
