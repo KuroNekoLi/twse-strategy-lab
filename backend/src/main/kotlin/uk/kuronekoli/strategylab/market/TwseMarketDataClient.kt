@@ -32,7 +32,11 @@ class TwseMarketDataClient(private val mapper: JsonMapper, @Value("\${app.twse.b
         while (!groupStart.isAfter(last)) {
             val group = (0..2).map { groupStart.plusMonths(it.toLong()) }.filterNot { it.isAfter(last) }
             bars += group.parallelStream().flatMap { loadMonth(symbol, it).stream() }.toList()
-            if (!groupStart.plusMonths(3).isAfter(last)) try { Thread.sleep(120) } catch (e: InterruptedException) { Thread.currentThread().interrupt(); throw IllegalStateException("行情請求已中斷。", e) }
+            if (!groupStart.plusMonths(3).isAfter(last)) try { Thread.sleep(120) } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                log.warn("TWSE request batch interrupted: symbol={}, firstMonth={}, lastMonth={}", symbol, first, last)
+                throw BacktestException.upstream("歷史行情請求已中斷，請稍後再試。")
+            }
             groupStart = groupStart.plusMonths(3)
         }
         if (bars.isNotEmpty()) BacktestValidation.bars(bars)

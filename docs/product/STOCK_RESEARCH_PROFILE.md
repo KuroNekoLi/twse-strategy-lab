@@ -13,16 +13,22 @@
 
 ## 明確限制與啟用閘門
 
-本版重用既有 TWSE `STOCK_DAY` 月歷史來源和 close-only `DailyBar`。沒有 OHLC、成交量、股利、公司行動或交易日曆，因此圖表為收盤趨勢，不能稱為 K 線。資料授權矩陣對月歷史端點的自動化、儲存、衍生圖表及公開展示用途仍為 `UNKNOWN`，正式發布 gate 為 `BLOCKED`。
+本版重用 TWSE `STOCK_DAY` 月歷史來源；parser 會讀取日期、開高低收及成交量，API 在來源欄位完整時提供 OHLCV，並聚合週／月 K。走勢模式繪製收盤價；只有所有圖表 bars 都具備開高低欄位時才允許切換 K 線，缺欄位時 K 線與量能依資料情況停用。此來源不含股利、公司行動或交易日曆，因此價格未調整且資料覆蓋狀態未知。資料授權矩陣對月歷史端點的自動化、儲存、衍生圖表及公開展示用途仍為 `UNKNOWN`，正式發布 gate 為 `BLOCKED`。
 
-因此 `app.market-history.enabled` 預設為 `false`，包含本機 `local` profile；只有合成測試 fixture 會明確啟用 API 供整合驗收。正式環境須先由權利人/授權供應商證據解除 gate，才可設定 `APP_MARKET_HISTORY_ENABLED=true`。本次沒有變更或宣稱任何授權已取得。即時行情、WebSocket、K 線、策略事件標記及市場資料保存均不在本次範圍。
+因此 `application.yml` 的 `app.market-history.enabled` 預設為 `false`；`local` profile 為本機圖表開發預設啟用，但可用 `APP_MARKET_HISTORY_ENABLED=false` 關閉。這項本機開發便利不代表取得公開展示權。正式環境須先由權利人／授權供應商證據解除 gate，才可設定 `APP_MARKET_HISTORY_ENABLED=true`。本次沒有變更或宣稱任何授權已取得。即時行情、WebSocket、策略事件標記及市場資料保存均不在本次範圍。
+
+### 線上環境現況（2026-10-10）
+
+對正式 API 的 `GET /api/v1/stocks/0050/history` 實際檢查回應 HTTP 503、`MARKET_HISTORY_DISABLED`。個股研究頁的收盤走勢 SVG 只有取得歷史價格資料後才會繪製，所以該環境目前顯示閘門訊息且沒有價格圖；這不是一張已繪製但未載入成功的圖。該 API 明確關閉是授權尚未確認的結果，本次維持此設定，不將假資料或未確認可公開展示的資料畫成行情。
+
+通用 `UPSTREAM_FAILURE` 是未預期例外的遮罩回應；先前 handler 沒有記錄例外，無法只靠回應 JSON 還原根因。本次改為記錄不含 query/body 的請求 method/path、例外堆疊及診斷編號，並把診斷編號回傳給使用者，方便用 Zeabur 後端日誌對照。這仍不能回溯本次既有的 502；要確認該次根因需要原請求時間、路徑及原部署日誌。
 
 ## 驗收條件
 
 1. 支援的 TWSE 目錄標的可從探索頁進到個股路由；其他市場或未支援標的會得到明確狀態。
 2. 頁面可選 1/3/5 年、顯示實際觀察期間、來源與資料限制，並可把代碼帶入回測。
-3. 歷史 API 僅回傳日期與收盤價；範圍限定 2010 年起、截至今日、最多五年，並明示 `licensingStatus=UNKNOWN`。
-4. 一般環境與本機 `local` profile 預設不啟用行情圖 API；僅合成資料測試會明確啟用此 API 驗收功能。
+3. 歷史 API 回傳日期、收盤價及來源可提供時的 OHLCV；週／月 bars 由日線聚合。查詢範圍限定 2010 年起、截至今日、最多五年，並明示 `licensingStatus=UNKNOWN`。
+4. 一般環境預設不啟用行情圖 API；本機 `local` profile 預設啟用以支援圖表開發（可用 `APP_MARKET_HISTORY_ENABLED=false` 關閉），這不代表公開展示權已確認。
 5. 瀏覽器驗收需記錄瀏覽器、viewport、操作及證據，不能把合成資料稱為市場資料。
 
 ## 後續證據需求

@@ -2,7 +2,9 @@ package uk.kuronekoli.strategylab.api
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.springframework.mock.web.MockHttpServletRequest
 
 class ApiExceptionHandlerTest {
   private val handler = ApiExceptionHandler()
@@ -18,9 +20,11 @@ class ApiExceptionHandlerTest {
 
   @Test
   fun unexpectedUpstreamDetailsAreNotEchoedToPublicError() {
-    val response = handler.upstream(RuntimeException("internal credential or source body"))
+    val request = MockHttpServletRequest("POST", "/api/v1/backtests")
+    val response = handler.upstream(RuntimeException("internal credential or source body"), request)
     assertEquals(502, response.statusCode.value())
     assertEquals("UPSTREAM_FAILURE", response.body?.get("code"))
     assertFalse(response.body?.get("error").orEmpty().contains("credential"))
+    assertTrue(response.body?.get("incidentId").orEmpty().matches(Regex("[0-9a-f-]{36}")))
   }
 }

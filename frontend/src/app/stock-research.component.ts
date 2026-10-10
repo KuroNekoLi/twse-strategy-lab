@@ -19,6 +19,11 @@ const liveDataOptIn = (window.APP_CONFIG as (Window['APP_CONFIG'] & { liveMarket
 const localBrowser = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname);
 const localLiveEnabled = liveDataOptIn && localBrowser;
 
+function apiErrorCode(value: unknown): string | undefined {
+  if (typeof value !== 'object' || value === null || !('code' in value)) return undefined;
+  return typeof value.code === 'string' ? value.code : undefined;
+}
+
 @Component({
   selector: 'app-stock-research-page', standalone: true, imports: [CommonModule, RouterLink],
   styles: [`.stock-control-group{display:grid;gap:4px}.stock-control-label{font-size:11px;color:#686d65}.indicator-note{font-size:11px;color:#686d65}.period-window-status{font-weight:650}`],
@@ -28,7 +33,7 @@ const localLiveEnabled = liveDataOptIn && localBrowser;
       <ng-container *ngIf="instrument as item; else loadingInstrument">
         <div class="stock-heading"><div><p class="stock-identity">{{item.code}}　{{item.market === 'TWSE' ? '臺灣證券交易所上市' : '市場未確認'}}</p><h1 tabindex="-1">{{item.name}}</h1></div><a class="stock-back-link stock-back-inline" routerLink="/explore">← 標的探索</a></div>
 
-        <div *ngIf="error" class="stock-error" role="alert"><strong>目前無法載入行情</strong><span>{{error}}</span><button type="button" (click)="loadHistory()">重新載入</button></div>
+        <div *ngIf="error" class="stock-error" role="alert"><strong>{{historyErrorTitle}}</strong><span>{{error}}</span><p *ngIf="historyDisabled">此環境未提供可繪製的歷史行情，所以目前不會顯示價格線或 K 線。需先確認資料展示權，再由部署設定開啟；不以合成資料代替。</p><a *ngIf="historyDisabled" routerLink="/methods">查看資料來源與使用限制</a><button *ngIf="!historyDisabled" type="button" (click)="loadHistory()">重新載入</button></div>
         <p *ngIf="dateFocusMessage" class="chart-date-focus" role="status" aria-live="polite">{{dateFocusMessage}}</p>
         <div *ngIf="busy" class="stock-loading" role="status">正在取得歷史行情…</div>
         <ng-container *ngIf="history as data">
@@ -118,6 +123,7 @@ export class StockResearchPageComponent {
   showVolume = true;
   busy = false;
   error = '';
+  historyErrorCode = '';
   chartBars: ChartBar[] = [];
   priceTicks: number[] = [0, 0, 0, 0];
   linePath = '';
@@ -145,6 +151,8 @@ export class StockResearchPageComponent {
 
   /** The chart can remain visible while another interval is loading; label it from the data currently rendered. */
   get displayedInterval(): ChartInterval { return this.history?.interval ?? this.selectedInterval; }
+  get historyDisabled(): boolean { return this.historyErrorCode === 'MARKET_HISTORY_DISABLED'; }
+  get historyErrorTitle(): string { return this.historyDisabled ? '個股圖表尚未在此環境開放' : '目前無法載入行情'; }
   get intervalName(): string { return this.displayedInterval === '1d' ? '日' : this.displayedInterval === '1w' ? '週' : '月'; }
   get intervalUnit(): string { return this.intervalName; }
 
@@ -153,7 +161,7 @@ export class StockResearchPageComponent {
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       this.closeLiveStream();
       this.symbol = params.get('symbol') ?? '';
-      this.instrument = null; this.history = null; this.chartBars = []; this.busy = false; this.error = '';
+      this.instrument = null; this.history = null; this.chartBars = []; this.busy = false; this.error = ''; this.historyErrorCode = ''; this.dateFocusMessage = '';
       this.liveQuote = null; this.liveState = localLiveEnabled ? 'connecting' : 'disabled';
       this.historyRequestId += 1;
       const requestId = ++this.instrumentRequestId;
@@ -216,12 +224,20 @@ export class StockResearchPageComponent {
   async loadHistory(): Promise<void> {
     if (!this.instrument || !apiBaseUrl) return;
     const requestId = ++this.historyRequestId;
-    this.busy = true; this.error = ''; this.cdr.markForCheck();
+    this.busy = true; this.error = ''; this.historyErrorCode = ''; this.cdr.markForCheck();
     const to = new Date(); const from = new Date(to); from.setFullYear(to.getFullYear() - Number.parseInt(this.selectedPeriod, 10));
     try {
       const data = await firstValueFrom(this.http.get<History>(`${apiBaseUrl}/api/v1/stocks/${this.symbol}/history`, { params: { from: this.dateParam(from), to: this.dateParam(to), interval: this.selectedInterval } }));
       if (requestId === this.historyRequestId) { this.history = data; this.prepareChart(data.bars ?? []); this.connectLiveStream(); this.focusRequestedDate(); }
-    } catch (failure) { if (requestId === this.historyRequestId) { this.error = this.messageFor(failure); this.history = null; this.chartBars = []; if (this.requestedFocusDate) this.dateFocusMessage = `目前無法取得足以定位 ${this.requestedFocusDate} 的歷史 K 線。請確認資料來源或稍後重試。`; } }
+    } catch (failure) {
+      if (requestId === this.historyRequestId) {
+        this.error = this.messageFor(failure);
+        this.historyErrorCode = failure instanceof HttpErrorResponse ? apiErrorCode(failure.error) ?? '' : '';
+        this.history = null;
+        this.chartBars = [];
+        if (this.requestedFocusDate) this.dateFocusMessage = `目前無法取得足以定位 ${this.requestedFocusDate} 的歷史 K 線。請確認資料來源或稍後重試。`;
+      }
+    }
     finally { if (requestId === this.historyRequestId) { this.busy = false; this.cdr.markForCheck(); } }
   }
 
@@ -391,7 +407,7 @@ export class StockResearchPageComponent {
   private messageFor(error: unknown): string {
     if (error instanceof HttpErrorResponse && error.status === 0) return '目前無法連線至研究服務，請稍後重試。';
     if (error instanceof HttpErrorResponse && error.status === 404) return '此期間沒有可用的行情資料，請選擇其他期間。';
-    if (error instanceof HttpErrorResponse && error.status === 503) return '行情展示權尚待確認，這個環境目前未開放歷史資料。';
+    if (error instanceof HttpErrorResponse && error.status === 503 && apiErrorCode(error.error) === 'MARKET_HISTORY_DISABLED') return '行情展示權尚待確認；此部署明確關閉了歷史行情 API。';
     return error instanceof HttpErrorResponse && typeof error.error?.error === 'string' ? error.error.error : '資料載入失敗，請稍後重試。';
   }
 }

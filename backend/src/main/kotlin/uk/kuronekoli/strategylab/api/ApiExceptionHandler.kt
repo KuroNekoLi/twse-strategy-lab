@@ -6,9 +6,13 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.slf4j.LoggerFactory
+import jakarta.servlet.http.HttpServletRequest
+import java.util.UUID
 
 @RestControllerAdvice
 class ApiExceptionHandler {
+  private val log = LoggerFactory.getLogger(ApiExceptionHandler::class.java)
   @ExceptionHandler(MethodArgumentNotValidException::class, HttpMessageNotReadableException::class)
   fun invalidRequest(exception: Exception): ResponseEntity<Map<String, String>> = ResponseEntity.badRequest().body(
     mapOf("code" to "INVALID_INPUT", "error" to "請求資料格式不正確，請確認回測參數後再試。")
@@ -28,8 +32,12 @@ class ApiExceptionHandler {
     .body(mapOf("code" to "NO_MARKET_DATA", "error" to exception.message.orEmpty()))
 
   @ExceptionHandler(Exception::class)
-  fun upstream(exception: Exception): ResponseEntity<Map<String, String>> = ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-    .body(mapOf("code" to "UPSTREAM_FAILURE", "error" to "無法完成行情研究計算，請稍後再試。"))
+  fun upstream(exception: Exception, request: HttpServletRequest): ResponseEntity<Map<String, String>> {
+    val incidentId = UUID.randomUUID().toString()
+    log.error("Unhandled API failure: incidentId={}, method={}, path={}, exceptionType={}", incidentId, request.method, request.requestURI, exception.javaClass.name, exception)
+    return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+      .body(mapOf("code" to "UPSTREAM_FAILURE", "error" to "無法完成行情研究計算，請稍後再試。", "incidentId" to incidentId))
+  }
 
   class NoMarketDataException(message: String) : RuntimeException(message)
 }

@@ -16,6 +16,12 @@ function apiErrorCode(value: unknown): string | undefined {
   return typeof code === 'string' ? code : undefined;
 }
 
+function incidentReference(error: HttpErrorResponse): string {
+  const payload: unknown = error.error;
+  if (typeof payload !== 'object' || payload === null || !('incidentId' in payload)) return '';
+  return typeof payload.incidentId === 'string' ? `（診斷編號 ${payload.incidentId}）` : '';
+}
+
 function robustnessErrorMessage(error: unknown): string {
   if (!(error instanceof HttpErrorResponse)) return '分析未能完成，請稍後重試。';
   if (error.status === 0) return '目前無法連線至回測服務。請確認網路連線與後端服務狀態，再重試。';
@@ -23,8 +29,9 @@ function robustnessErrorMessage(error: unknown): string {
     case 'NO_MARKET_DATA':
       return '所選標的在指定日期範圍內沒有可用行情。請調整分析期間或選擇其他標的。';
     case 'UPSTREAM_DATA_UNAVAILABLE':
-    case 'UPSTREAM_FAILURE':
       return '行情來源目前無法提供資料。請稍後重試；若持續發生，請查看資料與方法說明。';
+    case 'UPSTREAM_FAILURE':
+      return `分析服務發生未預期錯誤；請稍後重試。若回報問題，請附上診斷編號。${incidentReference(error)}`;
     case 'DATA_INTEGRITY_FAILED':
       return '取得的行情未通過資料完整性檢查，因此未執行分析。請稍後重試或改用其他期間。';
     case 'INVALID_INPUT':
