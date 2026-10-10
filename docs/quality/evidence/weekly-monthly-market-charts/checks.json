@@ -1,0 +1,80 @@
+[
+  {
+    "name": "0050 page loads from local synthetic fixture and defaults to daily",
+    "status": "PASS",
+    "detail": {
+      "line": "請求期間 2025-10-10 – 2026-10-10 · 觀察資料 2025-10-10 – 2026-10-09",
+      "summary": "+26.67%\n所選顯示範圍報酬\n261 根日 K\n上漲\n下跌",
+      "source": "來源：合成測試資料（非市場行情）\n擷取時間：2026-10-10T09:00:00+08:00\n價格調整：合成測試價格；不代表市場價格\n資料展示授權尚未確認",
+      "calls": [
+        {
+          "path": "/api/v1/stocks/0050/history",
+          "query": "?from=2025-10-10&to=2026-10-10&interval=1d"
+        }
+      ]
+    }
+  },
+  {
+    "name": "Switching 日K → 週K issues interval=1w and keeps the 1年 range",
+    "status": "PASS",
+    "detail": {
+      "selected": "true",
+      "request": {
+        "path": "/api/v1/stocks/0050/history",
+        "query": "?from=2025-10-10&to=2026-10-10&interval=1w"
+      },
+      "summary": "+3.72%\n所選顯示範圍報酬\n53 根週 K\n上漲\n下跌"
+    }
+  },
+  {
+    "name": "Switching 週K → 月K issues interval=1mo and keeps the 1年 range",
+    "status": "PASS",
+    "detail": {
+      "selected": "true",
+      "request": {
+        "path": "/api/v1/stocks/0050/history",
+        "query": "?from=2025-10-10&to=2026-10-10&interval=1mo"
+      },
+      "summary": "-0.19%\n所選顯示範圍報酬\n13 根月 K\n上漲\n下跌"
+    }
+  },
+  {
+    "name": "Display range remains separate from K-line interval",
+    "status": "PASS",
+    "detail": {
+      "request": {
+        "path": "/api/v1/stocks/0050/history",
+        "query": "?from=2023-10-10&to=2026-10-10&interval=1mo"
+      },
+      "selectedPeriod": "3年",
+      "selectedInterval": "月 K"
+    }
+  },
+  {
+    "name": "OHLC synthetic data allows candlestick and line mode toggles",
+    "status": "PASS",
+    "detail": {
+      "renderedCandles": 37,
+      "linePathRestored": true
+    }
+  },
+  {
+    "name": "Keyboard range slider changes the selected historical period",
+    "status": "PASS",
+    "detail": {
+      "value": "35",
+      "valueText": "2026-09-01 – 2026-09-30，觀察 2026-09-01 – 2026-09-01，開 101.83，高 102.88，低 101.33，收 102.28，已結束區間，歷史非即時資料",
+      "before": "2026-10-01 – 2026-10-31\n較前一月 +0.60%（+0.61 元）\n開 103.27\n高 103.87\n低 102.39\n收 102.89\n量 14,500\n觀察 2026-10-01 – 2026-10-01\n區間受查詢日期截短 · 資料覆蓋未知",
+      "after": "2026-09-01 – 2026-09-30\n較前一月 +0.42%（+0.43 元）\n開 101.83\n高 102.88\n低 101.33\n收 102.28\n量 14,375\n觀察 2026-09-01 – 2026-09-01\n已結束區間 · 資料覆蓋未知"
+    }
+  },
+  {
+    "name": "390px browser viewport remains usable (web viewport only)",
+    "status": "PASS",
+    "detail": {
+      "innerWidth": 390,
+      "documentWidth": 390,
+      "chartWidth": 360
+    }
+  }
+]

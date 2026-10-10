@@ -1,0 +1,56 @@
+{
+  "evidenceLabels": [
+    "BROWSER_RUNTIME",
+    "AUTOMATED_TEST"
+  ],
+  "runtimeIdentity": "/root/weekly_monthly_browser_qa",
+  "browser": {
+    "name": "Google Chrome",
+    "version": "154.0.8037.98",
+    "headless": true
+  },
+  "target": "http://127.0.0.1:18392",
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "note": "browser viewport only; not native simulator/device"
+    }
+  ],
+  "syntheticFixture": true,
+  "syntheticDataDisclosure": "合成測試資料（非市場行情）",
+  "liveMarketDataEnabled": false,
+  "historyRequests": [
+    {
+      "path": "/api/v1/stocks/0050/history",
+      "query": "?from=2025-10-10&to=2026-10-10&interval=1d"
+    },
+    {
+      "path": "/api/v1/stocks/0050/history",
+      "query": "?from=2025-10-10&to=2026-10-10&interval=1w"
+    },
+    {
+      "path": "/api/v1/stocks/0050/history",
+      "query": "?from=2025-10-10&to=2026-10-10&interval=1mo"
+    },
+    {
+      "path": "/api/v1/stocks/0050/history",
+      "query": "?from=2023-10-10&to=2026-10-10&interval=1mo"
+    }
+  ],
+  "unexpectedExternalRequests": [],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "artifacts": [
+    "daily-desktop.png",
+    "weekly-desktop.png",
+    "monthly-desktop.png",
+    "candlestick-desktop.png",
+    "mobile-viewport-only.png",
+    "weekly-monthly-browser-trace.zip"
+  ]
+}
