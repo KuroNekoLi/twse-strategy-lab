@@ -13,13 +13,13 @@
 
 ## 明確限制與啟用閘門
 
-本版重用 TWSE `STOCK_DAY` 月歷史來源；parser 會讀取日期、開高低收及成交量，API 在來源欄位完整時提供 OHLCV，並聚合週／月 K。走勢模式繪製收盤價；只有所有圖表 bars 都具備開高低欄位時才允許切換 K 線，缺欄位時 K 線與量能依資料情況停用。此來源不含股利、公司行動或交易日曆，因此價格未調整且資料覆蓋狀態未知。資料授權矩陣對月歷史端點的自動化、儲存、衍生圖表及公開展示用途仍為 `UNKNOWN`，正式發布 gate 為 `BLOCKED`。
+個股歷史圖表改用政府資料開放平臺「上市個股日成交資訊」每日快照（資料集 11549，OGDL v1）。此資料來源為全市場 CSV 快照，含日期、代號、名稱、成交量與金額、開高低收、漲跌與成交筆數。資料依法定開放授權標示來源後供本站匯入、聚合及展示。站點從首次匯入日起累積資料，沒有歷史日期查詢或 2010 年起回補；新部署的圖表最初只有一根/少量日 K。走勢/K 線及週／月 K 聚合契約維持不變，未調整價格且資料覆蓋、公司行動與交易日曆狀態仍未知。
 
-因此 `application.yml` 的 `app.market-history.enabled` 預設為 `false`；`local` profile 為本機圖表開發預設啟用，但可用 `APP_MARKET_HISTORY_ENABLED=false` 關閉。這項本機開發便利不代表取得公開展示權。正式環境須先由權利人／授權供應商證據解除 gate，才可設定 `APP_MARKET_HISTORY_ENABLED=true`。本次沒有變更或宣稱任何授權已取得。即時行情、WebSocket、策略事件標記及市場資料保存均不在本次範圍。
+正式與 local profile 以 `APP_MARKET_DATA_PROVIDER=database` 查詢 SSOT 日線；`APP_MARKET_DATA_INGESTION_ENABLED` 控制政府開放資料匯入，`APP_MARKET_HISTORY_ENABLED` 控制圖表 API。未設定時兩者預設啟用，關閉可分別設為 `false`。此授權只涵蓋政府資料開放平台明確釋出的資料集，不延伸至 TWSE 月資料端點、即時資料、分鐘資料或其他 feed。歷史資料持久化採 JPA store，排程失敗保留 last-good。即時行情、WebSocket 與策略事件標記仍不在本圖表資料管線範圍。
 
 ### 線上環境現況（2026-10-10）
 
-對正式 API 的 `GET /api/v1/stocks/0050/history` 實際檢查回應 HTTP 503、`MARKET_HISTORY_DISABLED`。個股研究頁的收盤走勢 SVG 只有取得歷史價格資料後才會繪製，所以該環境目前顯示閘門訊息且沒有價格圖；這不是一張已繪製但未載入成功的圖。該 API 明確關閉是授權尚未確認的結果，本次維持此設定，不將假資料或未確認可公開展示的資料畫成行情。
+`GET /api/v1/stocks/{symbol}/history` 讀取 DB-backed provider 並保留既有 bars contract；新增來源/授權 URL、最後驗證時間和最早可用日期。圖表可顯示單根 OHLCV bar，並明確說明只有單日觀察值；資料持續匯入後折線及日／週／月 K 才逐步形成長序列。部署驗收仍須確認目標環境 datasource 可寫、startup import 成功及 0050 API 回傳完整 OHLCV。自動化測試或本機單次 live fetch 不代替部署驗收。
 
 通用 `UPSTREAM_FAILURE` 是未預期例外的遮罩回應；先前 handler 沒有記錄例外，無法只靠回應 JSON 還原根因。本次改為記錄不含 query/body 的請求 method/path、例外堆疊及診斷編號，並把診斷編號回傳給使用者，方便用 Zeabur 後端日誌對照。這仍不能回溯本次既有的 502；要確認該次根因需要原請求時間、路徑及原部署日誌。
 

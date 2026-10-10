@@ -10,7 +10,7 @@ type Instrument = { code: string; name: string; kind: string; asOf: string; mark
 type ChartInterval = '1d' | '1w' | '1mo';
 type PeriodWindowStatus = 'ELAPSED' | 'CLIPPED_BY_REQUEST' | 'IN_PROGRESS' | 'UNKNOWN';
 type PriceBar = { date: string; periodStart?: string; periodEnd?: string; observedFrom?: string; observedTo?: string; periodWindowStatus?: PeriodWindowStatus; coverageStatus?: 'UNKNOWN'; open?: number | string | null; high?: number | string | null; low?: number | string | null; close: number | string; volume?: number | string | null };
-type History = { symbol: string; from: string; to: string; observedFrom: string; observedTo: string; fetchedAt: string; source: string; interval: ChartInterval; licensingStatus: string; adjustmentPolicy: string; bars: PriceBar[]; limitations: string[] };
+type History = { symbol: string; from: string; to: string; observedFrom: string; observedTo: string; fetchedAt: string; lastVerifiedAt?: string | null; earliestAvailableDate?: string | null; source: string; sourceUrl?: string | null; licenseUrl?: string | null; interval: ChartInterval; licensingStatus: string; adjustmentPolicy: string; bars: PriceBar[]; limitations: string[] };
 type ChartBar = { date: string; periodStart: string; periodEnd: string | null; observedFrom: string | null; observedTo: string | null; periodWindowStatus: PeriodWindowStatus; coverageStatus: 'UNKNOWN'; open: number | null; high: number | null; low: number | null; close: number; volume: number | null; sma20: number | null; sma60: number | null; sma20Y: number | null; sma60Y: number | null; x: number; openY: number | null; highY: number | null; lowY: number | null; closeY: number; volumeY: number; volumeHeight: number; candleY: number; candleHeight: number; up: boolean };
 type LiveQuote = { symbol: string; price: number; size: number | null; volume: number | null; eventTime: string; receivedAt: string; source: string; freshness: 'LIVE' };
 type LiveState = 'disabled' | 'connecting' | 'waiting' | 'live' | 'stale' | 'network' | 'error' | 'unavailable' | 'disconnected';
@@ -69,7 +69,8 @@ function apiErrorCode(value: unknown): string | undefined {
               <span>觀察 {{dateRange(quote.observedFrom, quote.observedTo)}}</span>
               <span class="period-window-status">{{periodWindowLabel(quote.periodWindowStatus)}} · 資料覆蓋未知</span>
             </div>
-            <div class="stock-chart-frame" *ngIf="chartBars.length > 1; else noPoints">
+            <p *ngIf="chartBars.length === 1" class="stock-single-bar-note">本站目前累積到 1 個交易日；已顯示單日 K 棒。每日資料匯入後，走勢會隨資料累積延長。</p>
+            <div class="stock-chart-frame" *ngIf="chartBars.length > 0; else noPoints">
               <svg class="stock-price-svg" viewBox="0 0 940 350" role="img" [attr.aria-label]="chartDescription(item.name, data)">
                 <g class="chart-grid"><line x1="64" y1="22" x2="920" y2="22"/><line x1="64" y1="89" x2="920" y2="89"/><line x1="64" y1="156" x2="920" y2="156"/><line x1="64" y1="224" x2="920" y2="224"/></g>
                 <g class="chart-axis-labels"><text x="3" y="27">{{priceTicks[0] | number:'1.0-0'}}</text><text x="3" y="94">{{priceTicks[1] | number:'1.0-0'}}</text><text x="3" y="161">{{priceTicks[2] | number:'1.0-0'}}</text><text x="3" y="229">{{priceTicks[3] | number:'1.0-0'}}</text><text x="64" y="344">{{chartBars[0].periodStart}}</text><text x="920" y="344" text-anchor="end">{{chartBars[chartBars.length - 1].periodEnd}}</text><text *ngIf="showVolume && hasVolume" x="64" y="244" class="volume-axis-title">成交量</text></g>
@@ -95,10 +96,10 @@ function apiErrorCode(value: unknown): string | undefined {
               <ng-container *ngIf="liveQuote as quote; else noLiveQuote"><div class="live-quote-value"><strong>{{quote.price | number:'1.2-2'}} <small>元</small></strong><span>{{quote.symbol}} · {{liveState === 'live' ? 'LIVE' : '最近報價'}}</span></div><div class="live-quote-meta"><span>事件時間 {{formatTime(quote.eventTime)}}</span><span>收到時間 {{formatTime(quote.receivedAt)}}</span><span>來源 {{quote.source || '未提供'}}</span><span *ngIf="quote.size !== null">單筆量 {{quote.size | number}}</span><span *ngIf="quote.volume !== null">累計量 {{quote.volume | number}}</span></div><p class="live-quote-note">即時報價獨立呈現；下方圖表仍是日線歷史行情，不會將報價併入日 K。</p></ng-container>
               <ng-template #noLiveQuote><p class="live-quote-message">{{liveStateMessage}}</p></ng-template>
             </section>
-            <div class="stock-data-foot"><span>來源：{{data.source}}</span><span>擷取時間：{{data.fetchedAt}}</span><span>價格調整：{{data.adjustmentPolicy || '未提供'}}</span><span class="data-status">{{data.licensingStatus === 'CONFIRMED' ? '展示授權已確認' : '資料展示授權尚未確認'}}</span></div>
+            <div class="stock-data-foot"><span>來源：<a [href]="data.sourceUrl || 'https://data.gov.tw/dataset/11549'" target="_blank" rel="noopener noreferrer">{{data.source}}</a></span><span>最後驗證：{{data.lastVerifiedAt || data.fetchedAt}}</span><span>本站最早資料：{{data.earliestAvailableDate || data.observedFrom}}</span><span>價格調整：{{data.adjustmentPolicy || '未提供'}}</span><span class="data-status">{{data.licensingStatus === 'CONFIRMED' ? '政府開放資料授權 · 非即時' : '資料展示授權尚未確認'}}</span><a *ngIf="data.licenseUrl" [href]="data.licenseUrl" target="_blank" rel="noopener noreferrer">授權條款 ↗</a></div>
           </section>
           <section class="stock-next-step"><div><p class="eyebrow">同一標的，接續研究</p><h2>從觀察走向檢驗與紀錄</h2><p>把 {{item.code}} 帶到回測或研究筆記；資料仍是歷史資料。</p></div><nav class="stock-context-nav" aria-label="個股研究導覽"><a href="#stock-chart-title" aria-current="location">走勢</a><a class="button-primary" [routerLink]="'/backtest'" [queryParams]="{symbol:item.code}">回測 {{item.code}} →</a><a class="button-outline" [routerLink]="'/journal'" [queryParams]="{symbol:item.code}">寫研究筆記 →</a><a class="button-quiet" routerLink="/watchlist">觀察清單</a></nav></section>
-          <section class="stock-data-notice"><div class="notice-mark" aria-hidden="true">i</div><div><strong>資料範圍與限制</strong><p>圖表呈現 {{hasOhlc ? '開、高、低、收' : '收盤'}}歷史行情{{hasVolume ? '與成交量' : ''}}，屬歷史資料，不代表即時報價或可交易價格。股利、公司行動及交易日曆完整性可能影響比較；來源限制：{{data.limitations.join('、') || '無其他說明'}}。資料授權狀態：{{data.licensingStatus || '未知'}}。</p><a href="https://openapi.twse.com.tw/" target="_blank" rel="noopener noreferrer">查看 TWSE OpenAPI ↗</a></div></section>
+          <section class="stock-data-notice"><div class="notice-mark" aria-hidden="true">i</div><div><strong>資料範圍與限制</strong><p>圖表呈現 {{hasOhlc ? '開、高、低、收' : '收盤'}}歷史行情{{hasVolume ? '與成交量' : ''}}，屬每日更新的歷史資料，不代表即時報價或可交易價格。股利、公司行動及交易日曆完整性可能影響比較；來源限制：{{data.limitations.join('、') || '無其他說明'}}。資料授權狀態：{{data.licensingStatus || '未知'}}。</p><a [href]="data.sourceUrl || 'https://data.gov.tw/dataset/11549'" target="_blank" rel="noopener noreferrer">政府資料開放平臺資料集 ↗</a><span *ngIf="data.licenseUrl"> · <a [href]="data.licenseUrl" target="_blank" rel="noopener noreferrer">授權條款 ↗</a></span></div></section>
         </ng-container>
       </ng-container>
       <ng-template #loadingInstrument><div *ngIf="!error" class="stock-loading" role="status">正在確認標的資訊…</div><div *ngIf="error" class="stock-error" role="alert"><strong>找不到可用的上市標的資訊</strong><span>{{error}}</span><a routerLink="/explore">返回標的探索</a></div></ng-template>
@@ -359,7 +360,7 @@ export class StockResearchPageComponent {
     const maxVolume = Math.max(...valid.map((bar) => bar.volume ?? 0), 1);
     this.chartBars = valid.map((bar, index) => {
       const close = bar.close!;
-      const x = this.plot.left + index * xSpan / Math.max(valid.length - 1, 1);
+      const x = valid.length === 1 ? this.plot.left + xSpan / 2 : this.plot.left + index * xSpan / (valid.length - 1);
       const y = (value: number) => this.plot.bottom - (value - low) * ySpan / (high - low);
       const openY = bar.open === null ? null : y(bar.open), closeY = y(close);
       const volumeHeight = bar.volume === null ? 0 : bar.volume / maxVolume * 58;
@@ -370,7 +371,7 @@ export class StockResearchPageComponent {
     });
     const closeValues = this.chartBars.map((bar) => bar.close);
     this.linePath = this.chartBars.map((bar, index) => `${index ? 'L' : 'M'}${bar.x.toFixed(1)} ${bar.closeY.toFixed(1)}`).join(' ');
-    this.areaPath = `${this.linePath} L${this.plot.right} ${this.plot.bottom} L${this.plot.left} ${this.plot.bottom} Z`;
+    this.areaPath = valid.length === 1 ? '' : `${this.linePath} L${this.plot.right} ${this.plot.bottom} L${this.plot.left} ${this.plot.bottom} Z`;
     this.firstClose = closeValues[0]; this.latestClose = closeValues[closeValues.length - 1];
     this.periodChange = closeValues.length > 1 && this.firstClose ? (this.latestClose / this.firstClose - 1) * 100 : 0;
     this.activeIndex = this.chartBars.length - 1;

@@ -7,11 +7,16 @@ spring:
   jpa:
     open-in-view: false
 app:
+  twse:
+    base-url: ${APP_TWSE_MONTHLY_URL:https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY}
   cors:
     allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:4200,https://kuronekoli.github.io,https://finance.kuronekoli.uk}
-  twse:
-    base-url: https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY
   market-history:
-    enabled: ${APP_MARKET_HISTORY_ENABLED:false}
+    enabled: ${APP_MARKET_HISTORY_ENABLED:true}
+  market-data:
+    provider: ${APP_MARKET_DATA_PROVIDER:database}
+    ingestion-enabled: ${APP_MARKET_DATA_INGESTION_ENABLED:true}
+    government-open-data-url: ${APP_GOVERNMENT_MARKET_DATA_URL:https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=open_data}
+    refresh-cron: ${APP_MARKET_DATA_REFRESH_CRON:0 20 18 * * MON-FRI}
   live-market-data:
     enabled: ${APP_LIVE_MARKET_DATA_ENABLED:false}

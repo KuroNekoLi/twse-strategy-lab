@@ -188,6 +188,9 @@ html,body{background:#f4f2eb;color:#202722}
 .stock-modes button{border:1px solid transparent}
 .stock-modes button.selected{border-color:#bcb9af;box-shadow:none;background:#e9e6dd}
 .stock-chart-summary{margin-top:12px;color:#6e736a}
+.stock-single-bar-note{margin:8px 0 2px;color:#6e736a;font-size:12px;line-height:1.6}
+.stock-data-foot a,.stock-data-notice a{color:#922f27;text-decoration:underline;text-underline-offset:2px}
+.stock-data-foot a:hover,.stock-data-notice a:hover{color:#70241e}
 .stock-chart-summary>span:first-child{font-size:15px;color:#aa3e33}
 .stock-chart-summary>span:first-child.negative{color:#18714e}
 .stock-chart-frame{height:350px;margin-top:3px}

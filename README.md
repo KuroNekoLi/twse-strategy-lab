@@ -24,7 +24,7 @@ IntelliJ IDEA 也可直接選擇共用的 **Backend Local** Run Configuration。
 
 `local` profile 使用 H2 記憶體資料庫；啟動時由 Hibernate 建立本機資料表。資料庫連線狀態可用 `GET /api/health/database` 檢查。正式環境需透過 `SPRING_DATASOURCE_URL`、`SPRING_DATASOURCE_USERNAME`、`SPRING_DATASOURCE_PASSWORD` 提供連線設定，並以 `SPRING_JPA_HIBERNATE_DDL_AUTO=update` 管理 schema；程式不提供預設正式資料庫網址或憑證。Zeabur 上可使用 MySQL 私有網路位址。既有 CORS 設定仍由 `CORS_ALLOWED_ORIGIN_PATTERNS` 控制。
 
-目前持久化合成回放 session／決策，以及上市公司、上市基金與上櫃公司名錄白名單。名錄首次搜尋時會完整讀取各官方來源並寫入資料庫，後續搜尋只查資料庫；每天排程更新，只有全部來源成功驗證才整批替換。上櫃標的可搜尋，但 TWSE 回測行情尚未支援。schema 選擇理由與欄位見 [MySQL schema proposal](docs/database/MYSQL_SCHEMA_PROPOSAL.md)。服務依賴儲存介面與 Spring Data JPA adapter；切換其他資料庫時可替換 adapter／連線設定，但仍須驗證 driver、Hibernate dialect、鎖定及 schema 更新行為。TWSE 歷史行情快取與回測輸出因授權尚未確認而不寫入資料庫。
+目前持久化合成回放 session／決策、標的目錄及上市日行情 SSOT。行情來源為政府資料開放平臺資料集 11549 的每日 CSV 快照（OGDL v1），以來源 Adapter 驗證後匯入 `daily_market_bar`，並記錄來源和匯入 run；查圖、回測及穩健性分析都由資料庫 provider 讀取，不在使用者請求時打上游。資料每日累積，無 2010 年起歷史回補；新部署的圖表從首次收集日逐步形成長走勢。週／月 K 由日線聚合。`APP_MARKET_DATA_PROVIDER` 可選資料查詢 adapter，`APP_MARKET_DATA_INGESTION_ENABLED` 控制排程，`APP_MARKET_HISTORY_ENABLED` 控制圖表 API。來源與資料限制見 [行情來源架構](docs/product/MARKET_CHART_PROVIDER_ARCHITECTURE.md) 和 [行情 SSOT 設計](docs/product/MARKET_DATA_STORAGE_SSOT.md)。
 
 啟動 Angular：
 

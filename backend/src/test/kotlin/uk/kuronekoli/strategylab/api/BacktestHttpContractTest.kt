@@ -26,7 +26,7 @@ import uk.kuronekoli.strategylab.market.HistoricalMarketDataProvider
 /** Real local HTTP + Spring startup, with a synthetic primary market source; no live calls. */
 @SpringBootTest(
   webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-  properties = ["app.twse.base-url=https://example.invalid/STOCK_DAY", "app.market-history.enabled=true"]
+  properties = ["app.market-history.enabled=true", "app.market-data.ingestion-enabled=false"]
 )
 @ActiveProfiles("local")
 @Import(BacktestHttpContractTest.SyntheticMarket::class)
@@ -131,8 +131,8 @@ class BacktestHttpContractTest {
     assertEquals("98", json.path("bars").get(0).path("low").asText())
     assertEquals(1000, json.path("bars").get(0).path("volume").asInt())
     assertFalse(json.path("realtime").asBoolean())
-    assertTrue(json.path("limitations").toString().contains("fetchedAt"))
-    assertTrue(json.path("limitations").toString().contains("非即時") || json.path("limitations").toString().contains("授權"))
+    assertTrue(json.path("limitations").toString().contains("歷史資料不是即時報價"))
+    assertTrue(json.path("limitations").toString().contains("股利") || json.path("limitations").toString().contains("即時"))
   }
 
   @Test

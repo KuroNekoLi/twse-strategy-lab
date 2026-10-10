@@ -11,15 +11,13 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.Duration
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
 import uk.kuronekoli.strategylab.api.BacktestException
 import uk.kuronekoli.strategylab.backtest.BacktestValidation
 
-@Component
-class TwseMarketDataClient(private val mapper: JsonMapper, @Value("\${app.twse.base-url}") endpoint: String) : HistoricalMarketDataProvider {
+/** Legacy monthly adapter retained for isolated parser tests; deliberately not registered as a public provider. */
+class TwseMarketDataClient(private val mapper: JsonMapper, endpoint: String) : HistoricalMarketDataProvider {
     private val log = LoggerFactory.getLogger(TwseMarketDataClient::class.java)
     private val endpoint = URI.create(endpoint)
     private val http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NEVER).build()

@@ -36,20 +36,23 @@ class StockHistoryService @Autowired constructor(
             throw BacktestException.input("請選擇 2010 年起、截至今日且不超過 5 年的日期範圍。")
         }
 
-        val loaded = marketData.load(symbol, YearMonth.from(from), YearMonth.from(to))
+        val loadedSnapshot = marketData.loadSnapshot(symbol, YearMonth.from(from), YearMonth.from(to))
+        val loaded = loadedSnapshot.bars
         BacktestValidation.bars(loaded)
         // Filter daily observations before bucketing so adjacent periods cannot leak into the request.
         val observations = loaded.filter { !it.date.isBefore(from) && !it.date.isAfter(to) }
         if (observations.isEmpty()) throw BacktestException("NO_MARKET_DATA", "$symbol 在此日期範圍沒有可用收盤資料。", 404)
 
-        val fetchedAt = java.time.OffsetDateTime.now(injectedClock.withZone(TAIPEI_ZONE)).toString()
+        val fetchedAt = loadedSnapshot.fetchedAt.toString()
         val completeOhlcv = observations.all(DailyBar::hasOhlcv)
-        val limitations = mutableListOf(
-            "TWSE STOCK_DAY 是按月提供的歷史日資料，不是即時報價；fetchedAt 是本服務擷取時間，observedTo 是最後一筆資料日期。",
-            "行情授權、歷史完整性與衍生圖表展示權尚未確認；公開發布狀態 BLOCKED。",
+        val limitations = (loadedSnapshot.limitations + listOf(
+            "歷史資料不是即時報價；圖表只呈現目前來源已提供並經驗證的日期。",
             "資料缺漏與停牌原因未知；價格為未調整資料，未處理股利與公司行動。",
             "coverageStatus=UNKNOWN；觀測筆數不代表交易日資料完整。",
-        )
+        )).toMutableList()
+        if (loadedSnapshot.earliestAvailableDate != null && from.isBefore(loadedSnapshot.earliestAvailableDate)) {
+            limitations += "請求起日早於本站最早可用資料 ${loadedSnapshot.earliestAvailableDate}；目前圖表只繪製已取得的日期。"
+        }
         if (!completeOhlcv) limitations += "此來源回應未提供完整 OHLCV；部分欄位為 null，不可視為 K 線或零成交量。"
 
         val bars = aggregate(observations, interval, from, to, today)
@@ -60,13 +63,17 @@ class StockHistoryService @Autowired constructor(
             observedFrom = observations.first().date.toString(),
             observedTo = observations.last().date.toString(),
             fetchedAt = fetchedAt,
-            source = marketData.sourceName,
+            source = loadedSnapshot.source,
+            sourceUrl = loadedSnapshot.sourceUrl,
+            licenseUrl = loadedSnapshot.licenseUrl,
             interval = interval.externalValue,
-            licensingStatus = "UNKNOWN",
-            adjustmentPolicy = "未調整原始價格",
+            licensingStatus = loadedSnapshot.licensingStatus,
+            adjustmentPolicy = loadedSnapshot.adjustmentPolicy,
             bars = bars,
             limitations = limitations,
             realtime = false,
+            lastVerifiedAt = loadedSnapshot.lastVerifiedAt?.toString(),
+            earliestAvailableDate = loadedSnapshot.earliestAvailableDate?.toString(),
         )
     }
 

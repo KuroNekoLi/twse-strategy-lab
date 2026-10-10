@@ -43,7 +43,11 @@ class BacktestService(
     for (symbol in symbols) {
       val tax = if (request.marketTaxDefaults()) BigDecimal(if (symbol.matches(Regex("00\\d{2,4}"))) "0.001" else "0.003") else request.sellTaxRate!!
       BacktestValidation.costs(request.commissionRate!!, tax); taxes[symbol] = tax
-      val loaded = marketData.load(symbol, firstMonth, lastMonth)
+      val snapshot = marketData.loadSnapshot(symbol, firstMonth, lastMonth)
+      val loaded = snapshot.bars
+      if (snapshot.earliestAvailableDate != null && from.isBefore(snapshot.earliestAvailableDate)) {
+        throw BacktestException("DATA_RANGE_UNAVAILABLE", "$symbol 本站最早可用行情為 ${snapshot.earliestAvailableDate}；目前無法驗證所選期間的完整歷史資料。", 422)
+      }
       if (loaded.isEmpty()) throw NoMarketDataException("$symbol 在這段期間沒有可用日行情；上市、停牌與日曆狀態未知。")
       BacktestValidation.bars(loaded)
       val bars = loaded.filter { !it.date.isBefore(from) && !it.date.isAfter(effectiveTo) }

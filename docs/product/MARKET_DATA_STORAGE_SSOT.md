@@ -1,7 +1,7 @@
 # 行情資料持久化與 SSOT 設計
 
 日期：2026-10-10
-狀態：架構提案；尚未開始行情資料表或排程實作。週／月 K 圖表聚合已先以請求時計算交付，未建立行情 SSOT。
+狀態：部分實作（2026-10-10）；daily bar/source/ingestion-run 資料表、政府資料來源匯入與 DB-backed history 已落地。週／月 K 仍由日線查詢時計算。須持續收集日資料；無歷史回補。
 範圍：先支援台股歷史日線與其衍生圖表，維持資料來源可替換，並避免每次查圖都呼叫上游。
 
 ## 決策摘要
@@ -13,11 +13,11 @@
 ## 目前程式現況
 
 - `catalog_instrument` 與 `catalog_source` 已透過 JPA 持久化標的目錄；目錄每日排程刷新，失敗時保留上次成功目錄。
-- `StockHistoryService` 每次呼叫 `HistoricalMarketDataProvider.load`，沒有查詢或寫入行情資料庫的 store/repository。
-- `TwseMarketDataClient` 依月呼叫 TWSE `STOCK_DAY`，驗證回應後回傳每日 OHLCV；不提供週／月 K API。
+- `StockHistoryService` 經 `HistoricalMarketDataProvider` query 邊界讀取資料；正式預設 adapter 讀取 JPA `MarketDataStore`，匯入由獨立 `DailyMarketDataSource` 負責。
+- `GovernmentOpenDataDailySource` 讀取資料集 11549 的全市場日 CSV 快照；TWSE `STOCK_DAY` client 不再為預設 provider，也不可在未另行授權下用於公開部署。
 - `StockHistoryService` 支援 `1d`、`1w`、`1mo`；週／月由當次取得的日線即時計算，未還原，公司行動與授權狀態尚未確認。
 - 前端個股圖表可切換日／週／月，均線的「20／60」依目前 bar 數計算，代表所選週期的 20／60 根，不是固定交易日視窗。
-- 0050 的日線讀取與週／月記憶體聚合能力已存在；行情仍未存入資料庫，重複查詢仍可能呼叫上游，無法以 DB 降低請求。
+- 0050 日線會按 `(symbol, trading_date)` 存入 DB，API 查圖不呼叫行情來源；排程匯入每日快照並記錄 lineage/ingestion run。
 - 週界目前採 ISO Mon–Sun，月界採曆月；回應列出期別邊界、實際觀測範圍、是否被查詢日期截短及期間狀態。因未接交易日曆／完整性資料，`coverageStatus` 一律是 `UNKNOWN`；觀測首末日不代表中間資料齊全。
 
 ## SSOT 邊界
@@ -90,7 +90,7 @@
 
 ## 日線匯入與 API 流程
 
-1. 選定並設定具備儲存及展示權的 provider adapter。`HistoricalMarketDataProvider` 作為服務邊界保留；資料庫 store 另以介面抽象，Service 不直接依賴 TWSE URL、JPA 或特定 DB。
+1. 選定並設定具備儲存及展示權的 provider adapter。`DailyMarketDataSource` 負責匯入，`HistoricalMarketDataProvider` 負責讀取；資料庫 store 另以介面抽象，Service 不直接依賴 TWSE URL、JPA 或特定 DB。
 2. 首次有需求時進行有上限的回補，按標的／月份取得上游資料；完整驗證某批資料後再交易式 upsert。失敗或空白月份不刪除舊資料，也不寫成「零筆行情」。
 3. 日常排程只補最近未完成交易日及最近月份；另以低頻重查窗口捕捉供應商更正。排程需有 single-flight／鎖，避免多個應用實例重複打上游。
 4. 個股圖表及回測先查 canonical 日線庫。只有日期覆蓋不足或資料超過 freshness policy 時才觸發補抓；請求路徑應避免對同標的／月份同時重複呼叫 provider。
@@ -146,9 +146,9 @@
 
 ## 目前阻塞與不納入首版
 
-- 歷史行情持久保存與網站展示權：UNKNOWN，須先確認 provider 條款。
+- 政府開放資料集 11549 的日快照及 OGL v1 來源標示路徑已確認；但多年歷史回補、交易日完整性、公司行動與完整回測 coverage 仍未知。任何其他來源的儲存/展示權均需個別確認。
 - 日線供應目前曾遇到 TWSE 回應 307 且缺少 Location 的錯誤；持久化只能降低已取得資料重複請求，無法修復首次取得失敗。匯入應可重試並保留 last-good。
-- 週／月 K API 與前端切換已實作，但僅為來源日線的請求時計算；它們尚未讀取 canonical DB 日線，亦沒有市場日曆、完整性判定或持久化行情。
+- 週／月 K API 與前端切換已實作，現在讀取 canonical DB 日線後請求時計算；仍沒有市場日曆、完整性判定與歷史回補。
 - 還原價格、法人、財報、新聞、分鐘線與即時 tick 不在 Phase 1；各自需要資料源、權利、更新與品質規則。
 - SQLite 與不同雲端資料庫的相容性尚未測試；JPA/Repository 可隔離大部分 persistence code，但 schema migration、索引、decimal、upsert、鎖與測試矩陣仍須逐一驗證。
 

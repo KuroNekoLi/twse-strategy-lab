@@ -20,7 +20,7 @@ import org.springframework.test.context.ActiveProfiles
 import tools.jackson.databind.json.JsonMapper
 
 /** Embedded local HTTP; synthetic source transport never contacts TWSE. */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = ["app.market-data.ingestion-enabled=false"])
 @ActiveProfiles("local")
 @Import(InstrumentCatalogHttpTest.SyntheticCatalog::class)
 class InstrumentCatalogHttpTest {
