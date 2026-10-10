@@ -26,8 +26,9 @@ class MarketDataIngestionService(
             if (snapshot.bars.isEmpty() || snapshot.bars.any { it.date != snapshot.sourceAsOf }) {
                 throw BacktestException("DATA_INTEGRITY_FAILED", "行情快照日期不一致；本次資料未寫入。", 502)
             }
-            val normalized = snapshot.bars.map(SourceMarketBar::toDailyBar)
-            BacktestValidation.bars(normalized)
+            snapshot.bars.groupBy(SourceMarketBar::symbol).values.forEach { rows ->
+                BacktestValidation.bars(rows.map(SourceMarketBar::toDailyBar))
+            }
             val result = store.saveSnapshot(snapshot)
             log.info("Open market data snapshot stored: source={}, date={}, received={}, inserted={}, updated={}, rejectedNoOhlc={}", snapshot.metadata.sourceId, snapshot.sourceAsOf, snapshot.bars.size + snapshot.rowsRejected, result.inserted, result.updated, result.rejected)
             return result

@@ -51,6 +51,12 @@ class GovernmentOpenDataDailySourceTest {
         assertEquals(1, parsed.rowsRejected)
     }
 
+    @Test
+    fun `accepts TWSE special security suffixes`() {
+        val row = "\"1151008\",\"2887Z1\",\"台新新光己特\",\"100\",\"1000\",\"10\",\"11\",\"9\",\"10\",\"0\",\"10\""
+        assertEquals("2887Z1", source.parseCsv(csv(row)).single().symbol)
+    }
+
     private fun csv(row: String) = """日期,證券代號,證券名稱,成交股數,成交金額,開盤價,最高價,最低價,收盤價,漲跌價差,成交筆數
 $row
 """

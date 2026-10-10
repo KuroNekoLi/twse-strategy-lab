@@ -55,7 +55,8 @@ class GovernmentOpenDataDailySource(
             if (row.size != HEADERS.size) throw upstream("政府開放資料 CSV 含有欄位數不符的資料列。")
             val symbol = row[1].trim()
             val name = row[2].trim()
-            if (!symbol.matches(Regex("[0-9]{4,6}[A-Z]?")) || name.isBlank() || name.length > 200) throw upstream("政府開放資料 CSV 含有無效標的識別。")
+            // TWSE includes special security suffixes such as 2887Z1 in addition to ETF suffixes like 00679B.
+            if (!symbol.matches(Regex("[0-9]{4,6}[A-Z0-9]{0,2}")) || name.isBlank() || name.length > 200) throw upstream("政府開放資料 CSV 含有無效標的識別。")
             val date = parseRocDate(row[0].trim())
             // Some listed securities have no published OHLC on a snapshot (usually no transactions).
             // Keep schema/identity checks strict, but do not invent a zero-price candle for them.
