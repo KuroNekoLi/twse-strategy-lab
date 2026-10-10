@@ -6,6 +6,9 @@ import java.time.Clock
 import java.time.ZoneId
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -68,6 +71,7 @@ class MarketDataStoreIntegrationTest {
         assertEquals("fugle-taiwan-stock-historical-candles", stored.metadata.sourceId)
         assertEquals("CONFIRMED", stored.metadata.licensingStatus)
         assertEquals(0, BigDecimal("21").compareTo(stored.bars.single().close))
+        assertEquals(listOf(imported.from to imported.to), store.findHistoricalCoverage("99150", date, date).map { it.from to it.to })
         assertEquals(1, bars.findAllByTradingDateAndAdjustmentPolicy(date, "RAW").count { it.symbol == "99150" })
     }
 
@@ -108,6 +112,37 @@ class MarketDataStoreIntegrationTest {
 
         assertEquals(3, history.bars.size)
         assertEquals("UNVERIFIED", history.licensingStatus)
+    }
+
+    @Test
+    fun `concurrent duplicate history imports retry after a unique key race`() {
+        val date = LocalDate.of(2037, 7, 8)
+        val import = HistoricalMarketDataImport(
+            FugleHistoricalMarketDataSource.METADATA, "99153", date, date,
+            Instant.parse("2037-07-09T12:00:00Z"),
+            listOf(SourceMarketBar("99153", "fixture", date, d("10"), d("12"), d("9"), d("11"), 100)),
+        )
+        val ready = CountDownLatch(2)
+        val start = CountDownLatch(1)
+        val pool = Executors.newFixedThreadPool(2)
+
+        try {
+            val results = (1..2).map {
+                pool.submit<IngestionResult> {
+                    ready.countDown()
+                    check(start.await(5, TimeUnit.SECONDS))
+                    store.saveHistory(import)
+                }
+            }
+            check(ready.await(5, TimeUnit.SECONDS))
+            start.countDown()
+            results.forEach { it.get(10, TimeUnit.SECONDS) }
+        } finally {
+            pool.shutdownNow()
+        }
+
+        assertEquals(1, bars.findAllBySymbolAndAdjustmentPolicyAndTradingDateBetweenOrderByTradingDateAsc("99153", "RAW", date, date).size)
+        assertNotNull(store.findBars("99153", date, date))
     }
 
     private fun d(value: String) = BigDecimal(value)

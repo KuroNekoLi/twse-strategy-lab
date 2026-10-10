@@ -25,6 +25,7 @@ class FugleHistoricalMarketDataSource(
     private val endpoint: String,
     @Value("\${app.market-data.fugle-api-key:}") private val apiKey: String,
 ) : HistoricalMarketDataSource {
+    override val metadata = METADATA
     private val client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build()
 
     override fun fetchHistory(symbol: String, from: LocalDate, to: LocalDate): HistoricalMarketDataImport {

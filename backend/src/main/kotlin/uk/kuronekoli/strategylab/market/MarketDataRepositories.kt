@@ -17,3 +17,9 @@ interface MarketDataSourceRepository : JpaRepository<MarketDataSourceEntity, Str
 interface MarketDataIngestionRunRepository : JpaRepository<MarketDataIngestionRunEntity, String> {
     fun findTopByOrderByStartedAtDesc(): MarketDataIngestionRunEntity?
 }
+
+interface HistoricalMarketDataCoverageRepository : JpaRepository<HistoricalMarketDataCoverageEntity, String> {
+    fun findAllBySymbolAndCoveredFromLessThanEqualAndCoveredToGreaterThanEqualOrderByCoveredFromAsc(
+        symbol: String, requestedTo: LocalDate, requestedFrom: LocalDate,
+    ): List<HistoricalMarketDataCoverageEntity>
+}

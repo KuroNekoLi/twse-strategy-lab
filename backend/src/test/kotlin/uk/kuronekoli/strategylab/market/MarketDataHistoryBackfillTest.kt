@@ -13,6 +13,7 @@ class MarketDataHistoryBackfillTest {
     fun `refuses to persist a one-row response for a five-year backfill`() {
         var saved = false
         val source = object : HistoricalMarketDataSource {
+            override val metadata = FugleHistoricalMarketDataSource.METADATA
             override fun fetchHistory(symbol: String, from: LocalDate, to: LocalDate) = HistoricalMarketDataImport(
                 metadata = FugleHistoricalMarketDataSource.METADATA,
                 symbol = symbol,
@@ -25,6 +26,7 @@ class MarketDataHistoryBackfillTest {
         val store = object : MarketDataStore {
             override fun findBars(symbol: String, from: LocalDate, to: LocalDate): StoredMarketBars? = null
             override fun findEarliestDate(symbol: String): LocalDate? = null
+            override fun findHistoricalCoverage(symbol: String, from: LocalDate, to: LocalDate) = emptyList<HistoricalCoverage>()
             override fun saveSnapshot(snapshot: MarketDataSnapshot) = error("not used")
             override fun saveHistory(import: HistoricalMarketDataImport): IngestionResult { saved = true; return IngestionResult(1, 0) }
             override fun recordFailure(sourceId: String, startedAt: Instant, finishedAt: Instant, errorCode: String) = Unit

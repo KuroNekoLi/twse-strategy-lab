@@ -1,6 +1,10 @@
 package uk.kuronekoli.strategylab.market
 
 import java.time.YearMonth
+import java.time.LocalDate
+import java.time.ZoneId
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -10,6 +14,8 @@ import org.springframework.stereotype.Component
 class DatabaseHistoricalMarketDataProvider(
     private val store: MarketDataStore,
     @Value("\${app.market-data.allow-unverified-display:false}") private val allowUnverifiedDisplay: Boolean,
+    private val backfill: MarketDataHistoryBackfillService? = null,
+    @Value("\${app.market-data.on-demand-backfill-enabled:true}") private val onDemandBackfillEnabled: Boolean = true,
 ) : HistoricalMarketDataProvider {
     override val sourceName = GovernmentOpenDataDailySource.attributionFor(java.time.LocalDate.now().year)
 
@@ -17,6 +23,7 @@ class DatabaseHistoricalMarketDataProvider(
         loadSnapshot(symbol, first, last).bars
 
     override fun loadSnapshot(symbol: String, first: YearMonth, last: YearMonth): HistoricalBarsSnapshot {
+        ensureRangeCached(symbol, first, last)
         val result = store.findBars(symbol, first.atDay(1), last.atEndOfMonth())
             ?: return HistoricalBarsSnapshot(emptyList(), sourceName, GovernmentOpenDataDailySource.METADATA.datasetUrl, GovernmentOpenDataDailySource.METADATA.licenseUrl,
                 GovernmentOpenDataDailySource.METADATA.licensingStatus, "未調整原始價格", java.time.Instant.now(), null, store.findEarliestDate(symbol),
@@ -46,5 +53,35 @@ class DatabaseHistoricalMarketDataProvider(
                 "價格為未調整原始價格，未處理股利、分割及其他公司行動。",
             ),
         )
+    }
+
+    private fun ensureRangeCached(symbol: String, first: YearMonth, last: YearMonth) {
+        if (!onDemandBackfillEnabled || backfill?.publicDisplayAllowed != true) return
+        val from = first.atDay(1)
+        val to = minOf(last.atEndOfMonth(), LocalDate.now(TAIPEI_ZONE))
+        if (from.isAfter(to)) return
+
+        symbolLocks[symbol.hashCode().and(Int.MAX_VALUE) % symbolLocks.size].withLock {
+            val gaps = uncoveredRanges(from, to, store.findHistoricalCoverage(symbol, from, to))
+            gaps.forEach { (gapFrom, gapTo) -> backfill.import(symbol, gapFrom, gapTo) }
+        }
+    }
+
+    private fun uncoveredRanges(from: LocalDate, to: LocalDate, covered: List<HistoricalCoverage>): List<Pair<LocalDate, LocalDate>> {
+        var cursor = from
+        val gaps = mutableListOf<Pair<LocalDate, LocalDate>>()
+        for (range in covered.sortedBy(HistoricalCoverage::from)) {
+            if (range.to.isBefore(cursor) || range.from.isAfter(to)) continue
+            if (range.from.isAfter(cursor)) gaps += cursor to minOf(to, range.from.minusDays(1))
+            if (!range.to.isBefore(cursor)) cursor = range.to.plusDays(1)
+            if (cursor.isAfter(to)) break
+        }
+        if (!cursor.isAfter(to)) gaps += cursor to to
+        return gaps
+    }
+
+    companion object {
+        private val symbolLocks = Array(64) { ReentrantLock() }
+        private val TAIPEI_ZONE = ZoneId.of("Asia/Taipei")
     }
 }

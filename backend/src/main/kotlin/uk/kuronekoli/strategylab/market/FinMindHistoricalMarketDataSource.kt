@@ -24,6 +24,7 @@ class FinMindHistoricalMarketDataSource(
     @Value("\${app.market-data.finmind-url:https://api.finmindtrade.com/api/v4/data}") private val endpoint: String,
     @Value("\${app.market-data.finmind-token:}") private val token: String,
 ) : HistoricalMarketDataSource {
+    override val metadata = METADATA
     private val client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build()
 
     override fun fetchHistory(symbol: String, from: LocalDate, to: LocalDate): HistoricalMarketDataImport {

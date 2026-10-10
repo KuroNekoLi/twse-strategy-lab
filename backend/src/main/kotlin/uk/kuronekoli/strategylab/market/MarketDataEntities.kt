@@ -90,3 +90,13 @@ open class MarketDataIngestionRunEntity(
     @field:Column(name = "rows_rejected", nullable = false) var rowsRejected: Int = 0,
     @field:Column(name = "error_code", length = 48) var errorCode: String? = null,
 )
+
+@Entity
+@Table(name = "market_history_coverage", indexes = [Index(name = "idx_history_coverage_symbol_range", columnList = "symbol,covered_from,covered_to")])
+open class HistoricalMarketDataCoverageEntity(
+    @field:Id @field:Column(name = "coverage_id", length = 36, nullable = false) var coverageId: String = "",
+    @field:Column(nullable = false, length = 12) var symbol: String = "",
+    @field:Column(name = "covered_from", nullable = false) var coveredFrom: LocalDate = LocalDate.of(1970, 1, 1),
+    @field:Column(name = "covered_to", nullable = false) var coveredTo: LocalDate = LocalDate.of(1970, 1, 1),
+    @field:Column(name = "verified_at", nullable = false) var verifiedAt: Instant = Instant.EPOCH,
+)

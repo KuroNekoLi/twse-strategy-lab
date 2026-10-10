@@ -21,6 +21,7 @@ app:
     finmind-url: ${APP_FINMIND_URL:https://api.finmindtrade.com/api/v4/data}
     finmind-token: ${FINMIND_API_TOKEN:}
     history-source: ${APP_MARKET_DATA_HISTORY_SOURCE:finmind}
+    on-demand-backfill-enabled: ${APP_MARKET_DATA_ON_DEMAND_BACKFILL_ENABLED:true}
     fugle-historical-url: ${APP_FUGLE_HISTORICAL_URL:https://api.fugle.tw/marketdata/v1.0/stock/historical/candles}
     fugle-api-key: ${FUGLE_API_KEY:}
     historical-backfill-enabled: ${APP_HISTORICAL_BACKFILL_ENABLED:${APP_FINMIND_BACKFILL_ENABLED:false}}

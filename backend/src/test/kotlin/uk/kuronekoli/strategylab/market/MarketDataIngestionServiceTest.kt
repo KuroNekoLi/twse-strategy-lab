@@ -31,6 +31,7 @@ class MarketDataIngestionServiceTest {
         var saved: MarketDataSnapshot? = null
         override fun findBars(symbol: String, from: LocalDate, to: LocalDate): StoredMarketBars? = null
         override fun findEarliestDate(symbol: String): LocalDate? = null
+        override fun findHistoricalCoverage(symbol: String, from: LocalDate, to: LocalDate) = emptyList<HistoricalCoverage>()
         override fun saveSnapshot(snapshot: MarketDataSnapshot): IngestionResult { saved = snapshot; return IngestionResult(snapshot.bars.size, 0) }
         override fun saveHistory(import: HistoricalMarketDataImport): IngestionResult = error("Not used by this test")
         override fun recordFailure(sourceId: String, startedAt: Instant, finishedAt: Instant, errorCode: String) = Unit

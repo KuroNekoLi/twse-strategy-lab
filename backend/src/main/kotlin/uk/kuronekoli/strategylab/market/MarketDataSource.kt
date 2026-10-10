@@ -52,6 +52,7 @@ data class HistoricalMarketDataImport(
 )
 
 interface HistoricalMarketDataSource {
+    val metadata: MarketDataSourceMetadata
     fun fetchHistory(symbol: String, from: LocalDate, to: LocalDate): HistoricalMarketDataImport
 }
 

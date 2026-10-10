@@ -16,10 +16,22 @@ class MarketDataHistoryBackfillService(
     private val source: HistoricalMarketDataSource,
     private val store: MarketDataStore,
 ) {
+    val publicDisplayAllowed: Boolean
+        get() = source.metadata.licensingStatus == "CONFIRMED"
+
     fun import(symbol: String, from: LocalDate, to: LocalDate, minimumRows: Int = 0): IngestionResult {
         require(minimumRows >= 0) { "minimumRows must not be negative" }
+        if (source.metadata.licensingStatus != "CONFIRMED") {
+            throw BacktestException("MARKET_DATA_LICENSE_UNVERIFIED", "行情來源的公開展示權尚未確認；本次查詢未回補或儲存資料。", 503)
+        }
         val imported = source.fetchHistory(symbol, from, to)
-        if (imported.bars.isEmpty()) error("歷史行情來源沒有回傳有效的日 K；匯入取消。")
+        if (imported.symbol != symbol || imported.from != from || imported.to != to || imported.metadata.sourceId != source.metadata.sourceId) {
+            throw BacktestException("UPSTREAM_DATA_UNAVAILABLE", "行情來源回傳的標的、日期範圍或來源識別不符；資料未寫入。", 502)
+        }
+        if (imported.metadata.licensingStatus != "CONFIRMED") {
+            throw BacktestException("MARKET_DATA_LICENSE_UNVERIFIED", "行情資料的公開展示權尚未確認；本次資料未寫入。", 503)
+        }
+        if (imported.bars.isEmpty()) throw BacktestException("NO_MARKET_DATA", "$symbol 在此日期範圍沒有可用日 K。", 404)
         if (imported.bars.size < minimumRows) {
             throw BacktestException("DATA_COVERAGE_INSUFFICIENT", "歷史行情筆數明顯不足；資料未寫入。", 502)
         }

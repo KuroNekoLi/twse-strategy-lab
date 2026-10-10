@@ -3,7 +3,10 @@ package uk.kuronekoli.strategylab.market
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.transaction.annotation.Transactional
 
 @Repository
@@ -11,7 +14,10 @@ class JpaMarketDataStore(
     private val bars: DailyMarketBarRepository,
     private val sources: MarketDataSourceRepository,
     private val runs: MarketDataIngestionRunRepository,
+    private val coverage: HistoricalMarketDataCoverageRepository,
+    transactionManager: PlatformTransactionManager,
 ) : MarketDataStore {
+    private val writeTransaction = TransactionTemplate(transactionManager)
     @Transactional(readOnly = true)
     override fun findBars(symbol: String, from: LocalDate, to: LocalDate): StoredMarketBars? {
         val rows = bars.findAllBySymbolAndAdjustmentPolicyAndTradingDateBetweenOrderByTradingDateAsc(symbol, "RAW", from, to)
@@ -37,6 +43,11 @@ class JpaMarketDataStore(
 
     @Transactional(readOnly = true)
     override fun findEarliestDate(symbol: String): LocalDate? = bars.findFirstBySymbolAndAdjustmentPolicyOrderByTradingDateAsc(symbol, "RAW")?.tradingDate
+
+    @Transactional(readOnly = true)
+    override fun findHistoricalCoverage(symbol: String, from: LocalDate, to: LocalDate): List<HistoricalCoverage> =
+        coverage.findAllBySymbolAndCoveredFromLessThanEqualAndCoveredToGreaterThanEqualOrderByCoveredFromAsc(symbol, to, from)
+            .map { HistoricalCoverage(it.symbol, it.coveredFrom, it.coveredTo, it.verifiedAt) }
 
     @Transactional
     override fun saveSnapshot(snapshot: MarketDataSnapshot): IngestionResult {
@@ -74,8 +85,21 @@ class JpaMarketDataStore(
         return IngestionResult(inserted, updated, snapshot.rowsRejected, skippedSourceConflict)
     }
 
-    @Transactional
     override fun saveHistory(import: HistoricalMarketDataImport): IngestionResult {
+        var retry = 0
+        while (true) {
+            try {
+                return writeTransaction.execute { saveHistoryWithinTransaction(import) }
+                    ?: error("Historical market data transaction returned no result")
+            } catch (error: DataIntegrityViolationException) {
+                if (retry++ >= 1) throw error
+                // Another app instance may have inserted the same symbol/date after our read.
+                // A fresh transaction re-reads those rows and applies the idempotent update path.
+            }
+        }
+    }
+
+    private fun saveHistoryWithinTransaction(import: HistoricalMarketDataImport): IngestionResult {
         require(import.bars.isNotEmpty()) { "Cannot persist empty historical import" }
         require(import.bars.all { it.symbol == import.symbol && it.date in import.from..import.to }) { "Historical import contains bars outside its requested symbol/date range" }
         val existing = bars.findAllBySymbolAndAdjustmentPolicyAndTradingDateBetweenOrderByTradingDateAsc(import.symbol, "RAW", import.from, import.to).associateBy { it.tradingDate }
@@ -112,6 +136,10 @@ class JpaMarketDataStore(
             startedAt = import.fetchedAt, finishedAt = import.fetchedAt, sourceAsOf = latestDataDate,
             status = "SUCCEEDED", rowsReceived = import.bars.size + import.rowsRejected,
             rowsInserted = inserted, rowsUpdated = updated, rowsRejected = import.rowsRejected,
+        ))
+        coverage.save(HistoricalMarketDataCoverageEntity(
+            coverageId = UUID.randomUUID().toString(), symbol = import.symbol,
+            coveredFrom = import.from, coveredTo = import.to, verifiedAt = import.fetchedAt,
         ))
         return IngestionResult(inserted, updated, import.rowsRejected)
     }
