@@ -396,6 +396,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .stock-context-nav .button-quiet{color:#595d55;border:1px solid #d0cdc3;border-radius:2px}
 .stock-modes,.stock-indicators{background:#eeece4}
 .line-focus-point{fill:#a94235}.line-focus-point.active{fill:#fff;stroke:#8f3028}
+.line-focus-point.active.single{fill:#a94235;stroke:#fbfaf6;stroke-width:1.5}
 .volume-bar.up{fill:#c24639;opacity:.46}.volume-bar.down{fill:#24714f;opacity:.38}
 .chart-point-selector{accent-color:#a94235}.chart-point-selector:focus-visible{outline-color:#a94235}
 .journal-symbol-context{padding:9px 11px;border-left:2px solid #a94235;background:#f0eee7;color:#555a53;font-size:12px}

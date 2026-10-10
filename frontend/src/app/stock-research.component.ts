@@ -69,21 +69,21 @@ function apiErrorCode(value: unknown): string | undefined {
               <span>觀察 {{dateRange(quote.observedFrom, quote.observedTo)}}</span>
               <span class="period-window-status">{{periodWindowLabel(quote.periodWindowStatus)}} · 資料覆蓋未知</span>
             </div>
-            <p *ngIf="chartBars.length === 1" class="stock-single-bar-note">本站目前累積到 1 個交易日；已顯示單日 K 棒。每日資料匯入後，走勢會隨資料累積延長。</p>
+            <p *ngIf="chartBars.length === 1" class="stock-single-bar-note">本站目前只有 1 個交易日資料；{{chartMode === 'line' ? '單一價格點無法呈現走勢，切換「K 線」可查看當日開高低收。' : '這是單根 K 棒，尚不足以判斷價格趨勢。'}}每日資料累積後，才會形成連續走勢。</p>
             <div class="stock-chart-frame" *ngIf="chartBars.length > 0; else noPoints">
-              <svg class="stock-price-svg" viewBox="0 0 940 350" role="img" [attr.aria-label]="chartDescription(item.name, data)">
+              <svg class="stock-price-svg" [class.chart-single-observation]="chartBars.length === 1" viewBox="0 0 940 350" role="img" [attr.aria-label]="chartDescription(item.name, data)">
                 <g class="chart-grid"><line x1="64" y1="22" x2="920" y2="22"/><line x1="64" y1="89" x2="920" y2="89"/><line x1="64" y1="156" x2="920" y2="156"/><line x1="64" y1="224" x2="920" y2="224"/></g>
-                <g class="chart-axis-labels"><text x="3" y="27">{{priceTicks[0] | number:'1.0-0'}}</text><text x="3" y="94">{{priceTicks[1] | number:'1.0-0'}}</text><text x="3" y="161">{{priceTicks[2] | number:'1.0-0'}}</text><text x="3" y="229">{{priceTicks[3] | number:'1.0-0'}}</text><text x="64" y="344">{{chartBars[0].periodStart}}</text><text x="920" y="344" text-anchor="end">{{chartBars[chartBars.length - 1].periodEnd}}</text><text *ngIf="showVolume && hasVolume" x="64" y="244" class="volume-axis-title">成交量</text></g>
+                <g class="chart-axis-labels"><text x="3" y="27">{{priceTicks[0] | number:'1.2-2'}}</text><text x="3" y="94">{{priceTicks[1] | number:'1.2-2'}}</text><text x="3" y="161">{{priceTicks[2] | number:'1.2-2'}}</text><text x="3" y="229">{{priceTicks[3] | number:'1.2-2'}}</text><text *ngIf="chartBars.length === 1" x="492" y="344" text-anchor="middle">{{chartBars[0].observedTo || chartBars[0].periodStart}}</text><ng-container *ngIf="chartBars.length > 1"><text x="64" y="344">{{chartBars[0].periodStart}}</text><text x="920" y="344" text-anchor="end">{{chartBars[chartBars.length - 1].periodEnd}}</text></ng-container><text *ngIf="showVolume && hasVolume" x="64" y="244" class="volume-axis-title">成交量</text></g>
                 <path *ngIf="chartMode === 'line'" class="chart-area" [class.chart-area-up]="periodChange > 0" [class.chart-area-down]="periodChange < 0" [attr.d]="areaPath"/><path *ngIf="chartMode === 'line'" class="chart-line" [class.chart-line-up]="periodChange > 0" [class.chart-line-down]="periodChange < 0" [attr.d]="linePath"/>
                 <g *ngFor="let bar of chartBars; let i = index" class="chart-mark" [class.chart-mark-active]="activeIndex === i" (mouseenter)="selectBar(i)" (click)="selectBar(i)">
                   <rect class="chart-hit-area" [attr.x]="Math.max(plot.left, bar.x - hitWidth / 2)" y="22" [attr.width]="hitWidth" height="202"/>
                   <line *ngIf="chartMode === 'candles' && hasOhlc" class="candle-wick" [class.up]="bar.up" [class.down]="!bar.up" [attr.x1]="bar.x" [attr.x2]="bar.x" [attr.y1]="bar.highY" [attr.y2]="bar.lowY"/>
                   <rect *ngIf="chartMode === 'candles' && hasOhlc" class="candle-body" [class.up]="bar.up" [class.down]="!bar.up" [attr.x]="bar.x - candleWidth / 2" [attr.y]="bar.candleY" [attr.width]="candleWidth" [attr.height]="bar.candleHeight" rx=".5"/>
-                  <circle *ngIf="chartMode === 'line'" class="line-focus-point" [class.active]="activeIndex === i" [attr.cx]="bar.x" [attr.cy]="bar.closeY" [attr.r]="activeIndex === i ? 4 : 1.7"/>
+                  <circle *ngIf="chartMode === 'line'" class="line-focus-point" [class.active]="activeIndex === i" [class.single]="chartBars.length === 1" [attr.cx]="bar.x" [attr.cy]="bar.closeY" [attr.r]="chartBars.length === 1 ? 5 : activeIndex === i ? 4 : 1.7"/>
                   <rect *ngIf="showVolume && hasVolume && bar.volume !== null" class="volume-bar" [class.up]="bar.up" [class.down]="!bar.up" [attr.x]="bar.x - candleWidth / 2" [attr.y]="bar.volumeY" [attr.width]="candleWidth" [attr.height]="bar.volumeHeight"/>
                 </g>
                 <path *ngIf="showSma20" class="moving-average-line moving-average-20" [attr.d]="sma20Path"/><path *ngIf="showSma60" class="moving-average-line moving-average-60" [attr.d]="sma60Path"/>
-                <line *ngIf="activeBar" class="chart-crosshair" [attr.x1]="activeBar.x" [attr.x2]="activeBar.x" y1="18" y2="224"/>
+                <line *ngIf="activeBar && chartBars.length > 1" class="chart-crosshair" [attr.x1]="activeBar.x" [attr.x2]="activeBar.x" y1="18" y2="224"/>
                 <ng-container *ngIf="liveState === 'live' && liveQuote && liveQuote.price >= priceScaleLow && liveQuote.price <= priceScaleHigh"><line class="live-price-line" x1="64" x2="920" [attr.y1]="liveQuoteY" [attr.y2]="liveQuoteY"/><text class="live-price-tag" x="914" [attr.y]="liveQuoteY - 4" text-anchor="end">LIVE {{liveQuote.price | number:'1.2-2'}}</text></ng-container>
               </svg>
               <div *ngIf="showVolume && hasVolume" class="volume-caption"><span>所選{{intervalName}} K 成交量</span><span>{{selectedBar?.volume === null || selectedBar?.volume === undefined ? '此筆無資料' : (selectedBar.volume | number)}}</span></div>
@@ -180,7 +180,7 @@ export class StockResearchPageComponent {
 
   get hasOhlc(): boolean { return !!this.history?.bars?.length && this.history.bars.every((bar) => this.number(bar.open) !== null && this.number(bar.high) !== null && this.number(bar.low) !== null); }
   get hasVolume(): boolean { return !!this.history?.bars?.some((bar) => this.number(bar.volume) !== null); }
-  get candleWidth(): number { return Math.max(1.2, Math.min(8, (this.plot.right - this.plot.left) / Math.max(this.chartBars.length, 1) * .62)); }
+  get candleWidth(): number { return this.chartBars.length === 1 ? 24 : Math.max(1.2, Math.min(8, (this.plot.right - this.plot.left) / Math.max(this.chartBars.length, 1) * .62)); }
   get hitWidth(): number { return Math.max(2, Math.min(18, (this.plot.right - this.plot.left) / Math.max(this.chartBars.length - 1, 1))); }
   get activeBar(): ChartBar | null { return this.chartBars[this.activeIndex] ?? null; }
   get selectedBar(): ChartBar | null { return this.activeBar; }
