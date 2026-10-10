@@ -21,7 +21,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import tools.jackson.databind.json.JsonMapper
 import uk.kuronekoli.strategylab.market.DailyBar
-import uk.kuronekoli.strategylab.market.TwseMarketDataClient
+import uk.kuronekoli.strategylab.market.HistoricalMarketDataProvider
 
 /** Real local HTTP + Spring startup, with a synthetic primary market source; no live calls. */
 @SpringBootTest(
@@ -44,11 +44,11 @@ class BacktestHttpContractTest {
   class SyntheticMarket {
     @Bean
     @Primary
-    fun fixtureMarketClient(mapper: JsonMapper): TwseMarketDataClient =
-      object : TwseMarketDataClient(mapper, "https://example.invalid/STOCK_DAY") {
-        override fun load(symbol: String, first: YearMonth, last: YearMonth): List<DailyBar> =
-          (0..4).map { index -> DailyBar(LocalDate.of(2024, 1, 1).plusDays(index.toLong()), java.math.BigDecimal("100"), java.math.BigDecimal("99"), java.math.BigDecimal("101"), java.math.BigDecimal("98"), 1000L) }
-      }
+    fun fixtureMarketClient(): HistoricalMarketDataProvider = object : HistoricalMarketDataProvider {
+      override val sourceName = "synthetic contract fixture"
+      override fun load(symbol: String, first: YearMonth, last: YearMonth): List<DailyBar> =
+        (0..4).map { index -> DailyBar(LocalDate.of(2024, 1, 1).plusDays(index.toLong()), java.math.BigDecimal("100"), java.math.BigDecimal("99"), java.math.BigDecimal("101"), java.math.BigDecimal("98"), 1000L) }
+    }
   }
 
   private fun body(initial: String): String =
@@ -70,6 +70,7 @@ class BacktestHttpContractTest {
     assertEquals("2330", json.path("symbol").asText())
     assertEquals("LIMITED_RESEARCH", json.path("status").asText())
     assertEquals("BLOCKED", json.path("releaseStatus").asText())
+    assertEquals("synthetic contract fixture", json.path("dataSource").asText())
     assertEquals("NEXT_CLOSE_PROXY", json.path("metadata").path("executionModel").asText())
     assertEquals(3, json.path("results").size())
     val dca = json.path("results").get(1)

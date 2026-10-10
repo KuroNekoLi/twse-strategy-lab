@@ -12,7 +12,7 @@ import uk.kuronekoli.strategylab.api.ApiExceptionHandler.NoMarketDataException
 import uk.kuronekoli.strategylab.api.BacktestException
 import uk.kuronekoli.strategylab.api.BacktestRequest
 import uk.kuronekoli.strategylab.backtest.BacktestValidation
-import uk.kuronekoli.strategylab.market.TwseMarketDataClient
+import uk.kuronekoli.strategylab.market.HistoricalMarketDataProvider
 
 @Service
 class RobustnessService {
@@ -20,10 +20,10 @@ class RobustnessService {
         private val SYMBOL=Regex("\\d{4,6}")
         private val LIMITATIONS=listOf("LIMITED_RESEARCH：僅為明確列舉案例的歷史敏感度分析，不代表策略有效或預測未來。","LICENSING_UNVERIFIED：行情授權與衍生結果再散布範圍尚未確認；不得據此公開發布或分享。","DIVIDENDS_UNSUPPORTED：未計算股利、公司行動、滑價、最低手續費或交易日曆；成本為簡化假設。","SNAPSHOT_NOT_ARCHIVED：僅在本次請求記憶體使用行情，不持久保存行情或分析結果；未保存快照，無法保證日後重播相同資料。")
     }
-    private val marketData: TwseMarketDataClient
+    private val marketData: HistoricalMarketDataProvider
     private val clock: Clock
-    @Autowired constructor(marketData: TwseMarketDataClient): this(marketData,Clock.system(ZoneId.of("Asia/Taipei")))
-    constructor(marketData: TwseMarketDataClient, clock: Clock) { this.marketData=marketData; this.clock=clock }
+    @Autowired constructor(marketData: HistoricalMarketDataProvider): this(marketData,Clock.system(ZoneId.of("Asia/Taipei")))
+    constructor(marketData: HistoricalMarketDataProvider, clock: Clock) { this.marketData=marketData; this.clock=clock }
     fun run(request: RobustnessRequest?): RobustnessResponse {
         if(request==null) throw BacktestException.input("請提供穩健性分析基準設定。")
         if(!request.baseId.matches(Regex("[A-Za-z0-9_-]{1,40}"))) throw BacktestException.input("基準識別碼需為 1 至 40 個英數字、底線或連字號。")
@@ -36,11 +36,13 @@ class RobustnessService {
         if(ChronoUnit.MONTHS.between(first,last)+1>204) throw BacktestException.input("單次穩健性分析最多 17 年，請縮短期間。")
         val symbol=base.symbol.trim(); val appliedTax=if(base.marketTaxDefaults()) BigDecimal(if(symbol.matches(Regex("00\\d{2,4}"))) "0.001" else "0.003") else base.sellTaxRate
         RobustnessMatrix.validateVariants(base,appliedTax,request.variants)
-        val loaded=marketData.load(symbol,first,last); BacktestValidation.bars(loaded)
+        val loaded=marketData.load(symbol,first,last)
+        if(loaded.isEmpty()) throw NoMarketDataException("$symbol 在這段期間沒有可用日行情；上市、停牌與日曆狀態未知。")
+        BacktestValidation.bars(loaded)
         val bars=loaded.filter{!it.date.isBefore(from) && !it.date.isAfter(effectiveTo)}
         if(bars.isEmpty()) throw NoMarketDataException("$symbol 在這段期間沒有可用日行情；上市、停牌與日曆狀態未知。")
         val result=RobustnessMatrix.run(base,symbol,bars,appliedTax,request.variants)
-        return RobustnessResponse(request.baseId,symbol,from.toString(),requestedTo.toString(),bars.first().date.toString(),bars.last().date.toString(),bars.size,"LIMITED_RESEARCH",LIMITATIONS,result.cases,result.aggregate)
+        return RobustnessResponse(request.baseId,symbol,from.toString(),requestedTo.toString(),bars.first().date.toString(),bars.last().date.toString(),bars.size,"LIMITED_RESEARCH",LIMITATIONS,result.cases,result.aggregate,marketData.sourceName)
     }
     private fun parseDate(value: String): LocalDate = try { LocalDate.parse(value) } catch (_: Exception) { throw BacktestException.input("回測日期格式不正確；請使用 YYYY-MM-DD。") }
 }

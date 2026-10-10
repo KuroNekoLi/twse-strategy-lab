@@ -1,0 +1,31 @@
+{
+  "evidenceLabel": "BROWSER_RUNTIME",
+  "target": "http://127.0.0.1:8877/#/explore",
+  "build": "frontend/dist/pages/browser/main-PBG6UERW.js",
+  "buildCommand": "cd frontend && npm run build:pages",
+  "browser": {
+    "name": "Google Chrome",
+    "version": "154.0.8037.98",
+    "providerIdentity": "Chrome extension browser id 1",
+    "sessionName": "🧪 Market data QA"
+  },
+  "os": "macOS 26.6",
+  "viewport": { "width": 1440, "height": 1000, "kind": "desktop browser viewport override" },
+  "mobileViewport": "NOT_RUN",
+  "deviceOrSimulator": "None; this was browser-only testing, not native device or simulator testing.",
+  "apiFixture": {
+    "server": "local Node.js fixture server",
+    "command": "node docs/quality/evidence/market-data-error-guidance/run.cjs",
+    "baseUrl": "http://127.0.0.1:8877",
+    "liveMarketDataEnabled": false,
+    "data": "Synthetic fixture only; no market data.",
+    "observedApiRequests": ["GET /api/v1/instruments?query=005&limit=20"],
+    "observedExternalRequests": [],
+    "networkCaptureLimitation": "Fixture-server log observed zero external API requests; browser-wide DevTools network capture was not completed, so this is not a complete external-request assertion."
+  },
+  "artifacts": {
+    "screenshot": "explore-desktop.jpg",
+    "fixtureRequestTrace": "fixture-server-requests.json",
+    "runner": "run.cjs"
+  }
+}

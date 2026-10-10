@@ -67,7 +67,7 @@ export class AppComponent {
           <p class="home-search-popover-title" *ngIf="symbol.trim() && !searchBusy && !searchError && searchResults.length === 0">沒有符合的標的</p>
           <ul id="home-search-listbox" role="listbox" [attr.aria-label]="symbol.trim() ? '標的搜尋結果' : '常用研究範例'">
             <ng-container *ngIf="!symbol.trim(); else matchingInstruments"><li *ngFor="let item of quickSearches; let i = index"><button type="button" role="option" [id]="'home-search-option-' + i" [attr.aria-selected]="i === activeIndex" (mouseenter)="activeIndex = i" (click)="openQuickSearch(item)"><span class="home-search-code">{{item.code}}</span><span class="home-search-name">{{item.label}}</span><span class="home-search-kind">範例</span></button></li></ng-container>
-            <ng-template #matchingInstruments><li *ngFor="let item of searchResults; let i = index"><button type="button" role="option" [id]="'home-search-option-' + i" [attr.aria-selected]="i === activeIndex" (mouseenter)="activeIndex = i" (click)="openInstrument(item)"><span class="home-search-code"><ng-container *ngFor="let part of highlight(item.code)"><span [class.search-match]="part.match">{{part.text}}</span></ng-container></span><span class="home-search-name"><ng-container *ngFor="let part of highlight(item.name)"><span [class.search-match]="part.match">{{part.text}}</span></ng-container></span><span class="home-search-kind" [class.unsupported]="!item.backtestSupported">{{item.backtestSupported ? '可研究' : '尚未支援'}}</span></button></li></ng-template>
+            <ng-template #matchingInstruments><li *ngFor="let item of searchResults; let i = index"><button type="button" role="option" [id]="'home-search-option-' + i" [attr.aria-selected]="i === activeIndex" (mouseenter)="activeIndex = i" (click)="openInstrument(item)"><span class="home-search-code"><ng-container *ngFor="let part of highlight(item.code)"><span [class.search-match]="part.match">{{part.text}}</span></ng-container></span><span class="home-search-name"><ng-container *ngFor="let part of highlight(item.name)"><span [class.search-match]="part.match">{{part.text}}</span></ng-container></span><span class="home-search-kind" [class.unsupported]="item.backtestSupported !== true">{{item.backtestSupported === true ? '目錄標示支援；期間資料須確認' : item.backtestSupported === false ? '目錄標示不支援' : '目錄未提供支援標記'}}</span></button></li></ng-template>
           </ul>
           <a *ngIf="symbol.trim()" class="home-search-all" [routerLink]="['/explore']" [queryParams]="{q:symbol.trim()}" (click)="closeSearch()">查看「{{symbol.trim()}}」搜尋結果 <span aria-hidden="true">→</span></a>
         </div>
@@ -192,7 +192,7 @@ export class HomePageComponent {
 
   openInstrument(item: HomeInstrument): void {
     this.closeSearch();
-    if (item.backtestSupported && /^\d{4,6}$/.test(item.code)) void this.router.navigate(['/stocks', item.code]);
+    if (item.backtestSupported === true && /^\d{4,6}$/.test(item.code)) void this.router.navigate(['/stocks', item.code]);
     else void this.router.navigate(['/explore'], { queryParams: { q: item.code } });
   }
 
@@ -221,13 +221,18 @@ export class HomePageComponent {
   }
 }
 
-type HomeInstrument = { code: string; name: string; kind: string; market: string; backtestSupported: boolean };
+type HomeInstrument = { code: string; name: string; kind: string; market: string; backtestSupported?: boolean };
+type InstrumentCatalogResponse = {
+  items: Array<HomeInstrument & { asOf?: string }>;
+  totalMatches: number;
+  sources: Array<{ provider: string; licenseUrl: string }>;
+};
 
 @Component({ selector: 'app-explore-page', standalone: true, imports: [CommonModule, FormsModule, RouterLink], template: `
-  <section class="page-wrap subpage"><p class="eyebrow">EXPLORE · 標的目錄</p><h1 tabindex="-1">先找到值得研究的標的。</h1><p class="subpage-lede">搜尋上市、上櫃公司與上市基金目錄，了解目前能否帶入回測。出現在目錄中不代表有可用行情。</p>
+  <section class="page-wrap subpage"><p class="eyebrow">EXPLORE · 標的目錄</p><h1 tabindex="-1">先找到值得研究的標的。</h1><p class="subpage-lede">搜尋上市、上櫃公司與上市基金目錄，查看目錄是否標示回測支援；這不代表指定日期範圍一定有行情。</p>
     <div class="explore-search"><label for="asset-search">搜尋代碼或名稱</label><div class="search-control"><span aria-hidden="true">⌕</span><input id="asset-search" type="search" [(ngModel)]="query" (ngModelChange)="search($event)" (keydown.enter)="$event.preventDefault()" placeholder="例如 2330、005 或 台" autocomplete="off"><span *ngIf="busy" role="status">搜尋中…</span></div><p class="form-hint">輸入 1 個字元即可搜尋。目錄只提供標的基本資訊。</p>
     <p *ngIf="error" class="notice-error" role="alert">{{error}}</p><p *ngIf="message" class="notice" role="status">{{message}}</p>
-    <div class="explore-results" *ngIf="results"><p class="result-count" role="status" aria-live="polite">找到 {{results.totalMatches}} 筆 · 顯示 {{results.items.length}} 筆</p><article class="asset-row" *ngFor="let item of results.items"><div class="asset-code">{{item.code}}</div><div class="asset-info"><strong>{{item.name}}</strong><span>{{marketName(item.market)}} · {{item.kind === 'STOCK' ? '公司' : item.kind === 'FUND' ? '基金' : '目錄項目'}} · 出表 {{item.asOf || '未提供'}}</span></div><span class="asset-availability" [class.unavailable]="!compatible(item)">{{compatible(item) ? '可帶入回測' : '目前回測行情來源尚未支援'}}</span><a *ngIf="compatible(item)" [routerLink]="'/stocks/' + item.code" class="small-action">個股研究 →</a><a *ngIf="compatible(item)" [routerLink]="'/backtest'" [queryParams]="{symbol:item.code}" class="small-action">帶入工作台 →</a><span *ngIf="!compatible(item)" class="small-action muted">尚未支援</span></article><div class="source-note"><strong>目錄資料與行情分開</strong><p>商品類型與代碼取自公開目錄；實際行情期間、公司行動與完整授權狀態，須在方法說明及回測結果中另行確認。</p><a *ngFor="let source of results.sources" [href]="source.licenseUrl" target="_blank" rel="noopener noreferrer">{{source.provider}} 授權 ↗</a></div></div>
+    <div class="explore-results" *ngIf="results"><p class="result-count" role="status" aria-live="polite">找到 {{results.totalMatches}} 筆 · 顯示 {{results.items.length}} 筆</p><article class="asset-row" *ngFor="let item of results.items"><div class="asset-code">{{item.code}}</div><div class="asset-info"><strong>{{item.name}}</strong><span>{{marketName(item.market)}} · {{item.kind === 'STOCK' ? '公司' : item.kind === 'FUND' ? '基金' : '目錄項目'}} · 出表 {{item.asOf || '未提供'}}</span></div><span class="asset-availability" [class.unavailable]="!compatible(item)">{{supportLabel(item)}}</span><a *ngIf="compatible(item)" [routerLink]="'/stocks/' + item.code" class="small-action">個股研究 →</a><a *ngIf="compatible(item)" [routerLink]="'/backtest'" [queryParams]="{symbol:item.code}" class="small-action">帶入工作台 →</a><span *ngIf="!compatible(item)" class="small-action muted">尚未標示支援</span></article><div class="source-note"><strong>目錄資料與行情分開</strong><p>目錄的回測支援標記僅表示來源能力，不保證指定期間有資料。行情期間、完整性、公司行動與授權狀態，須在回測及方法說明中另行確認。</p><a *ngFor="let source of results.sources" [href]="source.licenseUrl" target="_blank" rel="noopener noreferrer">{{source.provider}} 授權 ↗</a></div></div>
     <div class="explore-empty" *ngIf="!results && !busy"><span aria-hidden="true">⌕</span><strong>從代碼或名稱開始搜尋</strong><p>也可以先從常見研究範本開始。</p><a routerLink="/backtest" [queryParams]="{symbol:'0050',strategy:'ma-crossover'}">前往 0050 均線範本 →</a></div>
   </div>
   <aside class="page-side-note"><strong>目前目錄範圍</strong><p>目前搜尋資料來自 TWSE 上市公司、上市基金與 TPEx 上櫃公司公開目錄。搜尋結果不等同所有台灣金融商品，也不保證行情端點支援。</p><a routerLink="/methods">查看資料限制 →</a></aside>
@@ -236,7 +241,7 @@ type HomeInstrument = { code: string; name: string; kind: string; market: string
 export class ExplorePageComponent {
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
-  query = ''; results: any = null; busy = false; error = ''; message = ''; private timer?: ReturnType<typeof setTimeout>; private requestNo = 0;
+  query = ''; results: InstrumentCatalogResponse | null = null; busy = false; error = ''; message = ''; private timer?: ReturnType<typeof setTimeout>; private requestNo = 0;
   private readonly changeDetector = inject(ChangeDetectorRef);
   constructor() {
     const initialQuery = this.route.snapshot.queryParamMap.get('q') ?? '';
@@ -250,10 +255,14 @@ export class ExplorePageComponent {
   }
   private async load(query: string, id: number): Promise<void> {
     if (!apiBaseUrl) { if (id === this.requestNo) { this.busy = false; this.error = '標的目錄 API 尚未設定；請使用已知代碼或研究範本。'; this.changeDetector.markForCheck(); } return; }
-    try { const response = await firstValueFrom(this.http.get<any>(`${apiBaseUrl}/api/v1/instruments`, {params:{query,limit:'20'}})); if (id === this.requestNo) { this.results = response; this.busy = false; this.changeDetector.markForCheck(); } }
+    try { const response = await firstValueFrom(this.http.get<InstrumentCatalogResponse>(`${apiBaseUrl}/api/v1/instruments`, {params:{query,limit:'20'}})); if (id === this.requestNo) { this.results = response; this.busy = false; this.changeDetector.markForCheck(); } }
     catch (error) { if (id === this.requestNo) { this.busy = false; this.error = error instanceof HttpErrorResponse && error.status === 0 ? '目前無法連線至標的目錄，請稍後重試。' : '標的目錄查詢失敗，請稍後重試。'; this.changeDetector.markForCheck(); } }
   }
-  compatible(item: { code: string; backtestSupported?: boolean }): boolean { return item.backtestSupported !== false && /^\d{4,6}$/.test(item.code); }
+  compatible(item: { code: string; backtestSupported?: boolean }): boolean { return item.backtestSupported === true && /^\d{4,6}$/.test(item.code); }
+  supportLabel(item: { code: string; backtestSupported?: boolean }): string {
+    if (item.backtestSupported !== true) return item.backtestSupported === false ? '目錄標示尚未支援' : '目錄未標示回測支援';
+    return '目錄標示回測支援；指定期間須確認';
+  }
   marketName(market?: string): string { return market === 'TPEX' ? '上櫃' : market === 'TWSE' ? '上市' : '市場未提供'; }
 }
 

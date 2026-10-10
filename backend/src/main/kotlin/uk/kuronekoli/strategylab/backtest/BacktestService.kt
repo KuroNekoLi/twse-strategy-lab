@@ -17,15 +17,15 @@ import uk.kuronekoli.strategylab.api.BacktestRequest
 import uk.kuronekoli.strategylab.api.BacktestResponse
 import uk.kuronekoli.strategylab.api.BacktestResponse.*
 import uk.kuronekoli.strategylab.market.DailyBar
-import uk.kuronekoli.strategylab.market.TwseMarketDataClient
+import uk.kuronekoli.strategylab.market.HistoricalMarketDataProvider
 
 @Service
 class BacktestService(
-  private val marketData: TwseMarketDataClient,
+  private val marketData: HistoricalMarketDataProvider,
   private val clock: Clock
 ) {
   @Autowired
-  constructor(marketData: TwseMarketDataClient) : this(marketData, Clock.system(ZoneId.of("Asia/Taipei")))
+  constructor(marketData: HistoricalMarketDataProvider) : this(marketData, Clock.system(ZoneId.of("Asia/Taipei")))
 
   fun run(request: BacktestRequest?): BacktestResponse {
     BacktestValidation.parameters(request)
@@ -44,6 +44,7 @@ class BacktestService(
       val tax = if (request.marketTaxDefaults()) BigDecimal(if (symbol.matches(Regex("00\\d{2,4}"))) "0.001" else "0.003") else request.sellTaxRate!!
       BacktestValidation.costs(request.commissionRate!!, tax); taxes[symbol] = tax
       val loaded = marketData.load(symbol, firstMonth, lastMonth)
+      if (loaded.isEmpty()) throw NoMarketDataException("$symbol 在這段期間沒有可用日行情；上市、停牌與日曆狀態未知。")
       BacktestValidation.bars(loaded)
       val bars = loaded.filter { !it.date.isBefore(from) && !it.date.isAfter(effectiveTo) }
       if (bars.isEmpty()) throw NoMarketDataException("$symbol 在這段期間沒有可用日行情；上市、停牌與日曆狀態未知。")
@@ -72,7 +73,7 @@ class BacktestService(
       AccountingPortfolio.cents(request.initialCapital!!), AccountingPortfolio.cents(request.monthlyContribution!!), request.commissionRate!!, request.sellTaxRate!!, request.marketTaxDefaults(), java.util.Collections.unmodifiableMap(LinkedHashMap(taxes)))
     val metadata = BacktestFingerprint.metadata(config, datasets)
     val primary = assets.first()
-    return BacktestResponse(symbols.first(), symbols.toList(), primary.from, primary.to, primary.tradingDays, assets.toList(), "臺灣證券交易所 STOCK_DAY", assumptions, results.toList(),
+    return BacktestResponse(symbols.first(), symbols.toList(), primary.from, primary.to, primary.tradingDays, assets.toList(), marketData.sourceName, assumptions, results.toList(),
       request.from, request.to, "LIMITED_RESEARCH", "BLOCKED", limitations.toList(), metadata)
   }
 

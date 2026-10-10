@@ -35,39 +35,45 @@ class TwseMarketDataClient(private val mapper: JsonMapper, @Value("\${app.twse.b
             if (!groupStart.plusMonths(3).isAfter(last)) try { Thread.sleep(120) } catch (e: InterruptedException) { Thread.currentThread().interrupt(); throw IllegalStateException("行情請求已中斷。", e) }
             groupStart = groupStart.plusMonths(3)
         }
-        BacktestValidation.bars(bars)
+        if (bars.isNotEmpty()) BacktestValidation.bars(bars)
         return bars.toList()
     }
 
     private fun loadMonth(symbol: String, month: YearMonth): List<DailyBar> {
+        return loadMonth(symbol, month) { request -> http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)) }
+    }
+
+    internal fun loadMonth(symbol: String, month: YearMonth, send: (HttpRequest) -> HttpResponse<String>): List<DailyBar> {
         val query = "?date=${month.atDay(1).toString().replace("-", "")}&stockNo=${URLEncoder.encode(symbol, StandardCharsets.UTF_8)}&response=json"
         // URI.resolve("?query") drops the endpoint's last path segment; append the query to preserve STOCK_DAY.
         val uri = URI.create(endpoint.toString() + query)
         try {
-            val response = fetch(uri)
-            if (response.statusCode() !in 200..299) throw BacktestException.upstream("$symbol／$month：證交所行情服务回應 ${response.statusCode()}。")
+            val response = fetch(uri, send)
+            if (response.statusCode() !in 200..299) throw BacktestException.upstream("無法讀取歷史行情資料，請稍後再試。")
             val root = try { mapper.readTree(response.body()) } catch (e: Exception) {
-                log.warn("TWSE response was not valid JSON: symbol={}, month={}, status={}, contentType={}, server={}, upstreamRequestId={}, bodyLength={}, firstCharacter={}", symbol, month, response.statusCode(), response.headers().firstValue("content-type").orElse("missing"), response.headers().firstValue("server").orElse("missing"), response.headers().firstValue("x-request-id").orElse("missing"), response.body().length, if (response.body().isEmpty()) "empty" else response.body().substring(0, 1), e)
-                throw e
+                log.warn("TWSE response was not valid JSON: symbol={}, month={}, status={}, bodyLength={}", symbol, month, response.statusCode(), response.body().length)
+                throw BacktestException.upstream("無法讀取歷史行情資料，請稍後再試。")
             }
             return parseMonthResponse(symbol, month, root)
         } catch (e: BacktestException) { throw e }
         catch (e: IllegalStateException) {
-            log.warn("TWSE data request failed: symbol={}, month={}, exceptionType={}, reason={}", symbol, month, e.javaClass.name, e.message); throw e
+            log.warn("TWSE data request failed: symbol={}, month={}, exceptionType={}", symbol, month, e.javaClass.name)
+            throw BacktestException.upstream("無法讀取歷史行情資料，請稍後再試。")
         } catch (e: Exception) {
             val root = rootCause(e)
-            log.warn("TWSE data request failed: symbol={}, month={}, exceptionType={}, rootCauseType={}, rootCauseReason={}", symbol, month, e.javaClass.name, root.javaClass.name, root.message, e)
+            log.warn("TWSE data request failed: symbol={}, month={}, exceptionType={}, rootCauseType={}", symbol, month, e.javaClass.name, root.javaClass.name)
             if (e is InterruptedException) Thread.currentThread().interrupt()
-            throw BacktestException.upstream("$symbol／$month：無法讀取證交所行情，請稍後再試。")
+            throw BacktestException.upstream("無法讀取歷史行情資料，請稍後再試。")
         }
     }
 
     /** Strict package-visible parser permits offline synthetic provider-shape tests. */
     internal fun parseMonthResponse(symbol: String, month: YearMonth, root: JsonNode?): List<DailyBar> {
         val context = "$symbol／$month："
-        if (root == null || !root.isObject || !root.path("stat").isTextual || root.path("stat").asText() != "OK") throw BacktestException("UPSTREAM_MONTH_STATUS_UNKNOWN", "${context}行情狀態非 OK；上市、停牌及缺漏原因未知，已停止計算。", 502)
+        if (root == null || !root.isObject || !root.path("stat").isTextual || root.path("stat").asText() != "OK") throw BacktestException.upstream("${context}無法取得有效行情資料；上市、停牌與缺漏原因未知。")
         val data = root.path("data")
-        if (!data.isArray || data.isEmpty) throw BacktestException("UPSTREAM_EMPTY_MONTH", "${context}月份資料為空或格式不正確，已停止計算。", 502)
+        if (!data.isArray) throw BacktestException.upstream("${context}無法取得有效行情資料；上市、停牌與缺漏原因未知。")
+        if (data.isEmpty) throw BacktestException.upstream("${context}無法取得有效行情資料；上市、停牌與缺漏原因未知。")
         if (data.size() > 31) throw BacktestException.data("${context}月份行情筆數超出上限。")
         val rows = mutableListOf<DailyBar>()
         for (row in data) try {
@@ -129,14 +135,14 @@ class TwseMarketDataClient(private val mapper: JsonMapper, @Value("\${app.twse.b
                     current = fallback
                     return@repeat
                 }
-                throw IllegalStateException("證交所回應轉址但未提供目的位址（status=${result.statusCode()}, server=${result.headers().firstValue("server").orElse("missing")}, requestId=${result.headers().firstValue("x-request-id").orElse("missing")}, contentType=${result.headers().firstValue("content-type").orElse("missing")}, bodyLength=${result.body().length}）。")
+                throw BacktestException.upstream("無法讀取歷史行情資料，請稍後再試。")
             }
             val next = current.resolve(locationHeader.get())
             val host = next.host?.lowercase() ?: ""
-            if (!next.scheme.equals("https", true) || !(host == "twse.com.tw" || host.endsWith(".twse.com.tw"))) throw IllegalStateException("證交所行情服務導向非證交所網址，已停止請求。")
+            if (!next.scheme.equals("https", true) || !(host == "twse.com.tw" || host.endsWith(".twse.com.tw"))) throw BacktestException.upstream("無法讀取歷史行情資料，請稍後再試。")
             current = next
         }
-        throw IllegalStateException("證交所行情服務轉址次數過多，請稍後再試。")
+        throw BacktestException.upstream("無法讀取歷史行情資料，請稍後再試。")
     }
 
     internal fun missingLocationFallback(uri: URI): URI? {

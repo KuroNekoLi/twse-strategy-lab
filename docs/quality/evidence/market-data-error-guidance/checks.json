@@ -1,0 +1,59 @@
+{
+  "task": "Market-data availability and error guidance browser QA",
+  "result": "PARTIAL",
+  "checks": [
+    {
+      "id": "explore-catalog-support-copy-and-links",
+      "status": "PASS",
+      "actions": [
+        "Opened http://127.0.0.1:8877/#/explore in Chrome.",
+        "Entered 005 in the visible Explore search control.",
+        "Observed the local synthetic catalog response in the rendered page."
+      ],
+      "observed": {
+        "supportedTrue": "0050 showed copy that the directory marks source support while requiring period availability confirmation; both individual-research and workbench links were present.",
+        "supportOmitted": "0051 showed '目錄未標示回測支援' and no individual-research or workbench links.",
+        "supportedFalse": "0052 showed '目錄標示尚未支援' and no individual-research or workbench links.",
+        "rangeCaveat": "Page copy states directory support does not guarantee data in the selected date range."
+      },
+      "evidence": "explore-desktop.jpg"
+    },
+    {
+      "id": "workbench-catalog-support-copy",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "backtest-stable-error-codes-and-role-alert",
+      "status": "NOT_RUN",
+      "cases": ["NO_MARKET_DATA", "UPSTREAM_DATA_UNAVAILABLE", "DATA_INTEGRITY_FAILED", "INVALID_INPUT"]
+    },
+    {
+      "id": "backtest-network-offline-message",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "backtest-unknown-server-body-not-rendered",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "robustness-dataSource-visible-when-present",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "robustness-error-hides-arbitrary-body-and-role-alert",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "browser-wide-no-external-requests-assertion",
+      "status": "PARTIAL",
+      "observed": "Local fixture server recorded only the Explore catalog request and no external request; browser-wide DevTools network capture was not completed."
+    },
+    {
+      "id": "mobile-width-browser-viewport",
+      "status": "NOT_RUN"
+    }
+  ],
+  "scopeNote": "This browser QA run ended after the Explore criterion was verified; remaining flows were not executed.",
+  "noLiveMarketData": true,
+  "noNativeSimulatorClaim": true
+}

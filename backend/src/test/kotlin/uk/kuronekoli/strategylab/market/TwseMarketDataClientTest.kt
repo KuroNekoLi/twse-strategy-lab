@@ -35,10 +35,15 @@ class TwseMarketDataClientTest {
         assertEquals("2024-01-02", bars[0].date.toString()); assertEquals(0, BigDecimal("1000.50").compareTo(bars[0].close)); assertEquals(0, BigDecimal("1000.50").compareTo(bars[0].open)); assertEquals(1234L, bars[0].volume); assertTrue(bars[0].hasOhlcv); assertEquals(2, bars.size)
     }
     @Test fun emptyMissingAndNonOkMonthlyResponsesNeverBecomeSilentEmptySuccess() {
-        listOf("{}", "null", "[]", "{\"stat\":\"查無資料\"}", "{\"stat\":\"OK\"}", "{\"stat\":\"OK\",\"data\":[]}", "{\"stat\":\"OK\",\"data\":{}}").forEach { response ->
+        listOf("{}", "null", "[]", "{\"stat\":\"查無資料\"}", "{\"stat\":\"OK\"}", "{\"stat\":\"OK\",\"data\":{}}").forEach { response ->
             val error = assertThrows(BacktestException::class.java) { client.parseMonthResponse("2330", month, mapper.readTree(response)) }
-            assertTrue(error.code.startsWith("UPSTREAM_")); assertEquals(502, error.status); assertTrue(error.message!!.contains("2330／2024-01"))
+            assertEquals("UPSTREAM_DATA_UNAVAILABLE", error.code); assertEquals(502, error.status); assertTrue(error.message!!.contains("2330／2024-01"))
         }
+        val emptyMonth = assertThrows(BacktestException::class.java) {
+            client.parseMonthResponse("2330", month, mapper.readTree("{\"stat\":\"OK\",\"data\":[]}"))
+        }
+        assertEquals("UPSTREAM_DATA_UNAVAILABLE", emptyMonth.code)
+        assertEquals(502, emptyMonth.status)
     }
     @Test fun malformedRowsIncludingUnknownSuspensionPriceStopTheWholeMonth() {
         listOf("[]", row("bad", "100"), row("113/02/01", "100"), row("113/01/32", "100"), row("113/01/03", "--"), row("113/01/03", "0"), row("113/01/03", "NaN"), row("113/01/03", "10,00"), "[\"113/01/03\",\"-1\",\"0\",\"100\",\"100\",\"100\",\"100\",\"0\",\"1\"]").forEach { bad ->
@@ -80,9 +85,10 @@ class TwseMarketDataClientTest {
     @Test fun fetchStopsAfterBoundedRetriesWhenFallbackAlsoReturnsLocationless307() {
         val original = URI.create("https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY?date=20230701&stockNo=0050&response=json")
         val requests = mutableListOf<URI>()
-        assertThrows(IllegalStateException::class.java) {
+        val error = assertThrows(BacktestException::class.java) {
             client.fetch(original) { request -> requests += request.uri(); response(request, 307) }
         }
+        assertEquals("UPSTREAM_DATA_UNAVAILABLE", error.code)
         assertEquals(6, requests.size)
         assertTrue(requests.take(3).all { it == original })
         assertTrue(requests.drop(3).all { it == client.missingLocationFallback(original) })
@@ -93,5 +99,44 @@ class TwseMarketDataClientTest {
         val result = client.fetch(original) { request -> requests += request.uri(); response(request, 503) }
         assertEquals(503, result.statusCode())
         assertEquals(listOf(original), requests)
+    }
+
+    @Test fun fetchRejectsExternalRedirectWithStableSanitizedUpstreamError() {
+        val original = URI.create("https://www.twse.com.tw/exchangeReport/STOCK_DAY?date=20230701&stockNo=0050&response=json")
+        val error = assertThrows(BacktestException::class.java) {
+            client.fetch(original) { request -> responseWithLocation(request, 302, "https://attacker.invalid/secret?token=private") }
+        }
+        assertEquals("UPSTREAM_DATA_UNAVAILABLE", error.code)
+        assertEquals(502, error.status)
+        assertFalse(error.message.orEmpty().contains("attacker"))
+        assertFalse(error.message.orEmpty().contains("private"))
+    }
+
+    @Test fun protocolAndTransportFailuresBecomeSanitized502Errors() {
+        val protocolError = assertThrows(BacktestException::class.java) {
+            client.loadMonth("2330", month) { request -> response(request, 200, "<html>secret-token request-id-123</html>") }
+        }
+        assertEquals("UPSTREAM_DATA_UNAVAILABLE", protocolError.code)
+        assertEquals(502, protocolError.status)
+        assertFalse(protocolError.message.orEmpty().contains("secret-token"))
+        assertFalse(protocolError.message.orEmpty().contains("request-id-123"))
+
+        val transportError = assertThrows(BacktestException::class.java) {
+            client.loadMonth("2330", month) { throw java.io.IOException("private host credential") }
+        }
+        assertEquals("UPSTREAM_DATA_UNAVAILABLE", transportError.code)
+        assertEquals(502, transportError.status)
+        assertFalse(transportError.message.orEmpty().contains("private host credential"))
+    }
+
+    private fun responseWithLocation(request: HttpRequest, status: Int, location: String): HttpResponse<String> = object : HttpResponse<String> {
+        override fun statusCode() = status
+        override fun request() = request
+        override fun previousResponse(): Optional<HttpResponse<String>> = Optional.empty()
+        override fun headers() = HttpHeaders.of(mapOf("location" to listOf(location), "x-request-id" to listOf("private-id"), "content-type" to listOf("text/html"))) { _, _ -> true }
+        override fun body() = "private upstream html"
+        override fun sslSession(): Optional<SSLSession> = Optional.empty()
+        override fun uri() = request.uri()
+        override fun version() = HttpClient.Version.HTTP_1_1
     }
 }

@@ -55,8 +55,10 @@
                   [attr.aria-label]="canAddCatalogItem(item) ? '加入 ' + item.code + ' ' + item.name : item.code + ' 目前無法加入回測清單'">
                   {{ !isCompatibleCatalogCode(item.code) ? '不支援' : symbols.includes(item.code) ? '已加入' : symbols.length >= 3 ? '已達上限' : '加入' }}
                 </button>
-                <small *ngIf="item.backtestSupported === false" class="catalog-item-limit">已可搜尋；目前回測行情來源尚未支援此市場。</small>
-                <small *ngIf="item.backtestSupported !== false && !isCompatibleCatalogCode(item.code)" class="catalog-item-limit">代碼格式不相容：目前行情與回測只接受 4 至 6 位數字代碼。</small>
+                <small *ngIf="item.backtestSupported === true" class="catalog-item-limit">目錄標示回測來源支援；不保證所選期間有行情，執行時仍會檢查資料。</small>
+                <small *ngIf="item.backtestSupported === false" class="catalog-item-limit">目錄標示目前回測行情來源不支援此項目。</small>
+                <small *ngIf="item.backtestSupported === undefined" class="catalog-item-limit">目錄未提供回測支援標記，目前無法確認是否支援。</small>
+                <small *ngIf="item.backtestSupported === true && !isCompatibleCatalogCode(item.code)" class="catalog-item-limit">代碼格式不相容：目前行情與回測只接受 4 至 6 位數字代碼。</small>
               </li>
             </ul>
             <p class="catalog-count">最多顯示 {{ catalog.items.length }} / {{ catalog.totalMatches }} 筆符合項目。</p>

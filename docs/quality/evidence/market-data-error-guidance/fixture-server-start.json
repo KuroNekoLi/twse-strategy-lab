@@ -1,0 +1,7 @@
+{
+  "startedAt": "2026-10-10T01:20:06.768Z",
+  "port": 8877,
+  "root": "/Users/linli/dev_spring-boot/twse-strategy-lab/frontend/dist/pages/browser",
+  "liveMarketDataEnabled": false,
+  "fixtureOnly": true
+}

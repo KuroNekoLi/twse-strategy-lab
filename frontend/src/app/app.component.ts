@@ -103,6 +103,30 @@ type CatalogResponse = {
   sources: CatalogSource[]; limitations: string[];
 };
 
+function readApiErrorCode(value: unknown): string | undefined {
+  if (typeof value !== 'object' || value === null || !('code' in value)) return undefined;
+  const code = value.code;
+  return typeof code === 'string' ? code : undefined;
+}
+
+function backtestErrorMessage(error: unknown): string {
+  if (!(error instanceof HttpErrorResponse)) return '回測暫時無法完成，請稍後再試。';
+  if (error.status === 0) return '目前無法連線至回測服務。請確認網路連線與後端服務狀態，再重試。';
+  switch (readApiErrorCode(error.error)) {
+    case 'NO_MARKET_DATA':
+      return '所選標的在指定日期範圍內沒有可用行情。請調整回測期間或選擇其他標的。';
+    case 'UPSTREAM_DATA_UNAVAILABLE':
+    case 'UPSTREAM_FAILURE':
+      return '行情來源目前無法提供資料。請稍後重試；若持續發生，請查看資料與方法說明。';
+    case 'DATA_INTEGRITY_FAILED':
+      return '取得的行情未通過資料完整性檢查，因此未執行回測。請稍後重試或改用其他期間。';
+    case 'INVALID_INPUT':
+      return '回測條件不符合格式或範圍要求。請檢查標的、日期與策略參數。';
+    default:
+      return '回測暫時無法完成，請稍後再試。';
+  }
+}
+
 const savedDraftKey = 'twse-strategy-lab.config-drafts';
 const strategyIds: StrategyId[] = ['ma-crossover', 'rsi-reversion', 'bollinger-reversion', 'breakout', 'drawdown-entry'];
 
@@ -610,7 +634,7 @@ export class BacktestWorkspaceComponent {
   }
 
   canAddCatalogItem(item: CatalogItem): boolean {
-    return item.backtestSupported !== false && this.isCompatibleCatalogCode(item.code) && !this.symbols.includes(item.code) && this.symbols.length < 3;
+    return item.backtestSupported === true && this.isCompatibleCatalogCode(item.code) && !this.symbols.includes(item.code) && this.symbols.length < 3;
   }
 
   isCompatibleCatalogCode(code: string): boolean {
@@ -618,8 +642,8 @@ export class BacktestWorkspaceComponent {
   }
 
   addCatalogItem(item: CatalogItem): void {
-    if (item.backtestSupported === false) {
-      this.catalogMessage = `${item.code} ${item.name} 已收錄於 ${item.market === 'TPEX' ? '上櫃' : '此市場'}名錄，但目前回測行情來源尚未支援。`;
+    if (item.backtestSupported !== true) {
+      this.catalogMessage = `${item.code} ${item.name} 已收錄於標的目錄，但目錄未標示回測行情來源支援；是否有指定期間的資料仍須另行確認。`;
       return;
     }
     if (!/^\d{4,6}$/.test(item.code)) {
@@ -684,12 +708,7 @@ export class BacktestWorkspaceComponent {
     try {
       this.response = await firstValueFrom(this.http.post<BacktestResponse>(`${this.apiBaseUrl}/api/v1/backtests`, payload));
     } catch (error: unknown) {
-      if (error instanceof HttpErrorResponse) {
-        const message = (error.error as { error?: string } | null)?.error;
-        this.error = message || (error.status === 0 ? '無法連線到回測服務，請確認 Spring Boot API 已啟動且允許此網站的跨網域請求。' : '回測暫時無法完成，請稍後再試。');
-      } else {
-        this.error = '回測暫時無法完成，請稍後再試。';
-      }
+      this.error = backtestErrorMessage(error);
     } finally {
       this.busy = false;
       // Angular 22 uses zoneless change detection by default. The async HTTP

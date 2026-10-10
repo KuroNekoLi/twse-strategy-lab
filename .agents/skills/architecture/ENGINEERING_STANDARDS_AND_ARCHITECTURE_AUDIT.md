@@ -1,6 +1,6 @@
 # Engineering Standards and Architecture Audit
 
-Audit date: 2026-10-09. Scope: frontend and backend source/configuration, repository scripts and tests. This is a source-level architecture review; it does not claim production, provider, browser, or load-test verification. Standards sources are recorded in the Angular and Spring Boot Kotlin skill references.
+Audit date: 2026-10-09; implementation follow-up: 2026-10-10. Scope: frontend and backend source/configuration, repository scripts and tests. This is a source-level architecture review; it does not claim production, provider, browser, or load-test verification. Standards sources are recorded in the Angular and Spring Boot Kotlin skill references.
 
 Priority meaning: P1 means address before expanding the affected capability because the design limits correctness, repeatability, or safe evolution; it does not assert a currently observed runtime failure. P2 means planned maintainability or efficiency improvement with no demonstrated user-visible breakage. All findings below are existing conditions, not regressions from this standards update.
 
@@ -17,9 +17,9 @@ Priority meaning: P1 means address before expanding the affected capability beca
 | Priority | Area | Evidence and assessment | Recommended next action |
 |---|---|---|---|
 | P1 | Frontend component ownership | `frontend/src/app/app.component.ts` is 700 lines and combines backtest form state, HTTP calls, result mapping, and presentation state. `site-pages.component.ts` groups multiple route page components in 282 lines. This raises change/review coupling; not every multi-page file is itself a defect. | When those flows are next changed, extract cohesive API/data services and split page components by feature, preserving current routes and behavior. Add focused tests alongside the extraction. |
-| P1 | Frontend data access duplication | Home/explore behavior in `site-pages.component.ts` and workspace code each own requests/response handling; the explore page uses `any` for response/results. `research-library.component.ts` and `research-journal.component.ts` also use `Record<string, any>`; templates use `$any`. | Define API DTOs and share query services for repeated endpoints. Narrow `unknown` at storage/API boundaries, then remove unsafe types in touched code. |
+| P1 | Frontend data access duplication | Home/explore behavior in `site-pages.component.ts` and workspace code each own requests/response handling. The explore response is now explicitly typed; `research-library.component.ts` and `research-journal.component.ts` still use `Record<string, any>`, and templates use `$any`. | Define API DTOs and share query services for repeated endpoints. Narrow `unknown` at storage/API boundaries, then remove unsafe types in touched code. |
 | P2 | Route loading boundaries | `frontend/src/main.ts` statically imports all page components and eagerly registers them. This is simple and valid, but every page participates in the initial application bundle. | Measure bundle and startup impact; consider `loadComponent`/feature chunks for substantial pages if it reduces initial cost without harming navigation. |
-| P1 | Market-provider substitutability | `StockHistoryService` accepts `HistoricalMarketDataProvider`, but `BacktestService` and `RobustnessService` depend directly on `TwseMarketDataClient`. This makes changing vendors and testing those use cases less consistent. | Use the same market-history port where semantics match; add tests with a deterministic fake. Keep provider-specific parsing and retry logic in the adapter. |
+| Resolved 2026-10-10 | Market-provider substitutability | `BacktestService`, `RobustnessService`, and `StockHistoryService` now use `HistoricalMarketDataProvider`; provider parsing and status handling remain in the TWSE adapter. Deterministic provider tests cover consumer behavior. | Keep new history consumers behind the provider port. |
 | P1 | Historical market data SSOT | `StockHistoryService` obtains history through the provider and returns it; there is no persisted OHLCV/bar store or cache. Backtest metadata explicitly reports `SNAPSHOT_NOT_ARCHIVED`, and stock history marks authorization/completeness limitations. This can repeat upstream fetches and cannot guarantee exact replay of old datasets. | Design an instrument + daily-bar SSOT with source/as-of/fetched timestamps, adjustment policy, completeness/freshness and unique symbol/interval/date keys; separate provider refresh from read API. Confirm data rights and retention before storing or serving beyond permitted use. |
 | P2 | Formatting and static analysis | `frontend/package.json` has no lint or unit-test command; `backend/pom.xml` configures tests but no formatter/static-analysis plugin is evident. Several backend service methods are densely formatted, increasing review difficulty. | Select and configure minimal format/lint rules in a separate change; introduce incrementally, starting with changed files to avoid unrelated churn. |
 | P2 | Frontend test coverage | No frontend `*.spec.ts` or test runner/configuration was found in the inspected tree. UI interactions therefore rely on build/typecheck and browser evidence rather than automated component regressions. | Add a small Angular test harness and cover search, routing, loading/error, and key form/result behavior before major UI refactors. |
@@ -34,10 +34,17 @@ Priority meaning: P1 means address before expanding the affected capability beca
 
 ## Suggested order
 
-1. Establish typed Angular API contracts and extract shared data-access services for endpoints used by multiple pages.
-2. Route backtest and robustness through the existing market-data provider port; preserve fake-provider test seams.
+1. Extract shared data-access services for endpoints used by multiple pages; the Explore catalog response is now typed, while other research pages retain unsafe record types.
+2. Route backtest and robustness through the existing market-data provider port; completed 2026-10-10, with deterministic fake-provider tests.
 3. Design the historical-bars SSOT and freshness/invalidation policy, including source rights and provider-independent schema, before implementing persistent caching.
 4. Break up the large backtest page and add frontend tests around extracted behavior; measure before adding lazy route chunks.
 5. Add lint/format policy with a baseline and incremental adoption, avoiding a mass reformat in feature changes.
 
 These recommendations are not authorization for a repo-wide rewrite. Each implementation should have its own acceptance criteria and tests.
+
+## 2026-10-10 implementation follow-up
+
+- Resolved the provider-boundary finding before adding data-availability feedback: backtest and robustness now depend on `HistoricalMarketDataProvider`, not the TWSE client implementation.
+- The Explore catalog consumer now narrows typed responses and distinguishes supported, unsupported, and unknown states.
+- Remaining architecture work includes historical-bars SSOT/freshness and rights design, broader frontend data-service extraction, and focused UI tests. This slice does not establish market-data licensing, calendar completeness, live-provider health, or production behavior.
+- Automated verification for this slice: backend Maven tests (97) and frontend typecheck/production build. Browser evidence is recorded separately under the product opportunity note when available.

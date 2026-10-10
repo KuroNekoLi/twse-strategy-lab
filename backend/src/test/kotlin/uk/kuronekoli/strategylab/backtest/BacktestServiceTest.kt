@@ -10,18 +10,17 @@ import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import tools.jackson.databind.json.JsonMapper
 import uk.kuronekoli.strategylab.api.BacktestException
 import uk.kuronekoli.strategylab.api.BacktestRequest
+import uk.kuronekoli.strategylab.api.ApiExceptionHandler.NoMarketDataException
 import uk.kuronekoli.strategylab.market.DailyBar
-import uk.kuronekoli.strategylab.market.TwseMarketDataClient
+import uk.kuronekoli.strategylab.market.HistoricalMarketDataProvider
 
 class BacktestServiceTest {
   private val clock = Clock.fixed(Instant.parse("2024-01-20T04:00:00Z"), ZoneId.of("Asia/Taipei"))
 
-  private class CapturedClient(private val bars: List<DailyBar>) : TwseMarketDataClient(
-    JsonMapper.builder().build(), "https://example.invalid/STOCK_DAY"
-  ) {
+  private class CapturedClient(private val bars: List<DailyBar>) : HistoricalMarketDataProvider {
+    override val sourceName = "fixture historical source"
     var requestedFirst: YearMonth? = null
     var requestedLast: YearMonth? = null
 
@@ -44,6 +43,7 @@ class BacktestServiceTest {
     assertEquals(YearMonth.of(2024, 1), client.requestedLast)
     assertEquals("LIMITED_RESEARCH", report.status)
     assertEquals("BLOCKED", report.releaseStatus)
+    assertEquals("fixture historical source", report.dataSource)
     assertEquals("RAW_CLOSE_UNADJUSTED_V1", report.metadata.priceAdjustmentPolicy)
     assertEquals("NEXT_CLOSE_PROXY", report.metadata.executionModel)
     assertEquals("IDENTIFIED_NOT_ARCHIVED", report.metadata.reproducibilityStatus)
@@ -107,5 +107,12 @@ class BacktestServiceTest {
     assertEquals(10, response.results[1].trades[0].quantity)
     assertEquals(0, BigDecimal("0.001").compareTo(response.metadata.resolvedConfig.appliedSellTaxRates["0050"]))
     assertTrue(response.limitations.any { it.code == "TAX_CLASSIFICATION_ESTIMATE" })
+  }
+
+  @Test
+  fun emptyProviderResultIsNoMarketDataRatherThanMalformedData() {
+    val service = BacktestService(CapturedClient(emptyList()), clock)
+    val request = BacktestEngineGoldenTest().request("ma-crossover", "1000", "0", "0", "0")
+    assertThrows(NoMarketDataException::class.java) { service.run(request) }
   }
 }
