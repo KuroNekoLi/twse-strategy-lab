@@ -33,6 +33,16 @@ APP_HISTORICAL_BACKFILL_MINIMUM_ROWS=3500
 - 本次只新增歷史日線回補，不代表即時行情、分鐘 K 或即時行情公開展示權已確認。
 - 只完成 mock HTTP contract tests；尚未用正式 Fugle API key 呼叫實際上游，也尚未在 Zeabur 回補或驗證完整圖表。
 
+## 正式環境重新驗收（2026-10-10）
+
+- **目標**：`https://www.kuronekoli.uk/twse-strategy-lab/#/stocks/0050`；在 Chrome 實際重新載入頁面操作，非本機／viewport 模擬。
+- **瀏覽器操作**：切換 1 年、3 年、5 年；日／週／月 K；走勢／K 線；MA20 與成交量圖層。週期與顯示控制均能切換，頁面均能渲染並顯示來源歸屬與資料限制。
+- **正式 API**：Zeabur `GET /api/v1/stocks/0050/history?from=2021-10-10&to=2026-10-10&interval=1d` 回 HTTP 200，但僅回傳 1 根日 K，觀察日期 2026-10-08，來源為政府開放資料每日快照；`earliestAvailableDate=2026-10-08`、`coverageStatus=UNKNOWN`。
+- **UI 結果**：五年選項明確顯示「尚無足夠歷史資料」及「本站目前只有 1 根日 K」；畫面確實只畫出一根 K 棒。週／月 K 是這唯一日線的聚合，並非長期週／月歷史。圖表元件驗收通過；完整 0050 歷史圖表驗收**失敗／阻塞**。
+- **Zeabur 部署證據**：服務仍在運作，MySQL pool 已連線，當前部署執行每日快照匯入；環境變數頁顯示尚無使用者變數，`Add Fugle historical market data backfill` 部署狀態為「已取消」。因此沒有供應商 API key，也沒有執行歷史回補。
+- **未驗證項目**：未檢查瀏覽器 DevTools console/network log；沒有取得 Fugle 實際 API 回應或 DB 歷史筆數；沒有正式歷史回補。
+- **解除阻塞條件**：先取得涵蓋伺服器查詢、資料庫快取／保存及對外網站展示 OHLCV 的來源授權／方案確認；在 Zeabur Secret 由專案管理者設定 `FUGLE_API_KEY`。憑證不可貼在聊天或提交至 Git。完成後再核對授權與歸屬 metadata、啟用一次性 0050 回補、關閉回補開關，重部署並重跑上列正式 UI 驗收。FinMind API 使用條款同樣不把 API 存取權授予對外再散布，因此不能以它繞過此 gate。
+
 ## 來源
 
 - Fugle Historical Candles API：https://developer.fugle.tw/docs/data/http-api/historical/candles/
