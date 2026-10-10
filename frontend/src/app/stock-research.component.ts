@@ -52,7 +52,7 @@ function apiErrorCode(value: unknown): string | undefined {
                 <span class="indicator-note" *ngIf="!hasVolume">此資料來源未提供成交量，成交量圖層暫不可用。</span>
               </div>
             </div>
-            <div class="stock-chart-summary"><span [class.negative]="periodChange < 0" [class.positive]="periodChange > 0">{{periodChange >= 0 ? '+' : ''}}{{periodChange | number:'1.2-2'}}%</span><span>所選顯示範圍報酬</span><span class="chart-summary-divider"></span><span>{{chartBars.length}} 根{{intervalName}} K</span><span *ngIf="showVolume && hasVolume" class="chart-legend"><i class="legend-up"></i>上漲 <i class="legend-down"></i>下跌</span></div>
+            <div class="stock-chart-summary"><span [class.negative]="chartBars.length > 1 && periodChange < 0" [class.positive]="chartBars.length > 1 && periodChange > 0">{{chartBars.length > 1 ? (periodChange >= 0 ? '+' : '') + (periodChange | number:'1.2-2') + '%' : '—'}}</span><span>{{chartBars.length > 1 ? '所選顯示範圍報酬' : '資料不足，無法計算期間報酬'}}</span><span class="chart-summary-divider"></span><span>{{chartBars.length}} 根{{intervalName}} K</span><span *ngIf="showVolume && hasVolume" class="chart-legend"><i class="legend-up"></i>上漲 <i class="legend-down"></i>下跌</span></div>
             <div class="stock-selected-quote" aria-live="polite" aria-atomic="true" *ngIf="selectedBar as quote">
               <strong>{{dateRange(quote.periodStart, quote.periodEnd)}}</strong>
               <span [class.positive]="selectedDailyChange !== null && selectedDailyChange > 0" [class.negative]="selectedDailyChange !== null && selectedDailyChange < 0">
